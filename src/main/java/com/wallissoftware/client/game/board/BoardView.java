@@ -7,6 +7,7 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
@@ -25,7 +26,9 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		String gridLabel();
 	}
 
-	@UiField(provided = true) Grid board = new Grid(8, 8);
+	@UiField(provided = true) Grid boardBackground = new Grid(8, 8);
+
+	@UiField AbsolutePanel dropSurface;
 
 	@UiField MyStyle style;
 	@UiField LayoutPanel layoutPanel;
@@ -37,10 +40,10 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	BoardView(final Binder binder) {
 		initWidget(binder.createAndBindUi(this));
 
-		setGridLabels(Color.WHITE);
+		resetGridLabels();
 	}
 
-	private void setGridLabels(final Color playerColor) {
+	private void resetGridLabels() {
 		if (rankLabels.isEmpty()) {
 			for (int i = 0; i < 8; i++) {
 				final Label rankLabel = new Label("" + ((char) (i + 97)));
@@ -58,8 +61,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		}
 
 		for (int i = 0; i < 8; i++) {
-			final Widget rankLabel = playerColor == Color.WHITE ? rankLabels.get(i) : rankLabels.get(7 - i);
-			final Widget fileLabel = playerColor == Color.WHITE ? fileLabels.get(7 - i) : fileLabels.get(i);
+			final Widget rankLabel = getOrientation() == Color.WHITE ? rankLabels.get(i) : rankLabels.get(7 - i);
+			final Widget fileLabel = getOrientation() == Color.WHITE ? fileLabels.get(7 - i) : fileLabels.get(i);
 			layoutPanel.setWidgetLeftWidth(rankLabel, (i * 50) + 30, Unit.PX, 16, Unit.PX);
 			layoutPanel.setWidgetTopHeight(fileLabel, (i * 50) + 26, Unit.PX, 16, Unit.PX);
 		}
@@ -68,7 +71,16 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	@Override
 	public void setPieceInSquare(final IsWidget piece, final Square square) {
-		board.setWidget(square.getRank(), square.getFile(), piece);
+		int x = square.getRank() * 50;
+		int y = 350 - (square.getFile() * 50);
+		if (getOrientation() == Color.BLACK) {
+			x = 350 - x;
+			y = 350 - y;
+		}
+		dropSurface.add(piece, x, y);
+	}
 
+	private Color getOrientation() {
+		return Color.WHITE;
 	}
 }

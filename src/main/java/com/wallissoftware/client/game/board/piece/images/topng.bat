@@ -1,1 +1,1 @@
-FOR %%x IN (*.svg) DO convert %%x -density 216 "%%~nx.png"
+FOR %%x IN (*.svg) DO convert -density 216 -background none -resize 50x50 %%x "%%~nx.png"

@@ -1,0 +1,17 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+             xmlns:g="urn:import:com.google.gwt.user.client.ui">
+    <ui:style>
+    </ui:style>
+    <g:DialogBox autoHideOnHistoryEventsEnabled="true" autoHideEnabled="true" text="Promote Pawn">
+    <g:VerticalPanel horizontalAlignment="CENTER" spacing="10">
+    	<g:HorizontalPanel spacing="10">
+    		<g:PushButton ui:field="queenButton"/>
+    		<g:PushButton ui:field="knightButton"/>
+    		<g:PushButton ui:field="bishopButton"/>
+    		<g:PushButton ui:field="rookButton"/>
+    	</g:HorizontalPanel>
+    	<g:Button ui:field="cancelButton"> Cancel</g:Button>
+    </g:VerticalPanel>
+    </g:DialogBox>
+</ui:UiBinder>

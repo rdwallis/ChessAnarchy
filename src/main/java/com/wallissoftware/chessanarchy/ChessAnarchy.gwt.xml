@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<module rename-to='project'>
+    <!-- Inherit the core Web Toolkit stuff.                        -->
+    <inherits name='com.google.gwt.user.User'/>
+    <inherits name='com.google.gwt.user.theme.clean.Clean'/>
+	<inherits name='com.allen_sauer.gwt.dnd.gwt-dnd'/>  
+    <inherits name='com.gwtplatform.dispatch.Dispatch'/>
+    <inherits name='com.gwtplatform.mvp.MvpWithEntryPoint' />
+
+    <source path='client'/>
+    <source path='shared'/>
+
+    <!-- Default client module -->
+    <set-configuration-property name="gin.ginjector.modules" value="com.wallissoftware.chessanarchy.client.gin.ClientModule"/>
+    
+    <!-- Bootstrapper -->
+    <set-configuration-property name="gwtp.bootstrapper" value="com.wallissoftware.chessanarchy.client.gin.BootstrapperImpl"/> 
+</module>

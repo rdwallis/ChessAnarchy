@@ -10,7 +10,7 @@
     </welcome-file-list>
 
     <listener>
-        <listener-class>com.wallissoftware.server.guice.GuiceServletConfig</listener-class>
+        <listener-class>com.wallissoftware.chessanarchy.server.guice.GuiceServletConfig</listener-class>
     </listener>
 
     <filter>

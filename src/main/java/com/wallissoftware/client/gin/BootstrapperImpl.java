@@ -18,49 +18,20 @@ package com.wallissoftware.client.gin;
 
 import javax.inject.Inject;
 
-import com.wallissoftware.client.dispatch.AsyncCallbackImpl;
-import com.wallissoftware.shared.dispatch.FetchCurrentUserAction;
-import com.wallissoftware.shared.dispatch.FetchCurrentUserResult;
-import com.wallissoftware.shared.dto.CurrentUserDto;
-import com.gwtplatform.dispatch.shared.DispatchAsync;
 import com.gwtplatform.mvp.client.Bootstrapper;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 
 public class BootstrapperImpl implements Bootstrapper {
-    private final PlaceManager placeManager;
-    private final DispatchAsync dispatcher;
-    private final CurrentUserDto currentUserDto;
+	private final PlaceManager placeManager;
 
-    @Inject
-    public BootstrapperImpl(PlaceManager placeManager, DispatchAsync dispatcher, CurrentUserDto currentUserDto) {
-        this.placeManager = placeManager;
-        this.dispatcher = dispatcher;
-        this.currentUserDto = currentUserDto;
-    }
+	@Inject
+	public BootstrapperImpl(final PlaceManager placeManager) {
+		this.placeManager = placeManager;
+	}
 
-    @Override
-    public void onBootstrap() {
-        fetchCurrentUser();
-    }
+	@Override
+	public void onBootstrap() {
+		placeManager.revealCurrentPlace();
+	}
 
-    private void fetchCurrentUser() {
-        dispatcher.execute(new FetchCurrentUserAction(), new AsyncCallbackImpl<FetchCurrentUserResult>() {
-            @Override
-            public void onSuccess(FetchCurrentUserResult result) {
-                onFetchCurrentUserSuccess(result.getCurrentUser());
-            }
-
-            @Override
-            public void onFailure(Throwable caught) {
-                super.onFailure(caught);
-                placeManager.revealCurrentPlace();
-            }
-        });
-    }
-
-    private void onFetchCurrentUserSuccess(CurrentUserDto currentUser) {
-        currentUserDto.copyFrom(currentUser);
-
-        placeManager.revealCurrentPlace();
-    }
 }

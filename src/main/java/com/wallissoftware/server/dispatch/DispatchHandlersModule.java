@@ -16,19 +16,11 @@
 
 package com.wallissoftware.server.dispatch;
 
-import com.wallissoftware.server.dispatch.validators.AdminActionValidator;
-import com.wallissoftware.shared.dispatch.FetchAdminTaskCountAction;
-import com.wallissoftware.shared.dispatch.FetchCurrentUserAction;
-import com.wallissoftware.shared.dispatch.FetchTaskAction;
-import com.gwtplatform.dispatch.server.guice.HandlerModule;
+import com.gwtplatform.dispatch.rpc.server.guice.HandlerModule;
 
 public class DispatchHandlersModule extends HandlerModule {
-    @Override
-    protected void configureHandlers() {
-        bindHandler(FetchTaskAction.class, FetchTaskHandler.class);
-        bindHandler(FetchCurrentUserAction.class, FetchCurrentUserHandler.class);
+	@Override
+	protected void configureHandlers() {
 
-        // This fetch has a Validator which only lets App Admins fetch it.
-        bindHandler(FetchAdminTaskCountAction.class, FetchAdminTaskCountHandler.class, AdminActionValidator.class);
-    }
+	}
 }

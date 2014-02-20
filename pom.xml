@@ -12,7 +12,7 @@
     <properties>
         <!-- client -->
         <gwt.version>2.5.1</gwt.version>
-        <gwtp.version>1.0</gwtp.version>
+        <gwtp.version>1.2-SNAPSHOT</gwtp.version>
         <gin.version>2.0.0</gin.version>
         <arcbees-core.version>1.0-SNAPSHOT</arcbees-core.version>
         <gwt.style>OBF</gwt.style>
@@ -171,33 +171,11 @@
         <!-- GWT-Platform dependencies -->
         <dependency>
             <groupId>com.gwtplatform</groupId>
-            <artifactId>gwtp-mvp-client</artifactId>
+            <artifactId>gwtp-all</artifactId>
             <version>${gwtp.version}</version>
-            <scope>provided</scope>
+            
         </dependency>
-        <dependency>
-            <groupId>com.gwtplatform</groupId>
-            <artifactId>gwtp-dispatch-client</artifactId>
-            <version>${gwtp.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.gwtplatform</groupId>
-            <artifactId>gwtp-dispatch-server-guice</artifactId>
-            <version>${gwtp.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.gwtplatform</groupId>
-            <artifactId>gwtp-dispatch-shared</artifactId>
-            <version>${gwtp.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.gwtplatform</groupId>
-            <artifactId>gwtp-processors</artifactId>
-            <version>${gwtp.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
+        
         <!-- DI dependencies -->
         <dependency>
             <groupId>com.google.inject</groupId>

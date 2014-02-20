@@ -16,33 +16,36 @@
 
 package com.wallissoftware.client.gin;
 
-import com.wallissoftware.client.application.ApplicationModule;
-import com.wallissoftware.client.place.NameTokens;
-import com.wallissoftware.shared.dto.CurrentUserDto;
-import com.gwtplatform.dispatch.client.gin.DispatchAsyncModule;
+import com.gwtplatform.dispatch.rpc.client.gin.RpcDispatchAsyncModule;
+import com.gwtplatform.mvp.client.RootPresenter;
 import com.gwtplatform.mvp.client.annotations.DefaultPlace;
 import com.gwtplatform.mvp.client.annotations.ErrorPlace;
 import com.gwtplatform.mvp.client.annotations.UnauthorizedPlace;
 import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
 import com.gwtplatform.mvp.client.gin.DefaultModule;
 import com.gwtplatform.mvp.client.proxy.DefaultPlaceManager;
+import com.wallissoftware.client.game.GameModule;
+import com.wallissoftware.client.game.MyRootPresenter;
+import com.wallissoftware.client.place.NameTokens;
 
 /**
  * See more on setting up the PlaceManager on <a
- * href="// See more on: https://github.com/ArcBees/GWTP/wiki/PlaceManager">DefaultModule's > DefaultPlaceManager</a>
+ * href="// See more on: https://github.com/ArcBees/GWTP/wiki/PlaceManager"
+ * >DefaultModule's > DefaultPlaceManager</a>
  */
 public class ClientModule extends AbstractPresenterModule {
-    @Override
-    protected void configure() {
-        install(new DefaultModule(DefaultPlaceManager.class));
-        install(new DispatchAsyncModule.Builder().build());
-        install(new ApplicationModule());
+	@Override
+	protected void configure() {
+		bind(RootPresenter.class).to(MyRootPresenter.class);
 
-        // DefaultPlaceManager Places
-        bindConstant().annotatedWith(DefaultPlace.class).to(NameTokens.home);
-        bindConstant().annotatedWith(ErrorPlace.class).to(NameTokens.home);
-        bindConstant().annotatedWith(UnauthorizedPlace.class).to(NameTokens.home);
+		install(new DefaultModule(DefaultPlaceManager.class));
+		install(new RpcDispatchAsyncModule.Builder().build());
+		install(new GameModule());
 
-        bind(CurrentUserDto.class).asEagerSingleton();
-    }
+		// DefaultPlaceManager Places
+		bindConstant().annotatedWith(DefaultPlace.class).to(NameTokens.game);
+		bindConstant().annotatedWith(ErrorPlace.class).to(NameTokens.game);
+		bindConstant().annotatedWith(UnauthorizedPlace.class).to(NameTokens.game);
+
+	}
 }

@@ -16,26 +16,24 @@
 
 package com.wallissoftware.server.dao.objectify;
 
-import com.wallissoftware.shared.domain.Task;
-import com.wallissoftware.shared.domain.User;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyFactory;
 import com.googlecode.objectify.ObjectifyService;
 
 /**
- * For use of: import static com.sceneverse.shozon.server.dao.objectify.OfyService.ofy;
+ * For use of: import static
+ * com.sceneverse.shozon.server.dao.objectify.OfyService.ofy;
  */
 public class OfyService {
-    static {
-        factory().register(Task.class);
-        factory().register(User.class);
-    }
+	static {
+		//factory().register(Task.class);
+	}
 
-    public static Objectify ofy() {
-        return ObjectifyService.ofy();
-    }
+	public static Objectify ofy() {
+		return ObjectifyService.ofy();
+	}
 
-    public static ObjectifyFactory factory() {
-        return ObjectifyService.factory();
-    }
+	public static ObjectifyFactory factory() {
+		return ObjectifyService.factory();
+	}
 }

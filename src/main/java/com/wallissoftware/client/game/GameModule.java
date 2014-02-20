@@ -14,15 +14,16 @@
  * the License.
  */
 
-package com.wallissoftware.server.guice;
+package com.wallissoftware.client.game;
 
-import com.gwtplatform.dispatch.rpc.server.guice.HandlerModule;
-import com.wallissoftware.server.dispatch.DispatchHandlersModule;
+import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
+import com.wallissoftware.client.game.board.BoardModule;
 
-public class ServerModule extends HandlerModule {
+public class GameModule extends AbstractPresenterModule {
 	@Override
-	protected void configureHandlers() {
-		install(new DispatchHandlersModule());
+	protected void configure() {
 
+		install(new BoardModule());
+		bindPresenter(GamePresenter.class, GamePresenter.MyView.class, GameView.class, GamePresenter.MyProxy.class);
 	}
 }

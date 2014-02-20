@@ -17,14 +17,11 @@
 package com.wallissoftware.client.place;
 
 public class NameTokens {
-    public static final String home = "!home";
-    public static final String admin = "admin";
 
-    public static String getHome() {
-        return home;
-    }
+	public static final String game = "game";
 
-    public static final String getAdmin() {
-        return admin;
-    }
+	public static String getHome() {
+		return game;
+	}
+
 }

@@ -3,8 +3,14 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <title>Chess Anarchy</title>
-    <script type="text/javascript" src="project/project.nocache.js"></script>
-    
+    <script type="text/javascript" src="/chessanarchy/chessanarchy.nocache.js"></script>
+    <style>
+    	.expand {
+    		box-sizing: border-box;
+			width: 100%;
+			height: 100%;
+    	}
+    </style>
 </head>
 <body>
 	<header>

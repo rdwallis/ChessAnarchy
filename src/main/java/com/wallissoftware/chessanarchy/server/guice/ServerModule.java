@@ -16,13 +16,25 @@
 
 package com.wallissoftware.chessanarchy.server.guice;
 
+import com.googlecode.objectify.ObjectifyService;
 import com.gwtplatform.dispatch.rpc.server.guice.HandlerModule;
 import com.wallissoftware.chessanarchy.server.dispatch.DispatchHandlersModule;
+import com.wallissoftware.chessanarchy.server.mainpage.MainPageModule;
+import com.wallissoftware.chessanarchy.server.messages.MessageCache;
+import com.wallissoftware.chessanarchy.server.messages.MessageModule;
 
 public class ServerModule extends HandlerModule {
 	@Override
 	protected void configureHandlers() {
+		registerEntities();
 		install(new DispatchHandlersModule());
+		install(new MessageModule());
+		install(new MainPageModule());
+
+	}
+
+	private void registerEntities() {
+		ObjectifyService.factory().register(MessageCache.class);
 
 	}
 }

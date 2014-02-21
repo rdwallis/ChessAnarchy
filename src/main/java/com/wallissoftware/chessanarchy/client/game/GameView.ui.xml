@@ -1,6 +1,13 @@
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
              xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+    <ui:style>
+    	.responsive {
+			display: inline-block;
+			vertical-align:top;
+		}
+    </ui:style>
     <g:HTMLPanel>
-    	<g:SimplePanel ui:field="boardPanel"/>
+    	<g:SimplePanel ui:field="boardPanel" addStyleNames="{style.responsive}"/>
+    	<g:SimplePanel ui:field="chatPanel" addStyleNames="{style.responsive}" width="400px" height="600px"/>
     </g:HTMLPanel>
 </ui:UiBinder>

@@ -24,6 +24,7 @@ import com.gwtplatform.mvp.client.annotations.NameToken;
 import com.gwtplatform.mvp.client.annotations.ProxyStandard;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.wallissoftware.chessanarchy.client.game.board.BoardPresenter;
+import com.wallissoftware.chessanarchy.client.game.chat.ChatPresenter;
 import com.wallissoftware.chessanarchy.client.place.NameTokens;
 
 public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter.MyProxy> {
@@ -31,6 +32,7 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 	}
 
 	public static final Object BOARD_SLOT = new Object();
+	public static final Object CHAT_SLOT = new Object();
 
 	@ProxyStandard
 	@NameToken(NameTokens.game)
@@ -38,11 +40,13 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 	}
 
 	private final BoardPresenter boardPresenter;
+	private final ChatPresenter chatPresenter;
 
 	@Inject
-	GamePresenter(final EventBus eventBus, final MyView view, final MyProxy proxy, final BoardPresenter boardPresenter) {
+	GamePresenter(final EventBus eventBus, final MyView view, final MyProxy proxy, final BoardPresenter boardPresenter, final ChatPresenter chatPresenter) {
 		super(eventBus, view, proxy, RevealType.Root);
 		this.boardPresenter = boardPresenter;
+		this.chatPresenter = chatPresenter;
 
 	}
 
@@ -50,6 +54,7 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 	protected void onBind() {
 		super.onBind();
 		setInSlot(BOARD_SLOT, boardPresenter);
+		setInSlot(CHAT_SLOT, chatPresenter);
 	}
 
 }

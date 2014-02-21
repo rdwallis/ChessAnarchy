@@ -1,0 +1,9 @@
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+    <ui:style>
+    </ui:style>
+    <g:ScrollPanel  addStyleNames="expand" ui:field="scrollPanel">
+    	<g:VerticalPanel ui:field="messageLog">
+    	</g:VerticalPanel>
+    </g:ScrollPanel>
+</ui:UiBinder>

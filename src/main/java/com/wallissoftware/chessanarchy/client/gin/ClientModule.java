@@ -17,6 +17,7 @@
 package com.wallissoftware.chessanarchy.client.gin;
 
 import com.gwtplatform.dispatch.rpc.client.gin.RpcDispatchAsyncModule;
+import com.gwtplatform.dispatch.shared.SecurityCookie;
 import com.gwtplatform.mvp.client.RootPresenter;
 import com.gwtplatform.mvp.client.annotations.DefaultPlace;
 import com.gwtplatform.mvp.client.annotations.ErrorPlace;
@@ -36,6 +37,7 @@ import com.wallissoftware.chessanarchy.client.place.NameTokens;
 public class ClientModule extends AbstractPresenterModule {
 	@Override
 	protected void configure() {
+		bindConstant().annotatedWith(SecurityCookie.class).to("JSESSIONID");
 		bind(RootPresenter.class).to(MyRootPresenter.class);
 
 		install(new DefaultModule(DefaultPlaceManager.class));

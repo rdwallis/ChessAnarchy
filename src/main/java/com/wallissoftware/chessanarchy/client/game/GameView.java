@@ -29,7 +29,7 @@ public class GameView extends ViewImpl implements GamePresenter.MyView {
 	public interface Binder extends UiBinder<Widget, GameView> {
 	}
 
-	@UiField HasOneWidget boardPanel;
+	@UiField HasOneWidget boardPanel, chatPanel;
 
 	@Inject
 	GameView(final Binder uiBinder) {
@@ -40,6 +40,8 @@ public class GameView extends ViewImpl implements GamePresenter.MyView {
 	public void setInSlot(final Object slot, final IsWidget content) {
 		if (slot == GamePresenter.BOARD_SLOT) {
 			boardPanel.setWidget(content);
+		} else if (slot == GamePresenter.CHAT_SLOT) {
+			chatPanel.setWidget(content);
 		} else {
 			super.setInSlot(slot, content);
 		}

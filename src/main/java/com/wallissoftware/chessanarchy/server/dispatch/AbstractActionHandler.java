@@ -34,10 +34,10 @@ import com.gwtplatform.dispatch.shared.ActionException;
  * @param <R>
  *            The {@link com.gwtplatform.dispatch.shared.Result} type.
  */
-public abstract class AbstractAction<A extends Action<R>, R extends Result> implements ActionHandler<A, R> {
+public abstract class AbstractActionHandler<A extends Action<R>, R extends Result> implements ActionHandler<A, R> {
 	private final Class<A> actionType;
 
-	public AbstractAction(final Class<A> actionType) {
+	public AbstractActionHandler(final Class<A> actionType) {
 		this.actionType = actionType;
 	}
 

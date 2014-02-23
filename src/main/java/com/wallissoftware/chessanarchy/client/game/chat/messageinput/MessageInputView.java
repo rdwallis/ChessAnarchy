@@ -34,4 +34,5 @@ public class MessageInputView extends ViewWithUiHandlers<MessageInputUiHandlers>
 			messageBox.setText("");
 		}
 	}
+
 }

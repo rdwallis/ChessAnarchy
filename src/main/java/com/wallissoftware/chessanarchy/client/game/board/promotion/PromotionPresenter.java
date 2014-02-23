@@ -5,6 +5,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PopupView;
 import com.gwtplatform.mvp.client.PresenterWidget;
+import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
 import com.wallissoftware.chessanarchy.shared.game.Board;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Move;
@@ -47,7 +48,7 @@ public class PromotionPresenter extends PresenterWidget<PromotionPresenter.MyVie
 
 	@Override
 	public void promoteToRook() {
-		board.doMove(new Move(start, end, new Rook(getPromotedPawn())), true);
+		makeMove(new Move(start, end, new Rook(getPromotedPawn())));
 
 	}
 
@@ -57,20 +58,24 @@ public class PromotionPresenter extends PresenterWidget<PromotionPresenter.MyVie
 
 	@Override
 	public void promoteToBishop() {
-		board.doMove(new Move(start, end, new Bishop(getPromotedPawn())), true);
+		makeMove(new Move(start, end, new Bishop(getPromotedPawn())));
 
 	}
 
 	@Override
 	public void promoteToKnight() {
-		board.doMove(new Move(start, end, new Knight(getPromotedPawn())), true);
+		makeMove(new Move(start, end, new Knight(getPromotedPawn())));
 
 	}
 
 	@Override
 	public void promoteToQueen() {
-		board.doMove(new Move(start, end, new Queen(getPromotedPawn())), true);
+		makeMove(new Move(start, end, new Queen(getPromotedPawn())));
 
+	}
+
+	private void makeMove(final Move move) {
+		fireEvent(new SendMessageEvent(board.doMove(move, true)));
 	}
 
 }

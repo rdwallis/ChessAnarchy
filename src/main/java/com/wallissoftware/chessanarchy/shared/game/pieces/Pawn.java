@@ -97,4 +97,9 @@ public class Pawn extends Piece {
 		return promotedTo;
 	}
 
+	@Override
+	public String getPgnAbbreviation() {
+		return "";
+	}
+
 }

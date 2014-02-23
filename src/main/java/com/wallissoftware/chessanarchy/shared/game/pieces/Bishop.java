@@ -75,4 +75,9 @@ public class Bishop extends Piece {
 		return legalMoves;
 	}
 
+	@Override
+	public String getPgnAbbreviation() {
+		return "B";
+	}
+
 }

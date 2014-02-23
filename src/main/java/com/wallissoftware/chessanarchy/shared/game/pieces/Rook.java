@@ -77,4 +77,9 @@ public class Rook extends Piece {
 		return legalMoves;
 	}
 
+	@Override
+	public String getPgnAbbreviation() {
+		return "R";
+	}
+
 }

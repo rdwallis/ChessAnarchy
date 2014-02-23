@@ -124,4 +124,10 @@ public class Queen extends Piece {
 		return legalMoves;
 	}
 
+	@Override
+	public String getPgnAbbreviation() {
+		return "Q";
+
+	}
+
 }

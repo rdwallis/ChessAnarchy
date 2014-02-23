@@ -25,4 +25,14 @@ public final class MessageCache extends JavaScriptObject {
 		return JsonUtils.safeEval(json);
 	}
 
+	private final native String getNativeCreated() /*-{
+		return this.created;
+	}-*/;
+
+	public long getCreated() {
+		final String created = getNativeCreated();
+
+		return Long.valueOf(created);
+	}
+
 }

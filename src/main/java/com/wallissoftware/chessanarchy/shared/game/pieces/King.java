@@ -72,4 +72,9 @@ public class King extends Piece {
 		return legalMoves;
 	}
 
+	@Override
+	public String getPgnAbbreviation() {
+		return "K";
+	}
+
 }

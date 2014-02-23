@@ -128,7 +128,9 @@ public abstract class Piece implements Dto {
 
 	@Override
 	public String toString() {
-		return color + " on " + position;
+		return color + " " + getPgnAbbreviation() + " on " + position;
 	}
+
+	public abstract String getPgnAbbreviation();
 
 }

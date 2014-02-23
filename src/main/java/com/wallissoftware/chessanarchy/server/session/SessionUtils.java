@@ -33,4 +33,9 @@ public class SessionUtils {
 			return original;
 		return original.substring(0, 1).toUpperCase() + original.substring(1);
 	}
+
+	public static void setName(final HttpSession session, final String name) {
+		session.setAttribute("name", name);
+
+	}
 }

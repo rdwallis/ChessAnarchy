@@ -37,6 +37,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 			if (previousId != null) {
 				messageMap.put("previous", previousId + "");
 			}
+			messageMap.put("created", System.currentTimeMillis() + "");
 
 			messageMap.put("messages", messageQueue);
 

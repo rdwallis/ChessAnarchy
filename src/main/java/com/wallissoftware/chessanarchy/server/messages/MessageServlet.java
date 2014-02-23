@@ -73,12 +73,19 @@ public class MessageServlet extends HttpServlet {
 	protected void doPut(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
 		final StringWriter writer = new StringWriter();
 		IOUtils.copy(req.getInputStream(), writer, "UTF-8");
-		final String message = StringEscapeUtils.escapeHtml(writer.toString());
+		final String message = StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(writer.toString()));
 		if (message != null && !message.isEmpty()) {
 			final Map<String, Object> map = new HashMap<String, Object>();
-			//TODO get from session
 			map.put("userId", SessionUtils.getUserId(req.getSession()));
 			map.put("name", SessionUtils.getName(req.getSession()));
+			if (message.toLowerCase().startsWith("/nick")) {
+				String name = message.substring(5);
+				name = name.replace(" ", "");
+				if (name.length() > 20) {
+					name = name.substring(0, 20);
+				}
+				SessionUtils.setName(req.getSession(), name);
+			}
 			map.put("created", System.currentTimeMillis());
 			map.put("message", message);
 
@@ -94,7 +101,9 @@ public class MessageServlet extends HttpServlet {
 				final Queue queue = QueueFactory.getDefaultQueue();
 				queue.add(withUrl("/processmessages").method(Method.GET));
 			}
+
 		}
 
 	}
+
 }

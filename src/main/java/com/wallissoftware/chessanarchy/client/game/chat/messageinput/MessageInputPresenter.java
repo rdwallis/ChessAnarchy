@@ -11,9 +11,12 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
+import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
+import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent.SendMessageHandler;
 
-public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter.MyView> implements MessageInputUiHandlers {
+public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter.MyView> implements MessageInputUiHandlers, SendMessageHandler {
 	public interface MyView extends View, HasUiHandlers<MessageInputUiHandlers> {
+
 	}
 
 	@Inject
@@ -23,7 +26,19 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 	}
 
 	@Override
+	protected void onBind() {
+		super.onBind();
+		addRegisteredHandler(SendMessageEvent.getType(), this);
+	}
+
+	@Override
 	public void sendMessage(final String message) {
+		fireEvent(new SendMessageEvent(message));
+	}
+
+	@Override
+	public void onSendMessage(final SendMessageEvent event) {
+		final String message = event.getMessage();
 		if (!message.isEmpty()) {
 			final RequestBuilder builder = new RequestBuilder(RequestBuilder.PUT, URL.encode("/message"));
 
@@ -45,5 +60,6 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 				// Couldn't connect to server
 			}
 		}
+
 	}
 }

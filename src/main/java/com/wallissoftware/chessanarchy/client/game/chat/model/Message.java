@@ -24,4 +24,30 @@ public final class Message extends JavaScriptObject {
 		return JsonUtils.safeEval(json);
 	}
 
+	public boolean isNickChange() {
+		return getMessage().toLowerCase().startsWith("/nick");
+
+	}
+
+	public boolean is3rdPerson() {
+		return getMessage().toLowerCase().startsWith("/me");
+
+	}
+
+	public String getFormattedMessage() {
+		if (isNickChange()) {
+			String name = getMessage().substring(5);
+			name = name.replace(" ", "");
+			if (name.length() > 20) {
+				name = name.substring(0, 20);
+			}
+			return getName() + " changed their nick to " + name;
+		} else if (is3rdPerson()) {
+			return getName() + " " + getMessage().substring(3);
+		} else {
+			return getMessage();
+		}
+
+	}
+
 }

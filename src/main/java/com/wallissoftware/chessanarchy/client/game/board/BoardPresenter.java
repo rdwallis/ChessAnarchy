@@ -9,6 +9,7 @@ import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
 import com.wallissoftware.chessanarchy.client.game.board.piece.PiecePresenter;
 import com.wallissoftware.chessanarchy.client.game.board.promotion.PromotionPresenter;
+import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
 import com.wallissoftware.chessanarchy.shared.game.Board;
 import com.wallissoftware.chessanarchy.shared.game.Move;
 import com.wallissoftware.chessanarchy.shared.game.Square;
@@ -94,7 +95,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	}
 
 	private void makeMove(final Move move) {
-		board.doMove(move, true);
+		fireEvent(new SendMessageEvent(board.doMove(move, true)));
 	}
 
 }

@@ -20,6 +20,7 @@
 
 		<!-- server -->
 		<gae.version>1.8.8</gae.version>
+		<gae-runtime.version>1.8.6</gae-runtime.version>
 		<guice.version>3.0</guice.version>
 		<objectify.version>4.0b1</objectify.version>
 		<persistence-api.version>1.0.2</persistence-api.version>
@@ -37,7 +38,7 @@
 		<maven-surefire-plugin.version>2.6</maven-surefire-plugin.version>
 		<maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
 		<maven-resources-plugin.version>2.5</maven-resources-plugin.version>
-		<maven-gae-plugin.version>0.9.6</maven-gae-plugin.version>
+		<maven-gae-plugin.version>0.9.5</maven-gae-plugin.version>
 		<maven-processor-plugin.version>2.0.5</maven-processor-plugin.version>
 		<maven-build-helper-plugin.version>1.7</maven-build-helper-plugin.version>
 
@@ -46,7 +47,8 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
-		<gae.home>${settings.localRepository}/com/google/appengine/appengine-java-sdk/${gae.version}/appengine-java-sdk-${gae.version}</gae.home>
+		<gae.home>C:\Programming\appengine-java-sdk-${gae.version}</gae.home>
+		<!-- <gae.home>${settings.localRepository}/com/google/appengine/appengine-java-sdk/${gae.version}/appengine-java-sdk-${gae.version}</gae.home>-->
 	</properties>
 
 	<build>
@@ -117,6 +119,8 @@
 					<extraJvmArgs>-Dappengine.sdk.root=${gae.home}</extraJvmArgs>
 
 					<runTarget>ChessAnarchy.html</runTarget>
+					<localWorkers>2</localWorkers>
+					<enableClosureCompiler>true</enableClosureCompiler>
 					<modules>
 						<module>com.wallissoftware.chessanarchy.ChessAnarchy</module>
 					</modules>
@@ -138,8 +142,8 @@
 				<version>${maven-gae-plugin.version}</version>
 				<configuration>
 					<sdkDir>${gae.home}</sdkDir>
-					<!-- Add credentials to ~/.m2/settings.xml <id>appengine-credentials</id> -->
-					<serverId>appengine-credentials</serverId>
+					<unpackVersion>${gae.version}</unpackVersion>
+					<serverId>appengine.google.com</serverId>
 					<splitJars>true</splitJars>
 				</configuration>
 				<executions>
@@ -150,6 +154,14 @@
 						</goals>
 					</execution>
 				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>net.kindleit</groupId>
+						<artifactId>gae-runtime</artifactId>
+						<version>${gae-runtime.version}</version>
+						<type>pom</type>
+					</dependency>
+				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
@@ -282,7 +294,7 @@
 		<dependency>
 			<groupId>com.allen-sauer.gwt.dnd</groupId>
 			<artifactId>gwt-dnd</artifactId>
-			<version>3.3.0</version>
+			<version>3.2.3</version>
 		</dependency>
 		
 		<dependency>

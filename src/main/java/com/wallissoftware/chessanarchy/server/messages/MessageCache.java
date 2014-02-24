@@ -20,6 +20,7 @@ public class MessageCache {
 
 	public MessageCache(final Long previousId, final String json) {
 		this.creationTime = System.currentTimeMillis();
+		this.previousId = previousId;
 		this.json = json;
 	}
 

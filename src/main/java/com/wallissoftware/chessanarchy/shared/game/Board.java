@@ -1,9 +1,11 @@
 package com.wallissoftware.chessanarchy.shared.game;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.wallissoftware.chessanarchy.shared.game.pieces.Bishop;
@@ -49,32 +51,30 @@ public class Board {
 
 		this.lastMovedPiece = board[start.getRank()][start.getFile()];
 
-		if (recordMove) {
-			final List<Piece> otherPiecesOfSameType = getOtherPiecesOfSameTypeThatCanMoveToSquare(lastMovedPiece, end);
+		final List<Piece> otherPiecesOfSameType = getOtherPiecesOfSameTypeThatCanMoveToSquare(lastMovedPiece, end);
 
-			boolean fileIsUnique = true;
-			boolean rankIsUnique = true;
-			for (final Piece piece : otherPiecesOfSameType) {
-				final Square otherPosition = piece.getPosition();
-				final Square position = move.getStart();
-				if (otherPosition.getRank() == position.getRank()) {
-					rankIsUnique = false;
-				}
-				if (otherPosition.getFile() == position.getFile()) {
-					fileIsUnique = false;
-				}
+		boolean fileIsUnique = true;
+		boolean rankIsUnique = true;
+		for (final Piece piece : otherPiecesOfSameType) {
+			final Square otherPosition = piece.getPosition();
+			final Square position = move.getStart();
+			if (otherPosition.getRank() == position.getRank()) {
+				rankIsUnique = false;
 			}
-
-			if (!fileIsUnique) {
-				pgn = start.toString().charAt(1) + pgn;
+			if (otherPosition.getFile() == position.getFile()) {
+				fileIsUnique = false;
 			}
-
-			if (!rankIsUnique) {
-				pgn = start.toString().charAt(0) + pgn;
-			}
-
-			pgn = lastMovedPiece.getPgnAbbreviation() + pgn;
 		}
+
+		if (!fileIsUnique) {
+			pgn = start.toString().charAt(1) + pgn;
+		}
+
+		if (!rankIsUnique) {
+			pgn = start.toString().charAt(0) + pgn;
+		}
+
+		pgn = lastMovedPiece.getPgnAbbreviation() + pgn;
 
 		if (lastCapture == null && start.getRank() != end.getRank() && lastMovedPiece instanceof Pawn) {
 			//en passant
@@ -346,6 +346,19 @@ public class Board {
 
 	public Piece getPieceAt(final Square square) {
 		return board[square.getRank()][square.getFile()];
+	}
+
+	public Piece[][] getBoardArray() {
+		return board;
+	}
+
+	public Map<String, Move> getLegalMovesWithNotation() {
+		final Map<String, Move> result = new HashMap<String, Move>();
+		for (final Move move : calculateLegalMoves()) {
+			result.put(doMove(move, false), move);
+			undoLastMove();
+		}
+		return result;
 	}
 
 }

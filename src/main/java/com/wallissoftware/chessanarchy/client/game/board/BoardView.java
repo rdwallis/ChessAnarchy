@@ -1,7 +1,10 @@
 package com.wallissoftware.chessanarchy.client.game.board;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.allen_sauer.gwt.dnd.client.DragEndEvent;
 import com.allen_sauer.gwt.dnd.client.DragHandler;
@@ -9,11 +12,14 @@ import com.allen_sauer.gwt.dnd.client.DragStartEvent;
 import com.allen_sauer.gwt.dnd.client.PickupDragController;
 import com.allen_sauer.gwt.dnd.client.VetoDragException;
 import com.allen_sauer.gwt.dnd.client.drop.GridConstrainedDropController;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.AbsolutePanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.LayoutPanel;
@@ -21,8 +27,16 @@ import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
+import com.wallissoftware.chessanarchy.client.game.board.piece.images.PieceSprites;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Square;
+import com.wallissoftware.chessanarchy.shared.game.pieces.Bishop;
+import com.wallissoftware.chessanarchy.shared.game.pieces.King;
+import com.wallissoftware.chessanarchy.shared.game.pieces.Knight;
+import com.wallissoftware.chessanarchy.shared.game.pieces.Pawn;
+import com.wallissoftware.chessanarchy.shared.game.pieces.Piece;
+import com.wallissoftware.chessanarchy.shared.game.pieces.Queen;
+import com.wallissoftware.chessanarchy.shared.game.pieces.Rook;
 
 public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements BoardPresenter.MyView, DragHandler {
 	public interface Binder extends UiBinder<Widget, BoardView> {
@@ -34,7 +48,10 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		String darkSquare();
 
 		String lightSquare();
+
 	}
+
+	private final PieceSprites sprites;
 
 	@UiField AbsolutePanel dropSurface;
 
@@ -47,10 +64,13 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	private final List<Widget> rankLabels = new ArrayList<Widget>();
 	private final List<Widget> fileLabels = new ArrayList<Widget>();
 
+	private final Set<GhostAnimation> ghostAnimations = new HashSet<GhostAnimation>();
+
 	private Square startDragSquare;
 
 	@Inject
-	BoardView(final Binder binder) {
+	BoardView(final Binder binder, final PieceSprites sprites) {
+		this.sprites = sprites;
 		initWidget(binder.createAndBindUi(this));
 		dropController = new GridConstrainedDropController(dropSurface, 50, 50);
 
@@ -62,6 +82,36 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 		drawSquares();
 		resetGridLabels();
+		startGhostAnimations();
+
+	}
+
+	private void startGhostAnimations() {
+		Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+
+			@Override
+			public boolean execute() {
+				updateGhostAnimations();
+				return true;
+			}
+
+		}, 100);
+
+	}
+
+	private void updateGhostAnimations() {
+		final long milli = System.currentTimeMillis();
+		final Iterator<GhostAnimation> it = ghostAnimations.iterator();
+		while (it.hasNext()) {
+			final GhostAnimation ghostAnimation = it.next();
+			if (ghostAnimation.isFinished(milli)) {
+				it.remove();
+			} else if (ghostAnimation.isMovementComplete(milli)) {
+				ghostAnimation.getImage().getElement().getStyle().setOpacity(ghostAnimation.getOpacity(milli));
+			} else {
+				dropSurface.setWidgetPosition(ghostAnimation.getImage(), ghostAnimation.getX(milli), ghostAnimation.getY(milli));
+			}
+		}
 
 	}
 
@@ -182,4 +232,69 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		piece.asWidget().removeFromParent();
 
 	}
+
+	@Override
+	public void makeGhostMove(final double startTime, final Piece piece, final Square end) {
+		if (ghostAnimations.size() > 20 || piece == null) {
+			return;
+		}
+		final Image image = new Image();
+		if (piece instanceof Pawn) {
+			if (piece.getColor() == Color.WHITE) {
+				image.setResource(sprites.whitePawn());
+			} else {
+				image.setResource(sprites.blackPawn());
+			}
+		} else if (piece instanceof Rook) {
+			if (piece.getColor() == Color.WHITE) {
+				image.setResource(sprites.whiteRook());
+			} else {
+				image.setResource(sprites.blackRook());
+			}
+		} else if (piece instanceof Knight) {
+			if (piece.getColor() == Color.WHITE) {
+				image.setResource(sprites.whiteKnight());
+			} else {
+				image.setResource(sprites.blackKnight());
+			}
+		} else if (piece instanceof Bishop) {
+			if (piece.getColor() == Color.WHITE) {
+				image.setResource(sprites.whiteBishop());
+			} else {
+				image.setResource(sprites.blackBishop());
+			}
+		} else if (piece instanceof King) {
+			if (piece.getColor() == Color.WHITE) {
+				image.setResource(sprites.whiteKing());
+			} else {
+				image.setResource(sprites.blackKing());
+			}
+		} else if (piece instanceof Queen) {
+			if (piece.getColor() == Color.WHITE) {
+				image.setResource(sprites.whiteQueen());
+			} else {
+				image.setResource(sprites.blackQueen());
+			}
+		}
+
+		final Square start = piece.getPosition();
+		int x = start.getRank() * 50;
+		int y = 350 - (start.getFile() * 50);
+		if (getOrientation() == Color.BLACK) {
+			x = 350 - x;
+			y = 350 - y;
+		}
+
+		int x1 = end.getRank() * 50;
+		int y1 = 350 - (end.getFile() * 50);
+		if (getOrientation() == Color.BLACK) {
+			x1 = 350 - x1;
+			y1 = 350 - y1;
+		}
+
+		dropSurface.add(image, x, y);
+		ghostAnimations.add(new GhostAnimation(startTime + 1000, image, x, y, x1, y1));
+
+	}
+
 }

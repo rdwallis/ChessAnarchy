@@ -16,6 +16,15 @@ public abstract class Piece implements Dto {
 	private int moveCount;
 	private boolean captured = false;
 
+	private static String[] abbreviations = { "p", "k", "b", "q", "r", "n" };
+	private static Set<String> abbreviationSet = new HashSet<String>();
+
+	static {
+		for (int i = 0; i < abbreviations.length; i++) {
+			abbreviationSet.add(abbreviations[i]);
+		}
+	}
+
 	private Set<PieceMoveHandler> pieceMoveHandlers = new HashSet<PieceMoveHandler>();
 
 	Piece() {
@@ -132,5 +141,9 @@ public abstract class Piece implements Dto {
 	}
 
 	public abstract String getPgnAbbreviation();
+
+	public static Set<String> getAllAbbreviations() {
+		return abbreviationSet;
+	};
 
 }

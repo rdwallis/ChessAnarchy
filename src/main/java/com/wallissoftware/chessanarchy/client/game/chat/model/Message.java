@@ -16,9 +16,15 @@ public final class Message extends JavaScriptObject {
 		return this.message;
 	}-*/;
 
-	public final native double getCreated() /*-{
+	private final native String getNativeCreated() /*-{
 		return this.created;
 	}-*/;
+
+	public long getCreated() {
+		final String created = getNativeCreated();
+
+		return Long.valueOf(created);
+	}
 
 	public static Message fromJson(final String json) {
 		return JsonUtils.safeEval(json);

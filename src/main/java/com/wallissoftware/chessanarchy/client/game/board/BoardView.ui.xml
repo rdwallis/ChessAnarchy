@@ -1,13 +1,13 @@
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
-             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
-    <ui:style type="com.wallissoftware.chessanarchy.client.game.board.BoardView.MyStyle">
-    	.boardBackground {
-			
+	xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+	<ui:style
+		type="com.wallissoftware.chessanarchy.client.game.board.BoardView.MyStyle">
+		.boardBackground {
 			border: 2px solid gray;
 			z-index: -1;
 		}
 		
-		.darkSquare, .lightSquare {
+		.darkSquare,.lightSquare {
 			width: 100%;
 			height: 100%;
 		}
@@ -16,7 +16,7 @@
 			background-color: #D18B47;
 		}
 		
-		 .lightSquare {
+		.lightSquare {
 			background-color: #FFCE9E;
 		}
 		
@@ -24,18 +24,20 @@
 			font-size: 16px;
 		}
 		
-    </ui:style>
-    <g:LayoutPanel width="444px" height="444px" ui:field="layoutPanel">
-    	
-    	<g:layer left="8px" width="404px" top="8px" height="404px">
-    		<g:LayoutPanel addStyleNames="{style.boardBackground}" width="400px" height="400px" ui:field="boardBackground">
-    			
-    		</g:LayoutPanel>
-    	</g:layer>
-    	
-    	<g:layer left="10px" width="400px" top="10px" height="400px">
-    		<g:AbsolutePanel ui:field="dropSurface" width="400px" height="400px"></g:AbsolutePanel>
-    	</g:layer>
-    	
-    </g:LayoutPanel>
+		</ui:style>
+	<g:LayoutPanel width="444px" height="444px" ui:field="layoutPanel">
+
+		<g:layer left="8px" width="404px" top="8px" height="404px">
+			<g:LayoutPanel addStyleNames="{style.boardBackground}"
+				width="400px" height="400px" ui:field="boardBackground">
+
+			</g:LayoutPanel>
+		</g:layer>
+
+		<g:layer left="10px" width="400px" top="10px" height="400px">
+			<g:AbsolutePanel ui:field="dropSurface" width="400px"
+				height="400px"></g:AbsolutePanel>
+		</g:layer>
+
+	</g:LayoutPanel>
 </ui:UiBinder>

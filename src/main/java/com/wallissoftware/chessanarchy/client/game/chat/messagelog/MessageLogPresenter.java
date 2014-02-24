@@ -17,6 +17,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
+import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.model.Message;
 import com.wallissoftware.chessanarchy.client.game.chat.model.MessageCache;
 
@@ -31,6 +32,8 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	private final RequestBuilder fullRequestBuilder;
 
 	private List<MessageLink> messageLinks = new ArrayList<MessageLink>();
+
+	private String lastLoadedId;
 
 	@Inject
 	MessageLogPresenter(final EventBus eventBus, final MyView view) {
@@ -65,7 +68,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 				@Override
 				public void onResponseReceived(final Request request, final Response response) {
 					if (200 == response.getStatusCode()) {
-						processMessages(response.getText(), 0);
+						processMessages(response.getText(), true, 0);
 					} else {
 					}
 
@@ -78,7 +81,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
 	}
 
-	private void processMessages(final String messagesJson, final int ancestorCount) {
+	private void processMessages(final String messagesJson, final boolean checkIfMissedOne, final int ancestorCount) {
 		final MessageCache messageCache = MessageCache.fromJson(messagesJson);
 		final MessageLink link = new MessageLink(messageCache);
 		if (!messageLinks.contains(link)) {
@@ -86,14 +89,28 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 			for (int i = 0; i < messageCache.getMessages().length(); i++) {
 				getView().addMessage(messageCache.getMessages().get(i));
 			}
+			if (checkIfMissedOne && ancestorCount >= 0) {
+				fireEvent(new ReceivedMessageCacheEvent(messageCache));
+			}
 		}
-		if (ancestorCount > 0 || !getView().isScrollBarShowing() || Math.abs(messageCache.getCreated() - System.currentTimeMillis()) < 10000) {
+
+		if (checkIfMissedOne && lastLoadedId != null && !lastLoadedId.equals(link.getPreviousId())) {
+			fetchMessage(messageCache.getPreviousId(), true, ancestorCount - 1);
+		} else if (ancestorCount > 0 || !getView().isScrollBarShowing() || Math.abs(messageCache.getCreated() - System.currentTimeMillis()) < 10000) {
 			fetchMessage(messageCache.getPreviousId(), ancestorCount - 1);
+		}
+
+		if (checkIfMissedOne) {
+			lastLoadedId = link.getId();
 		}
 
 	}
 
 	private void fetchMessage(final String id, final int ancestorCount) {
+		fetchMessage(id, false, ancestorCount);
+	}
+
+	private void fetchMessage(final String id, final boolean checkIfMiisedOne, final int ancestorCount) {
 		if (!messageHasBeenLoaded(id)) {
 			final RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/message?id=" + id));
 			try {
@@ -105,7 +122,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 					@Override
 					public void onResponseReceived(final Request request, final Response response) {
 						if (200 == response.getStatusCode()) {
-							processMessages(response.getText(), ancestorCount);
+							processMessages(response.getText(), checkIfMiisedOne, ancestorCount);
 						} else {
 						}
 

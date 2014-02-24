@@ -50,4 +50,17 @@ public class Square {
 		return true;
 	}
 
+	public static Square fromString(final String input) {
+		final int rank = input.toLowerCase().charAt(0) - 97;
+		final int file = input.charAt(1) - 49;
+		if (rank < 0 || rank > 7) {
+			return null;
+		}
+
+		if (file < 0 || file > 7) {
+			return null;
+		}
+		return new Square(rank, file);
+	}
+
 }

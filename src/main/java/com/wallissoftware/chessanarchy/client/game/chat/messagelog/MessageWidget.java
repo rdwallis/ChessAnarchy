@@ -34,7 +34,7 @@ public class MessageWidget extends Composite {
 		this.message = new InlineLabel(message.getFormattedMessage());
 		this.name = new InlineLabel("<" + message.getName() + ">");
 
-		this.creation = new InlineLabel(DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM).format(new Date((long) message.getCreated())));
+		this.creation = new InlineLabel(DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM).format(new Date(message.getCreated())));
 		this.creationTime = message.getCreated();
 		initWidget(uiBinder.createAndBindUi(this));
 		if (message.is3rdPerson() || message.isNickChange()) {

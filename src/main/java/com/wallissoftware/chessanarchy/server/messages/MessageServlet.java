@@ -86,7 +86,7 @@ public class MessageServlet extends HttpServlet {
 				}
 				SessionUtils.setName(req.getSession(), name);
 			}
-			map.put("created", System.currentTimeMillis());
+			map.put("created", System.currentTimeMillis() + "");
 			map.put("message", message);
 
 			final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();

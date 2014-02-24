@@ -72,7 +72,7 @@ public class Move implements Dto {
 
 	@Override
 	public String toString() {
-		return "Move from " + start + " to " + end;
+		return start + "-" + end;
 	}
 
 	public boolean matchesWithoutPromotion(final Move move) {

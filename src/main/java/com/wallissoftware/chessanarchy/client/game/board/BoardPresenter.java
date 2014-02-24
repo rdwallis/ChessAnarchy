@@ -1,5 +1,7 @@
 package com.wallissoftware.chessanarchy.client.game.board;
 
+import java.util.Map;
+
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -9,6 +11,8 @@ import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
 import com.wallissoftware.chessanarchy.client.game.board.piece.PiecePresenter;
 import com.wallissoftware.chessanarchy.client.game.board.promotion.PromotionPresenter;
+import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
+import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent.ReceivedMessageCacheHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
 import com.wallissoftware.chessanarchy.shared.game.Board;
 import com.wallissoftware.chessanarchy.shared.game.Move;
@@ -16,7 +20,7 @@ import com.wallissoftware.chessanarchy.shared.game.Square;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Piece;
 import com.wallissoftware.chessanarchy.shared.game.pieces.PieceMoveHandler;
 
-public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers {
+public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler {
 	public interface MyView extends View, HasUiHandlers<BoardUiHandlers> {
 
 		void setPieceInSquare(IsWidget isWidget, Square square);
@@ -24,6 +28,8 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		void capture(IsWidget isWidget);
 
 		void removeFromBoard(IsWidget piece);
+
+		void makeGhostMove(final double startTime, Piece piece, Square end);
 
 	}
 
@@ -44,7 +50,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	@Override
 	protected void onBind() {
 		super.onBind();
-
+		addRegisteredHandler(ReceivedMessageCacheEvent.getType(), this);
 		drawBoard();
 
 	}
@@ -80,7 +86,11 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	@Override
 	public boolean isMoveLegal(final Square start, final Square end) {
-		return board.isPartialMoveLegal(start, end);
+		if (!board.isPartialMoveLegal(start, end)) {
+			fireEvent(new SendMessageEvent(new Move(start, end).toString()));
+			return false;
+		}
+		return true;
 
 	}
 
@@ -96,6 +106,37 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	private void makeMove(final Move move) {
 		fireEvent(new SendMessageEvent(board.doMove(move, true)));
+	}
+
+	@Override
+	public void onReceivedMessageCache(final ReceivedMessageCacheEvent event) {
+		final Map<String, Move> notationMap = board.getLegalMovesWithNotation();
+		for (int i = 0; i < event.getMessageCache().getMessages().length(); i++) {
+			final String message = event.getMessageCache().getMessages().get(i).getMessage().toLowerCase();
+			final long created = event.getMessageCache().getMessages().get(i).getCreated();
+			if (System.currentTimeMillis() - created < 4000) {
+				if (message.length() == 5 && message.charAt(2) == '-') {
+					final Square startSquare = Square.fromString(message.substring(0, 2));
+					if (startSquare != null) {
+						final Square endSquare = Square.fromString(message.substring(3, 5));
+						if (endSquare != null) {
+							makeGhostMove(created, new Move(startSquare, endSquare));
+						}
+					}
+				} else if (notationMap.containsKey(message)) {
+					makeGhostMove(created, notationMap.get(message));
+				} else {
+					//TODO maybe ghost guess at illegal moves???
+				}
+			}
+
+		}
+
+	}
+
+	private void makeGhostMove(final double startTime, final Move move) {
+		getView().makeGhostMove(startTime, board.getPieceAt(move.getStart()), move.getEnd());
+
 	}
 
 }

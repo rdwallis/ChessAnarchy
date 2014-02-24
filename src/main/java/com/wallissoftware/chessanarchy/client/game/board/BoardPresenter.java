@@ -14,13 +14,17 @@ import com.wallissoftware.chessanarchy.client.game.board.promotion.PromotionPres
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent.ReceivedMessageCacheHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
+import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
+import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
+import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent.GameStateUpdatedHandler;
 import com.wallissoftware.chessanarchy.shared.game.Board;
 import com.wallissoftware.chessanarchy.shared.game.Move;
 import com.wallissoftware.chessanarchy.shared.game.Square;
+import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Piece;
 import com.wallissoftware.chessanarchy.shared.game.pieces.PieceMoveHandler;
 
-public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler {
+public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler, GameStateUpdatedHandler {
 	public interface MyView extends View, HasUiHandlers<BoardUiHandlers> {
 
 		void setPieceInSquare(IsWidget isWidget, Square square);
@@ -31,15 +35,19 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 		void makeGhostMove(final double startTime, Piece piece, Square end);
 
+		void clearBoard();
+
 	}
 
 	private final Provider<PiecePresenter> piecePresenterProvider;
 	private final Board board;
 	private final PromotionPresenter promotionPresenter;
+	private final GameStateProvider gameStateProvider;
 
 	@Inject
-	BoardPresenter(final EventBus eventBus, final MyView view, final Provider<PiecePresenter> piecePresenterProvider, final Board board, final PromotionPresenter promotionPresenter) {
+	BoardPresenter(final EventBus eventBus, final MyView view, final Provider<PiecePresenter> piecePresenterProvider, final Board board, final PromotionPresenter promotionPresenter, final GameStateProvider gameStateProvider) {
 		super(eventBus, view);
+		this.gameStateProvider = gameStateProvider;
 		this.promotionPresenter = promotionPresenter;
 		this.piecePresenterProvider = piecePresenterProvider;
 		this.board = board;
@@ -51,11 +59,13 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	protected void onBind() {
 		super.onBind();
 		addRegisteredHandler(ReceivedMessageCacheEvent.getType(), this);
+		addRegisteredHandler(GameStateUpdatedEvent.getType(), this);
 		drawBoard();
 
 	}
 
 	private void drawBoard() {
+		getView().clearBoard();
 		for (final Piece piece : board.getPieces()) {
 			final PiecePresenter piecePresenter = getPiecePresenter(piece);
 			getView().setPieceInSquare(piecePresenter.getView(), piecePresenter.getPosition());
@@ -136,6 +146,18 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	private void makeGhostMove(final double startTime, final Move move) {
 		getView().makeGhostMove(startTime, board.getPieceAt(move.getStart()), move.getEnd());
+
+	}
+
+	@Override
+	public void onGameStateUpdated(final GameStateUpdatedEvent event) {
+		try {
+			board.resetFromMoveList(gameStateProvider.get());
+			drawBoard();
+		} catch (final IllegalMoveException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 

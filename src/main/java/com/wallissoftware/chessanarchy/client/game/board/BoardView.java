@@ -106,9 +106,9 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 			final GhostAnimation ghostAnimation = it.next();
 			if (ghostAnimation.isFinished(milli)) {
 				it.remove();
-			} else if (ghostAnimation.isMovementComplete(milli)) {
-				ghostAnimation.getImage().getElement().getStyle().setOpacity(ghostAnimation.getOpacity(milli));
+				dropSurface.remove(ghostAnimation.getImage());
 			} else {
+				ghostAnimation.getImage().getElement().getStyle().setOpacity(ghostAnimation.getOpacity(milli));
 				dropSurface.setWidgetPosition(ghostAnimation.getImage(), ghostAnimation.getX(milli), ghostAnimation.getY(milli));
 			}
 		}
@@ -294,6 +294,12 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 		dropSurface.add(image, x, y);
 		ghostAnimations.add(new GhostAnimation(startTime + 1000, image, x, y, x1, y1));
+
+	}
+
+	@Override
+	public void clearBoard() {
+		dropSurface.clear();
 
 	}
 

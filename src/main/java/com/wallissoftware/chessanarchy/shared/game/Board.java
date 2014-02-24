@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Bishop;
 import com.wallissoftware.chessanarchy.shared.game.pieces.King;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Knight;
@@ -33,6 +34,27 @@ public class Board {
 	private Set<Piece> capturedPieces = new HashSet<Piece>();
 
 	private Set<Move> lastCalculatedLegalMoves = new HashSet<Move>();
+
+	public Board(final List<String> moveList) throws IllegalMoveException {
+		resetFromMoveList(moveList);
+	}
+
+	public void resetFromMoveList(final List<String> moveList) throws IllegalMoveException {
+		reset();
+		for (final String pgn : moveList) {
+			doMove(pgn);
+		}
+	}
+
+	private void doMove(final String pgn) throws IllegalMoveException {
+		final Map<String, Move> notationMap = getLegalMovesWithNotation();
+		if (notationMap.containsKey(pgn)) {
+			doMove(notationMap.get(pgn), true);
+		} else {
+			throw new IllegalMoveException();
+		}
+
+	}
 
 	public Board() {
 		reset();
@@ -359,6 +381,18 @@ public class Board {
 			undoLastMove();
 		}
 		return result;
+	}
+
+	public Map<String, String> getAllLegalMovesWithNotation() {
+		final Map<String, String> result = new HashMap<String, String>();
+		for (final Move move : calculateLegalMoves()) {
+			final String pgn = doMove(move, false);
+			result.put(pgn, pgn);
+			result.put(move.toString(), pgn);
+			undoLastMove();
+		}
+		return result;
+
 	}
 
 }

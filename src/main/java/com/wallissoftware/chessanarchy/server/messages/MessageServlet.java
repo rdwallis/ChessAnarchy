@@ -26,6 +26,7 @@ import com.google.inject.Singleton;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.wallissoftware.chessanarchy.server.session.SessionUtils;
+import com.wallissoftware.chessanarchy.shared.game.Color;
 
 @Singleton
 public class MessageServlet extends HttpServlet {
@@ -53,10 +54,10 @@ public class MessageServlet extends HttpServlet {
 				final String maxAge = idSupplied ? "31556926" : "1";
 				resp.setHeader("cache-control", "public, max-age=" + maxAge);
 				resp.getWriter().write(messageCache.getJson());
+				return;
 			}
-		} else {
-			resp.sendError(404);
 		}
+		resp.sendError(404);
 
 	}
 
@@ -75,7 +76,7 @@ public class MessageServlet extends HttpServlet {
 		IOUtils.copy(req.getInputStream(), writer, "UTF-8");
 		final String message = StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(writer.toString()));
 		if (message != null && !message.isEmpty()) {
-			final Map<String, Object> map = new HashMap<String, Object>();
+			final Map<String, String> map = new HashMap<String, String>();
 			map.put("userId", SessionUtils.getUserId(req.getSession()));
 			map.put("name", SessionUtils.getName(req.getSession()));
 			if (message.toLowerCase().startsWith("/nick")) {
@@ -86,14 +87,19 @@ public class MessageServlet extends HttpServlet {
 				}
 				SessionUtils.setName(req.getSession(), name);
 			}
+
 			map.put("created", System.currentTimeMillis() + "");
 			map.put("message", message);
+			final Color color = SessionUtils.getColor(req.getSession());
+			if (color != null) {
+				map.put("color", color.name());
+			}
 
 			final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 			@SuppressWarnings("unchecked")
-			Set<Map<String, Object>> messageQueue = (Set<Map<String, Object>>) cache.get(MESSAGE_QUEUE_KEY);
+			Set<Map<String, String>> messageQueue = (Set<Map<String, String>>) cache.get(MESSAGE_QUEUE_KEY);
 			if (messageQueue == null) {
-				messageQueue = new HashSet<Map<String, Object>>();
+				messageQueue = new HashSet<Map<String, String>>();
 			}
 			messageQueue.add(map);
 			cache.put(MESSAGE_QUEUE_KEY, messageQueue);

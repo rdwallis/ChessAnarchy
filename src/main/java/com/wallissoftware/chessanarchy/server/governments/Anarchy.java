@@ -2,18 +2,16 @@ package com.wallissoftware.chessanarchy.server.governments;
 
 import java.util.List;
 
-import com.wallissoftware.chessanarchy.shared.game.Move;
-
 public class Anarchy extends SystemOfGovernment {
 
 	@Override
-	Move getMove(final List<MoveRequest> moveRequest) {
-		return moveRequest.get(0).getMove();
+	public boolean isReady(final long timeOfLastMove, final List<MoveRequest> moveRequests) {
+		return !moveRequests.isEmpty();
 	}
 
 	@Override
-	public boolean isReady(final List<MoveRequest> moveRequests) {
-		return !moveRequests.isEmpty();
+	public String getMove(final List<MoveRequest> moveRequest) {
+		return moveRequest.get(0).getMove();
 	}
 
 }

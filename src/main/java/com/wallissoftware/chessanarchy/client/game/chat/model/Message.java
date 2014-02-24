@@ -2,6 +2,7 @@ package com.wallissoftware.chessanarchy.client.game.chat.model;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsonUtils;
+import com.wallissoftware.chessanarchy.shared.game.Color;
 
 public final class Message extends JavaScriptObject {
 
@@ -12,6 +13,10 @@ public final class Message extends JavaScriptObject {
 		return this.name;
 	}-*/;
 
+	public final native String getUserId() /*-{
+		return this.userId;
+	}-*/;
+
 	public final native String getMessage() /*-{
 		return this.message;
 	}-*/;
@@ -19,6 +24,18 @@ public final class Message extends JavaScriptObject {
 	private final native String getNativeCreated() /*-{
 		return this.created;
 	}-*/;
+
+	private final native String getNativeColor() /*-{
+		return this.color;
+	}-*/;
+
+	private Color getColor() {
+		final String color = getNativeColor();
+		if (color == null) {
+			return null;
+		}
+		return Color.valueOf(color);
+	}
 
 	public long getCreated() {
 		final String created = getNativeCreated();
@@ -56,4 +73,7 @@ public final class Message extends JavaScriptObject {
 
 	}
 
+	public boolean isFromGameMaster() {
+		return getUserId().equals("Game Master");
+	}
 }

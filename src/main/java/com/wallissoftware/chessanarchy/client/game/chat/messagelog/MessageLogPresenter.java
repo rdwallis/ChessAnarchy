@@ -17,6 +17,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
+import com.wallissoftware.chessanarchy.client.game.chat.events.GameMasterMessageEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.model.Message;
 import com.wallissoftware.chessanarchy.client.game.chat.model.MessageCache;
@@ -87,6 +88,10 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 		if (!messageLinks.contains(link)) {
 			messageLinks.add(link);
 			for (int i = 0; i < messageCache.getMessages().length(); i++) {
+				final Message message = messageCache.getMessages().get(i);
+				if (checkIfMissedOne && ancestorCount >= 0 && message.isFromGameMaster()) {
+					fireEvent(new GameMasterMessageEvent(message.getMessage()));
+				}
 				getView().addMessage(messageCache.getMessages().get(i));
 			}
 			if (checkIfMissedOne && ancestorCount >= 0) {

@@ -45,9 +45,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 
 			messageMap.put("messages", messageQueue);
 
-			updateGameState(req.getSession(), messageQueue);
-
-			final MessageCache messageCache = new MessageCache(previousId, new Gson().toJson(messageMap));
+			final MessageCache messageCache = new MessageCache(updateGameState(req.getSession(), messageQueue), previousId, new Gson().toJson(messageMap));
 			final Objectify ofy = ObjectifyService.ofy();
 			ofy.save().entities(messageCache).now();
 
@@ -56,7 +54,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 		}
 	}
 
-	private void updateGameState(final HttpSession session, final Set<Map<String, String>> messageQueue) {
+	private boolean updateGameState(final HttpSession session, final Set<Map<String, String>> messageQueue) {
 		final Objectify ofy = ObjectifyService.ofy();
 		final Long latestGameStateId = LatestGameStateId.get();
 		if (latestGameStateId != null) {
@@ -82,39 +80,50 @@ public class UpdateMessagesServlet extends HttpServlet {
 						}
 					}
 
-					if (currentPlayer == Color.valueOf(message.get("color")) || moveMap.containsKey(message.get("message"))) {
+					if (message.get("color") != null && currentPlayer == Color.valueOf(message.get("color")) || moveMap.containsKey(message.get("message"))) {
 						gameState.addMoveRequest(new MoveRequest(Color.valueOf(message.get("color")), message.get("userId"), moveMap.get(message.get("message"))));
 					}
 				}
 
 				final String serverMessage = gameState.processMoveRequests();
 				if (serverMessage != null) {
-					final Map<String, String> serverMessageMap = new HashMap<String, String>();
-					serverMessageMap.put("userId", "Game Master");
-					serverMessageMap.put("name", "Game Master");
-					serverMessageMap.put("created", System.currentTimeMillis() + "");
-					serverMessageMap.put("message", serverMessage);
-					messageQueue.add(serverMessageMap);
+
+					messageQueue.add(createServerMessageMap(serverMessage));
 				}
 				ofy.save().entity(gameState);
 
 				if (gameState.isComplete()) {
-					createNewGameState(!gameState.swapColors());
+
+					messageQueue.add(createServerMessageMap("STARTING NEW GAME: " + createNewGameState(!gameState.swapColors())));
+					return true;
 				}
 			}
 
 		} else {
-			createNewGameState(false);
+
+			messageQueue.add(createServerMessageMap("STARTING NEW GAME: " + createNewGameState(false)));
+			return true;
 		}
+		return false;
 
 	}
 
-	private void createNewGameState(final boolean swapColors) {
+	private long createNewGameState(final boolean swapColors) {
 		final Objectify ofy = ObjectifyService.ofy();
 		final GameState gameState = new GameState(swapColors);
 		ofy.save().entity(gameState).now();
 		LatestGameStateId.set(gameState.getId());
+		return gameState.getId();
 
+	}
+
+	private Map<String, String> createServerMessageMap(final String message) {
+		final Map<String, String> serverMessageMap = new HashMap<String, String>();
+		serverMessageMap.put("userId", "Game Master");
+		serverMessageMap.put("name", "Game Master");
+		serverMessageMap.put("created", System.currentTimeMillis() + "");
+		serverMessageMap.put("message", message);
+		return serverMessageMap;
 	}
 
 }

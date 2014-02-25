@@ -14,6 +14,7 @@ import com.wallissoftware.chessanarchy.client.game.board.promotion.PromotionPres
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent.ReceivedMessageCacheHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
+import com.wallissoftware.chessanarchy.client.game.chat.model.Message;
 import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent.GameStateUpdatedHandler;
@@ -121,9 +122,9 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	@Override
 	public void onReceivedMessageCache(final ReceivedMessageCacheEvent event) {
 		final Map<String, Move> notationMap = board.getLegalMovesWithNotation();
-		for (int i = 0; i < event.getMessageCache().getMessages().length(); i++) {
-			final String message = event.getMessageCache().getMessages().get(i).getMessage().toLowerCase();
-			final long created = event.getMessageCache().getMessages().get(i).getCreated();
+		for (final Message msg : event.getMessageCache().getMessages()) {
+			final String message = msg.getMessage();
+			final long created = msg.getCreated();
 			if (System.currentTimeMillis() - created < 4000) {
 				if (message.length() == 5 && message.charAt(2) == '-') {
 					final Square startSquare = Square.fromString(message.substring(0, 2));
@@ -152,7 +153,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	@Override
 	public void onGameStateUpdated(final GameStateUpdatedEvent event) {
 		try {
-			board.resetFromMoveList(gameStateProvider.get());
+			board.resetFromMoveList(gameStateProvider.get().getMoveList());
 			drawBoard();
 		} catch (final IllegalMoveException e) {
 			// TODO Auto-generated catch block

@@ -1,21 +1,37 @@
 package com.wallissoftware.chessanarchy.shared.government;
 
-public enum Government {
-	ANARCHY("Anarchy", "Under anarchy the first legal move recieved by server will be played immediately");
+public enum Government implements GovernmentInfo {
+	ANARCHY(new AnarchyInfo());
 
-	private final String description;
-	private final String name;
+	private final GovernmentInfo governmentInfo;
 
-	Government(final String name, final String description) {
-		this.name = name;
-		this.description = description;
+	Government(final GovernmentInfo governmentInfo) {
+		this.governmentInfo = governmentInfo;
 	}
 
-	public String getDescription() {
-		return description;
-	}
-
+	@Override
 	public String getName() {
-		return name;
+		return governmentInfo.getName();
 	}
+
+	@Override
+	public String getDescription() {
+		return governmentInfo.getDescription();
+	}
+
+	@Override
+	public String getJoinMessage() {
+		return governmentInfo.getJoinMessage();
+	}
+
+	@Override
+	public String getPlayerCountMessage(final int... playerCount) {
+		return governmentInfo.getPlayerCountMessage(playerCount);
+	}
+
+	@Override
+	public String getUsingMessage() {
+		return governmentInfo.getUsingMessage();
+	}
+
 }

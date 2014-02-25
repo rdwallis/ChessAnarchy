@@ -1,0 +1,12 @@
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+    <ui:style>
+    </ui:style>
+    <g:HTMLPanel>
+    	<g:InlineLabel ui:field="color">White</g:InlineLabel>
+    	<g:InlineLabel ui:field="isUsing">is living in Anarchy</g:InlineLabel>
+    	
+    	<g:Label ui:field="playerCount">1000 anarchists</g:Label>
+    	<g:Button ui:field="joinTeamButton">Become an Anarchist</g:Button>
+    </g:HTMLPanel>
+</ui:UiBinder>

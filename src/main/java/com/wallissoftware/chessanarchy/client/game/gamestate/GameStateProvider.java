@@ -1,8 +1,5 @@
 package com.wallissoftware.chessanarchy.client.game.gamestate;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.http.client.Request;
@@ -21,13 +18,15 @@ import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpd
 import com.wallissoftware.chessanarchy.client.game.gamestate.model.GameState;
 
 @Singleton
-public class GameStateProvider implements Provider<List<String>>, GameMasterMessageHandler {
+public class GameStateProvider implements Provider<GameState>, GameMasterMessageHandler {
 
 	private EventBus eventBus;
 
 	private final RequestBuilder requestBuilder;
 
-	private List<String> moveList = new ArrayList<String>();
+	private GameState gameState;
+
+	private String fetchedJson;
 
 	@Inject
 	GameStateProvider(final EventBus eventBus) {
@@ -68,18 +67,16 @@ public class GameStateProvider implements Provider<List<String>>, GameMasterMess
 	}
 
 	private void processJson(final String json) {
-		final GameState gameState = GameState.fromJson(json);
-		if (!moveList.equals(gameState.getMoveList())) {
-			moveList = gameState.getMoveList();
+		if (fetchedJson == null || !json.equals(fetchedJson)) {
+			fetchedJson = json;
+			gameState = GameState.fromJson(json);
 			eventBus.fireEvent(new GameStateUpdatedEvent());
-
 		}
-
 	}
 
 	@Override
-	public List<String> get() {
-		return moveList;
+	public GameState get() {
+		return gameState;
 	}
 
 	@Override

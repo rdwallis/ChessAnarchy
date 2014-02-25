@@ -83,6 +83,8 @@ public class GameState {
 		jsonMap.put("id", id + "");
 		jsonMap.put("created", creationTime + "");
 		jsonMap.put("swapColors", swapColors);
+		jsonMap.put("whiteGovernment", whiteGovernment.name());
+		jsonMap.put("blackGovernment", whiteGovernment.name());
 		jsonMap.put("moveList", moveList);
 		return new Gson().toJson(jsonMap);
 

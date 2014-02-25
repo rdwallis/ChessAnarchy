@@ -4,7 +4,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsonUtils;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 
-public final class Message extends JavaScriptObject {
+public final class Message extends JavaScriptObject implements Comparable<Message> {
 
 	protected Message() {
 	};
@@ -75,5 +75,17 @@ public final class Message extends JavaScriptObject {
 
 	public boolean isFromGameMaster() {
 		return getUserId().equals("Game Master");
+	}
+
+	@Override
+	public int compareTo(final Message o) {
+		return Long.compare(o.getCreated(), getCreated());
+	}
+
+	public String getNewGameId() {
+		if (isFromGameMaster() && getMessage().startsWith("STARTING NEW GAME: ")) {
+			return getMessage().replace("STARTING NEW GAME: ", "");
+		}
+		return null;
 	}
 }

@@ -38,22 +38,41 @@ public class MessageServlet extends HttpServlet {
 	@Override
 	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
 		final String idStr = req.getParameter("id");
+
 		final Long id;
 		final boolean idSupplied = idStr != null;
+		boolean toGameStart = false;
 		if (idSupplied) {
 			id = Long.valueOf(idStr);
+			toGameStart = req.getParameter("tgs") != null;
 		} else {
 			id = LatestMessageId.get();
 		}
 		if (id != null) {
 
 			final Objectify ofy = ObjectifyService.ofy();
-			final MessageCache messageCache = ofy.load().type(MessageCache.class).id(id).getValue();
+			MessageCache messageCache = ofy.load().type(MessageCache.class).id(id).getValue();
 			if (messageCache != null) {
 				resp.setContentType("application/json");
 				final String maxAge = idSupplied ? "31556926" : "1";
 				resp.setHeader("cache-control", "public, max-age=" + maxAge);
-				resp.getWriter().write(messageCache.getJson());
+
+				if (toGameStart) {
+					resp.getWriter().write("[");
+					resp.getWriter().write(messageCache.getJson());
+					while (messageCache.getPreviousId() != null) {
+						messageCache = ofy.load().type(MessageCache.class).id(messageCache.getPreviousId()).getValue();
+						resp.getWriter().write(",");
+						resp.getWriter().write(messageCache.getJson());
+						if (messageCache.isGameStart()) {
+							break;
+						}
+					}
+					resp.getWriter().write("]");
+				} else {
+					resp.getWriter().write(messageCache.getJson());
+				}
+
 				return;
 			}
 		}
@@ -61,14 +80,14 @@ public class MessageServlet extends HttpServlet {
 
 	}
 
-	@Override
+	/*@Override
 	protected long getLastModified(final HttpServletRequest req) {
 		final Long lastUpdateTime = LastUpdateTime.getLastUpdateTime();
 		if (lastUpdateTime == null) {
 			return System.currentTimeMillis();
 		}
 		return lastUpdateTime;
-	}
+	}*/
 
 	@Override
 	protected void doPut(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {

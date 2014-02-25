@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.core.client.JsonUtils;
+import com.wallissoftware.chessanarchy.shared.government.Government;
 
 public final class GameState extends JavaScriptObject {
 
@@ -20,7 +21,7 @@ public final class GameState extends JavaScriptObject {
 		return this.swapColors;
 	}-*/;
 
-	public native JsArrayString getNativeMoveList() /*-{
+	private native JsArrayString getNativeMoveList() /*-{
 		return this.moveList;
 	}-*/;
 
@@ -30,6 +31,22 @@ public final class GameState extends JavaScriptObject {
 			result.add(getNativeMoveList().get(i));
 		}
 		return result;
+	}
+
+	private native String getNativeWhiteGovernment()/*-{
+		return this.whiteGovernment;
+	}-*/;
+
+	private native String getNativeBlackGovernment()/*-{
+		return this.blackGovernment;
+	}-*/;
+
+	public Government getWhiteGovernment() {
+		return Government.valueOf(getNativeWhiteGovernment());
+	}
+
+	public Government getBlackGovernment() {
+		return Government.valueOf(getNativeBlackGovernment());
 	}
 
 	public static GameState fromJson(final String json) {

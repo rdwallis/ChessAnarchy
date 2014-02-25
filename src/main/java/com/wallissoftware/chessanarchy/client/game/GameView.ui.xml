@@ -7,7 +7,9 @@
 		}
     </ui:style>
     <g:HTMLPanel>
+    	<g:SimplePanel ui:field="topTeamPanel"/>
     	<g:SimplePanel ui:field="boardPanel" addStyleNames="{style.responsive}"/>
     	<g:SimplePanel ui:field="chatPanel" addStyleNames="{style.responsive}" width="400px" height="600px"/>
+    	<g:SimplePanel ui:field="bottomTeamPanel"/>
     </g:HTMLPanel>
 </ui:UiBinder>

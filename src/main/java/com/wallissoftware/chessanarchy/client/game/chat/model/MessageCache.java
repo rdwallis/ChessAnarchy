@@ -1,5 +1,8 @@
 package com.wallissoftware.chessanarchy.client.game.chat.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsonUtils;
@@ -17,12 +20,30 @@ public final class MessageCache extends JavaScriptObject {
 		return this.id;
 	}-*/;
 
-	public native JsArray<Message> getMessages() /*-{
+	private native JsArray<Message> getNativeMessages() /*-{
 		return this.messages;
 	}-*/;
 
-	public static MessageCache fromJson(final String json) {
+	public List<Message> getMessages() {
+		final List<Message> result = new ArrayList<Message>();
+		final JsArray<Message> jsArray = getNativeMessages();
+		for (int i = 0; i < jsArray.length(); i++) {
+			result.add(jsArray.get(i));
+		}
+		return result;
+	}
+
+	private static JsArray<MessageCache> nativeFromJson(final String json) {
 		return JsonUtils.safeEval(json);
+	}
+
+	public static List<MessageCache> fromJson(final String json) {
+		final List<MessageCache> result = new ArrayList<MessageCache>();
+		final JsArray<MessageCache> jsArray = nativeFromJson(json);
+		for (int i = 0; i < jsArray.length(); i++) {
+			result.add(jsArray.get(i));
+		}
+		return result;
 	}
 
 	private final native String getNativeCreated() /*-{

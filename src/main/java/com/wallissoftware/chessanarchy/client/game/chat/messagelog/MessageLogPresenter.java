@@ -2,7 +2,9 @@ package com.wallissoftware.chessanarchy.client.game.chat.messagelog;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
@@ -32,9 +34,14 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
 	private final RequestBuilder fullRequestBuilder;
 
-	private List<MessageLink> messageLinks = new ArrayList<MessageLink>();
+	private Set<String> loadedMessageCacheIds = new HashSet<String>();
 
-	private String lastLoadedId;
+	private List<Message> messages = new ArrayList<Message>();
+
+	private List<Message> gameMasterMessages = new ArrayList<Message>();
+
+	private long earliestMessageCacheCreationTime = -1;
+	private String earliestMessageCacheId = null;
 
 	@Inject
 	MessageLogPresenter(final EventBus eventBus, final MyView view) {
@@ -69,7 +76,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 				@Override
 				public void onResponseReceived(final Request request, final Response response) {
 					if (200 == response.getStatusCode()) {
-						processMessages(response.getText(), true, 0);
+						processMessages("[" + response.getText() + "]", false);
 					} else {
 					}
 
@@ -82,95 +89,110 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
 	}
 
-	private void processMessages(final String messagesJson, final boolean checkIfMissedOne, final int ancestorCount) {
-		final MessageCache messageCache = MessageCache.fromJson(messagesJson);
-		final MessageLink link = new MessageLink(messageCache);
-		if (!messageLinks.contains(link)) {
-			messageLinks.add(link);
-			for (int i = 0; i < messageCache.getMessages().length(); i++) {
-				final Message message = messageCache.getMessages().get(i);
-				if (checkIfMissedOne && ancestorCount >= 0 && message.isFromGameMaster()) {
-					fireEvent(new GameMasterMessageEvent(message.getMessage()));
+	private void processMessages(final String messagesJson, final boolean toGameStart) {
+		final List<MessageCache> messageCacheList = MessageCache.fromJson(messagesJson);
+		for (final MessageCache messageCache : messageCacheList) {
+			if (loadedMessageCacheIds.add(messageCache.getId())) {
+				for (final Message message : messageCache.getMessages()) {
+					addMessage(message);
+
 				}
-				getView().addMessage(messageCache.getMessages().get(i));
-			}
-			if (checkIfMissedOne && ancestorCount >= 0) {
+				if (!toGameStart) {
+					if (messageCache.getPreviousId() != null && !loadedMessageCacheIds.contains(messageCache.getPreviousId())) {
+						fetchMessage(messageCache.getPreviousId(), true);
+					}
+				}
+				if (earliestMessageCacheCreationTime == -1 || messageCache.getCreated() < earliestMessageCacheCreationTime) {
+					earliestMessageCacheId = messageCache.getPreviousId();
+					earliestMessageCacheCreationTime = messageCache.getCreated();
+				}
 				fireEvent(new ReceivedMessageCacheEvent(messageCache));
 			}
-		}
 
-		if (checkIfMissedOne && lastLoadedId != null && !lastLoadedId.equals(link.getPreviousId())) {
-			fetchMessage(messageCache.getPreviousId(), true, ancestorCount - 1);
-		} else if (ancestorCount > 0 || !getView().isScrollBarShowing() || Math.abs(messageCache.getCreated() - System.currentTimeMillis()) < 10000) {
-			fetchMessage(messageCache.getPreviousId(), ancestorCount - 1);
 		}
-
-		if (checkIfMissedOne) {
-			lastLoadedId = link.getId();
+		if (!getView().isScrollBarShowing()) {
+			prependEarlierMessages();
 		}
 
 	}
 
-	private void fetchMessage(final String id, final int ancestorCount) {
-		fetchMessage(id, false, ancestorCount);
-	}
-
-	private void fetchMessage(final String id, final boolean checkIfMiisedOne, final int ancestorCount) {
-		if (!messageHasBeenLoaded(id)) {
-			final RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/message?id=" + id));
-			try {
-				requestBuilder.sendRequest(null, new RequestCallback() {
-					@Override
-					public void onError(final Request request, final Throwable exception) {
-					}
-
-					@Override
-					public void onResponseReceived(final Request request, final Response response) {
-						if (200 == response.getStatusCode()) {
-							processMessages(response.getText(), checkIfMiisedOne, ancestorCount);
-						} else {
-						}
-
-					}
-
-				});
-			} catch (final RequestException e) {
-				// Couldn't connect to server
+	private void addMessage(final Message message) {
+		getView().addMessage(message);
+		messages.add(message);
+		if (message.isFromGameMaster()) {
+			gameMasterMessages.add(message);
+			if (System.currentTimeMillis() - message.getCreated() < 10000) {
+				fireEvent(new GameMasterMessageEvent(message.getMessage()));
 			}
 		}
+
 	}
 
-	private boolean messageHasBeenLoaded(final String id) {
-		if (id == null) {
-			return true;
-		}
-		for (final MessageLink messageLink : messageLinks) {
-			if (messageLink.getId().equals(id)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private String getLatestLinkNotLoaded() {
-		Collections.sort(messageLinks);
-		if (!messageLinks.isEmpty()) {
-			String previousId = messageLinks.get(0).getPreviousId();
-			String lastNotLoaded = previousId;
-			for (final MessageLink messageLink : messageLinks) {
-				if (previousId != null && !previousId.equals(messageLink.getPreviousId())) {
-					lastNotLoaded = messageLink.getPreviousId();
+	public String getGameId(int gamesAgo) {
+		Collections.sort(gameMasterMessages);
+		for (final Message gameMasterMessage : gameMasterMessages) {
+			final String gameId = gameMasterMessage.getNewGameId();
+			if (gameId != null) {
+				gamesAgo -= 1;
+				if (gamesAgo == 0) {
+					return gameId;
 				}
-				previousId = messageLink.getPreviousId();
 			}
-			return lastNotLoaded;
 		}
 		return null;
 	}
 
+	public List<Message> getMessagesForGame(final String gameId) {
+		Collections.sort(gameMasterMessages);
+		for (final Message gameMasterMessage : gameMasterMessages) {
+			if (gameId.equals(gameMasterMessage.getNewGameId())) {
+				Collections.sort(messages);
+				final List<Message> result = new ArrayList<Message>();
+				result.add(gameMasterMessage);
+				for (int index = Collections.binarySearch(messages, gameMasterMessage) - 1; index >= 0; index--) {
+					if (messages.get(index).getNewGameId() == null) {
+						result.add(messages.get(index));
+					} else {
+						return result;
+					}
+
+				}
+				return result;
+			}
+		}
+
+		return new ArrayList<Message>();
+	}
+
+	private void fetchMessage(final String id, final boolean toGameStart) {
+		final RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/message?id=" + id + (toGameStart ? "&tgs" : "")));
+		try {
+			requestBuilder.sendRequest(null, new RequestCallback() {
+				@Override
+				public void onError(final Request request, final Throwable exception) {
+				}
+
+				@Override
+				public void onResponseReceived(final Request request, final Response response) {
+					if (200 == response.getStatusCode()) {
+						processMessages(response.getText(), toGameStart);
+					} else {
+					}
+
+				}
+
+			});
+		} catch (final RequestException e) {
+			// Couldn't connect to server
+		}
+
+	}
+
 	@Override
 	public void prependEarlierMessages() {
-		fetchMessage(getLatestLinkNotLoaded(), 10);
+		if (earliestMessageCacheId != null) {
+			fetchMessage(earliestMessageCacheId, true);
+		}
 
 	}
 

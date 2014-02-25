@@ -31,8 +31,7 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 	public interface MyView extends View {
 	}
 
-	public static final Object BOARD_SLOT = new Object();
-	public static final Object CHAT_SLOT = new Object();
+	public static final Object BOARD_SLOT = new Object(), CHAT_SLOT = new Object(), TOP_TEAM_SLOT = new Object(), BOTTOM_TEAM_SLOT = new Object();
 
 	@ProxyStandard
 	@NameToken(NameTokens.game)

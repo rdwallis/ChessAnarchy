@@ -40,7 +40,7 @@ public class GameStateServlet extends HttpServlet {
 		resp.sendError(404);
 	}
 
-	@Override
+	/*Override
 	protected long getLastModified(final HttpServletRequest req) {
 		final String idStr = req.getParameter("id");
 		final Long id;
@@ -58,6 +58,6 @@ public class GameStateServlet extends HttpServlet {
 			}
 		}
 		return super.getLastModified(req);
-	}
+	}*/
 
 }

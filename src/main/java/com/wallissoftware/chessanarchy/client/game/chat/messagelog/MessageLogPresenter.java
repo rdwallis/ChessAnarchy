@@ -23,6 +23,7 @@ import com.wallissoftware.chessanarchy.client.game.chat.events.GameMasterMessage
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.model.Message;
 import com.wallissoftware.chessanarchy.client.game.chat.model.MessageCache;
+import com.wallissoftware.chessanarchy.client.game.chat.model.MessageComparator;
 
 public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyView> implements MessageLogUiHandlers {
 	public interface MyView extends View, HasUiHandlers<MessageLogUiHandlers> {
@@ -43,9 +44,12 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	private long earliestMessageCacheCreationTime = -1;
 	private String earliestMessageCacheId = null;
 
+	private final MessageComparator messageComparator;
+
 	@Inject
-	MessageLogPresenter(final EventBus eventBus, final MyView view) {
+	MessageLogPresenter(final EventBus eventBus, final MyView view, final MessageComparator messageComparator) {
 		super(eventBus, view);
+		this.messageComparator = messageComparator;
 		getView().setUiHandlers(this);
 		fullRequestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/message"));
 	}
@@ -129,7 +133,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	}
 
 	public String getGameId(int gamesAgo) {
-		Collections.sort(gameMasterMessages);
+		Collections.sort(gameMasterMessages, messageComparator);
 		for (final Message gameMasterMessage : gameMasterMessages) {
 			final String gameId = gameMasterMessage.getNewGameId();
 			if (gameId != null) {
@@ -143,13 +147,14 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	}
 
 	public List<Message> getMessagesForGame(final String gameId) {
-		Collections.sort(gameMasterMessages);
+
+		Collections.sort(gameMasterMessages, messageComparator);
 		for (final Message gameMasterMessage : gameMasterMessages) {
 			if (gameId.equals(gameMasterMessage.getNewGameId())) {
-				Collections.sort(messages);
+				Collections.sort(messages, messageComparator);
 				final List<Message> result = new ArrayList<Message>();
 				result.add(gameMasterMessage);
-				for (int index = Collections.binarySearch(messages, gameMasterMessage) - 1; index >= 0; index--) {
+				for (int index = Collections.binarySearch(messages, gameMasterMessage, messageComparator) - 1; index >= 0; index--) {
 					if (messages.get(index).getNewGameId() == null) {
 						result.add(messages.get(index));
 					} else {

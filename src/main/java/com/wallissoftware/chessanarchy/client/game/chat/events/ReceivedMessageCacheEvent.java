@@ -4,7 +4,7 @@ import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.event.shared.HasHandlers;
-import com.wallissoftware.chessanarchy.client.game.chat.model.MessageCache;
+import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessageCache;
 
 public class ReceivedMessageCacheEvent extends GwtEvent<ReceivedMessageCacheEvent.ReceivedMessageCacheHandler> {
 
@@ -22,9 +22,9 @@ public class ReceivedMessageCacheEvent extends GwtEvent<ReceivedMessageCacheEven
 		return TYPE;
 	}
 
-	private final MessageCache messageCache;
+	private final JsonMessageCache messageCache;
 
-	public ReceivedMessageCacheEvent(final MessageCache message) {
+	public ReceivedMessageCacheEvent(final JsonMessageCache message) {
 		this.messageCache = message;
 	}
 
@@ -38,7 +38,7 @@ public class ReceivedMessageCacheEvent extends GwtEvent<ReceivedMessageCacheEven
 		return TYPE;
 	}
 
-	public MessageCache getMessageCache() {
+	public JsonMessageCache getMessageCache() {
 		return messageCache;
 	}
 

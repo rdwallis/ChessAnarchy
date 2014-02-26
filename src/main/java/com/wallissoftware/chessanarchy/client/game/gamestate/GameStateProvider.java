@@ -16,6 +16,8 @@ import com.wallissoftware.chessanarchy.client.game.chat.events.GameMasterMessage
 import com.wallissoftware.chessanarchy.client.game.chat.events.GameMasterMessageEvent.GameMasterMessageHandler;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
 import com.wallissoftware.chessanarchy.client.game.gamestate.model.GameState;
+import com.wallissoftware.chessanarchy.shared.game.Board;
+import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 
 @Singleton
 public class GameStateProvider implements Provider<GameState>, GameMasterMessageHandler {
@@ -24,9 +26,11 @@ public class GameStateProvider implements Provider<GameState>, GameMasterMessage
 
 	private final RequestBuilder requestBuilder;
 
-	private GameState gameState;
+	private GameState gameState = null;
 
 	private String fetchedJson;
+
+	private final Board syncedBoard = new Board();
 
 	@Inject
 	GameStateProvider(final EventBus eventBus) {
@@ -41,6 +45,7 @@ public class GameStateProvider implements Provider<GameState>, GameMasterMessage
 			}
 
 		}, 10000);
+		fetchLatestGameState();
 	}
 
 	private void fetchLatestGameState() {
@@ -70,12 +75,20 @@ public class GameStateProvider implements Provider<GameState>, GameMasterMessage
 		if (fetchedJson == null || !json.equals(fetchedJson)) {
 			fetchedJson = json;
 			gameState = GameState.fromJson(json);
+			try {
+				syncedBoard.resetFromMoveList(gameState.getMoveList());
+			} catch (final IllegalMoveException e) {
+
+			}
 			eventBus.fireEvent(new GameStateUpdatedEvent());
 		}
 	}
 
 	@Override
 	public GameState get() {
+		if (gameState == null) {
+			throw new NullPointerException();
+		}
 		return gameState;
 	}
 
@@ -83,6 +96,10 @@ public class GameStateProvider implements Provider<GameState>, GameMasterMessage
 	public void onGameMasterMessage(final GameMasterMessageEvent event) {
 		fetchLatestGameState();
 
+	}
+
+	public Board getSyncedBoard() {
+		return syncedBoard;
 	}
 
 }

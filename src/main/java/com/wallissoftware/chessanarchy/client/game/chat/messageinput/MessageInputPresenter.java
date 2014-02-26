@@ -13,6 +13,7 @@ import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent.SendMessageHandler;
+import com.wallissoftware.chessanarchy.client.user.User;
 
 public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter.MyView> implements MessageInputUiHandlers, SendMessageHandler {
 	public interface MyView extends View, HasUiHandlers<MessageInputUiHandlers> {
@@ -51,6 +52,7 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 					@Override
 					public void onResponseReceived(final Request request, final Response response) {
 						if (200 == response.getStatusCode()) {
+							User.update(getEventBus(), response.getText());
 						} else {
 						}
 

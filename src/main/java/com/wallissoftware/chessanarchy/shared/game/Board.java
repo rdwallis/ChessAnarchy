@@ -182,7 +182,8 @@ public class Board {
 		for (final Move move : getLastCalculatedLegalMoves()) {
 			if (move.getEnd().equals(square) && !move.getStart().equals(piece.getPosition())) {
 				final Piece other = getPieceAt(move.getStart());
-				if (other.getColor() == piece.getColor() && other.getPgnAbbreviation().equals(piece.getPgnAbbreviation())) {
+
+				if (other != null && other.getColor() == piece.getColor() && other.getPgnAbbreviation().equals(piece.getPgnAbbreviation())) {
 					result.add(piece);
 				}
 			}

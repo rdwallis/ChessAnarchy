@@ -9,7 +9,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
@@ -19,9 +18,8 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 import com.wallissoftware.chessanarchy.server.gamestate.GameState;
 import com.wallissoftware.chessanarchy.server.gamestate.LatestGameStateId;
-import com.wallissoftware.chessanarchy.server.governments.MoveRequest;
-import com.wallissoftware.chessanarchy.server.session.SessionUtils;
 import com.wallissoftware.chessanarchy.shared.game.Color;
+import com.wallissoftware.chessanarchy.shared.governments.MoveRequest;
 
 @Singleton
 public class UpdateMessagesServlet extends HttpServlet {
@@ -45,7 +43,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 
 			messageMap.put("messages", messageQueue);
 
-			final MessageCache messageCache = new MessageCache(updateGameState(req.getSession(), messageQueue), previousId, new Gson().toJson(messageMap));
+			final MessageCache messageCache = new MessageCache(updateGameState(messageQueue), previousId, new Gson().toJson(messageMap));
 			final Objectify ofy = ObjectifyService.ofy();
 			ofy.save().entities(messageCache).now();
 
@@ -54,7 +52,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 		}
 	}
 
-	private boolean updateGameState(final HttpSession session, final Set<Map<String, String>> messageQueue) {
+	private boolean updateGameState(final Set<Map<String, String>> messageQueue) {
 		final Objectify ofy = ObjectifyService.ofy();
 		final Long latestGameStateId = LatestGameStateId.get();
 		if (latestGameStateId != null) {
@@ -65,19 +63,6 @@ public class UpdateMessagesServlet extends HttpServlet {
 				for (final Map<String, String> message : messageQueue) {
 					if (gameState.swapColors() && message.containsKey("color")) {
 						message.put("color", Color.valueOf(message.get("color")) == Color.WHITE ? Color.BLACK.name() : Color.WHITE.name());
-					}
-					final String msg = message.get("message");
-					if (msg.toLowerCase().startsWith("/team")) {
-						final String clr = msg.substring(5).trim().toUpperCase();
-						try {
-							Color color = Color.valueOf(clr);
-							if (gameState.swapColors()) {
-								color = color == Color.WHITE ? Color.BLACK : Color.WHITE;
-							}
-							SessionUtils.setColor(session, color);
-						} catch (final Exception e) {
-
-						}
 					}
 
 					if (message.get("color") != null && currentPlayer == Color.valueOf(message.get("color")) || moveMap.containsKey(message.get("message"))) {

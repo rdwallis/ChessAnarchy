@@ -6,7 +6,7 @@ import java.util.List;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.core.client.JsonUtils;
-import com.wallissoftware.chessanarchy.shared.government.Government;
+import com.wallissoftware.chessanarchy.shared.governments.SystemOfGovernment;
 
 public final class GameState extends JavaScriptObject {
 
@@ -41,12 +41,12 @@ public final class GameState extends JavaScriptObject {
 		return this.blackGovernment;
 	}-*/;
 
-	public Government getWhiteGovernment() {
-		return Government.valueOf(getNativeWhiteGovernment());
+	public SystemOfGovernment getWhiteGovernment() {
+		return SystemOfGovernment.get(getNativeWhiteGovernment());
 	}
 
-	public Government getBlackGovernment() {
-		return Government.valueOf(getNativeBlackGovernment());
+	public SystemOfGovernment getBlackGovernment() {
+		return SystemOfGovernment.get(getNativeBlackGovernment());
 	}
 
 	public static GameState fromJson(final String json) {

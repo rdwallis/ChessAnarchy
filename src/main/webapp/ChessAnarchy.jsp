@@ -4,6 +4,9 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <title>Chess Anarchy</title>
     <script type="text/javascript" src="/chessanarchy/chessanarchy.nocache.js"></script>
+    <script>
+    	var user = ${userJson};
+    </script>
     <style>
     	.expand {
     		box-sizing: border-box;

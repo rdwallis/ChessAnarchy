@@ -1,4 +1,4 @@
-package com.wallissoftware.chessanarchy.server.governments;
+package com.wallissoftware.chessanarchy.shared.governments;
 
 import com.googlecode.objectify.annotation.Embed;
 import com.wallissoftware.chessanarchy.shared.game.Color;
@@ -73,7 +73,12 @@ public class MoveRequest implements Comparable<MoveRequest> {
 
 	@Override
 	public int compareTo(final MoveRequest o) {
-		return Long.compare(creationTime, o.creationTime);
+		if (o.creationTime < creationTime) {
+			return 1;
+		} else if (o.creationTime > creationTime) {
+			return -1;
+		}
+		return 0;
 	}
 
 	public Color getColor() {

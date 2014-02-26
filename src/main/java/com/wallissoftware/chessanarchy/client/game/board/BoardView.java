@@ -28,6 +28,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
 import com.wallissoftware.chessanarchy.client.game.board.piece.images.PieceSprites;
+import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Square;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Bishop;
@@ -170,7 +171,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	}
 
 	private Color getOrientation() {
-		return Color.WHITE;
+		return User.get().getColor(true) == null ? null : User.get().getColor(true);
+
 	}
 
 	@Override
@@ -199,7 +201,9 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	@Override
 	public void onPreviewDragStart(final DragStartEvent event) throws VetoDragException {
-		// TODO Auto-generated method stub
+		if (!getUiHandlers().canMove(getSquareAtMouseCoordinate(event.getContext().mouseX, event.getContext().mouseY))) {
+			throw new VetoDragException();
+		}
 
 	}
 

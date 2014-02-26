@@ -1,11 +1,15 @@
 package com.wallissoftware.chessanarchy.server.session;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.http.HttpSession;
 
+import com.google.gson.Gson;
 import com.wallissoftware.chessanarchy.server.words.Adjectives;
 import com.wallissoftware.chessanarchy.server.words.Nouns;
+import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 
 public class SessionUtils {
@@ -42,16 +46,16 @@ public class SessionUtils {
 
 	public static Color getColor(final HttpSession session) {
 		if (session.getAttribute("white") == null && session.getAttribute("black") == null) {
-			setColor(session, (Math.random() * 2) % 2 == 0 ? Color.WHITE : Color.BLACK);
+			setColor(session, (Math.random() < 0.5) ? Color.WHITE : Color.BLACK);
 		}
 		if (session.getAttribute("black") != null) {
 
-			if (System.currentTimeMillis() - (Long) session.getAttribute("black") > 20000) {
+			if (System.currentTimeMillis() - (Long) session.getAttribute("black") > CAConstants.JOIN_TEAM_WAIT) {
 				return Color.BLACK;
 			}
 		}
 		if (session.getAttribute("white") != null) {
-			if (System.currentTimeMillis() - (Long) session.getAttribute("white") > 20000) {
+			if (System.currentTimeMillis() - (Long) session.getAttribute("white") > CAConstants.JOIN_TEAM_WAIT) {
 				return Color.WHITE;
 			}
 		}
@@ -67,5 +71,19 @@ public class SessionUtils {
 			session.setAttribute("black", System.currentTimeMillis());
 		}
 
+	}
+
+	public static String getUserJson(final HttpSession session) {
+		final Map<String, String> jsonMap = new HashMap<String, String>();
+		jsonMap.put("name", getName(session));
+		jsonMap.put("userId", getUserId(session));
+		getColor(session);
+		if (session.getAttribute("black") != null) {
+			jsonMap.put("black", session.getAttribute("black") + "");
+		}
+		if (session.getAttribute("white") != null) {
+			jsonMap.put("white", session.getAttribute("white") + "");
+		}
+		return new Gson().toJson(jsonMap);
 	}
 }

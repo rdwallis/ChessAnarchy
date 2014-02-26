@@ -17,6 +17,7 @@
 package com.wallissoftware.chessanarchy.client.game;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
 import com.gwtplatform.mvp.client.View;
@@ -25,9 +26,13 @@ import com.gwtplatform.mvp.client.annotations.ProxyStandard;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.wallissoftware.chessanarchy.client.game.board.BoardPresenter;
 import com.wallissoftware.chessanarchy.client.game.chat.ChatPresenter;
+import com.wallissoftware.chessanarchy.client.game.team.TeamPresenter;
 import com.wallissoftware.chessanarchy.client.place.NameTokens;
+import com.wallissoftware.chessanarchy.client.user.User;
+import com.wallissoftware.chessanarchy.client.user.UserChangedEvent;
+import com.wallissoftware.chessanarchy.client.user.UserChangedEvent.UserChangedHandler;
 
-public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter.MyProxy> {
+public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter.MyProxy> implements UserChangedHandler {
 	public interface MyView extends View {
 	}
 
@@ -40,12 +45,17 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 
 	private final BoardPresenter boardPresenter;
 	private final ChatPresenter chatPresenter;
+	private final TeamPresenter topTeamPresenter;
+	private final TeamPresenter bottomTeamPresenter;
 
 	@Inject
-	GamePresenter(final EventBus eventBus, final MyView view, final MyProxy proxy, final BoardPresenter boardPresenter, final ChatPresenter chatPresenter) {
+	GamePresenter(final EventBus eventBus, final MyView view, final MyProxy proxy, final BoardPresenter boardPresenter, final ChatPresenter chatPresenter, final Provider<TeamPresenter> teamPresenterProvider) {
 		super(eventBus, view, proxy, RevealType.Root);
 		this.boardPresenter = boardPresenter;
 		this.chatPresenter = chatPresenter;
+		this.topTeamPresenter = teamPresenterProvider.get();
+		this.bottomTeamPresenter = teamPresenterProvider.get();
+		update();
 
 	}
 
@@ -54,6 +64,23 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 		super.onBind();
 		setInSlot(BOARD_SLOT, boardPresenter);
 		setInSlot(CHAT_SLOT, chatPresenter);
+		setInSlot(BOTTOM_TEAM_SLOT, bottomTeamPresenter);
+		setInSlot(TOP_TEAM_SLOT, topTeamPresenter);
+		addRegisteredHandler(UserChangedEvent.getType(), this);
+	}
+
+	@Override
+	public void onUserChanged(final UserChangedEvent event) {
+		update();
+
+	}
+
+	private void update() {
+		if (User.get().getColor(true) != null) {
+			bottomTeamPresenter.setColor(User.get().getColor(true));
+			topTeamPresenter.setColor(User.get().getColor(true).getOpposite());
+		}
+
 	}
 
 }

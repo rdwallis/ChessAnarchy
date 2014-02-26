@@ -9,7 +9,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
-import com.wallissoftware.chessanarchy.client.game.chat.model.Message;
+import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
 public class MessageLogView extends ViewWithUiHandlers<MessageLogUiHandlers> implements MessageLogPresenter.MyView {
 	public interface Binder extends UiBinder<Widget, MessageLogView> {
@@ -24,7 +24,7 @@ public class MessageLogView extends ViewWithUiHandlers<MessageLogUiHandlers> imp
 	}
 
 	@Override
-	public void addMessage(final Message message) {
+	public void addMessage(final MessageWrapper message) {
 		final boolean isOnBottom = scrollPanel.getMaximumVerticalScrollPosition() - scrollPanel.getVerticalScrollPosition() < 50;
 
 		final MessageWidget messageWidget = new MessageWidget(message);

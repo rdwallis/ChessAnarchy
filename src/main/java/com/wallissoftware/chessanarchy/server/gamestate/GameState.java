@@ -14,12 +14,12 @@ import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.OnSave;
-import com.wallissoftware.chessanarchy.server.governments.MoveRequest;
-import com.wallissoftware.chessanarchy.server.governments.SystemOfGovernment;
 import com.wallissoftware.chessanarchy.shared.game.Board;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
-import com.wallissoftware.chessanarchy.shared.government.Government;
+import com.wallissoftware.chessanarchy.shared.governments.MoveRequest;
+import com.wallissoftware.chessanarchy.shared.governments.MoveResult;
+import com.wallissoftware.chessanarchy.shared.governments.SystemOfGovernment;
 
 @Entity
 @Cache
@@ -31,14 +31,16 @@ public class GameState {
 
 	private boolean swapColors;
 
-	private Government whiteGovernment = Government.ANARCHY;
-	private Government blackGovernment = Government.ANARCHY;
+	private String whiteGovernment = "Anarchy";
+	private String blackGovernment = "Anarchy";
 
 	private List<String> moveList = new ArrayList<String>();
 
 	private List<Long> moveTimes = new ArrayList<Long>();
 
 	private Set<MoveRequest> moveRequests = new HashSet<MoveRequest>();
+
+	private String whiteExtraInfo, blackExtraInfo;
 
 	@SuppressWarnings("unused")
 	private GameState() {
@@ -56,10 +58,11 @@ public class GameState {
 
 	public void addMove(final String move) {
 		moveList.add(move);
+		moveRequests.clear();
 		try {
 			new Board(moveList);
 			moveTimes.add(System.currentTimeMillis());
-			moveRequests.clear();
+
 		} catch (final IllegalMoveException e) {
 			moveList.remove(moveList.size() - 1);
 		}
@@ -83,8 +86,8 @@ public class GameState {
 		jsonMap.put("id", id + "");
 		jsonMap.put("created", creationTime + "");
 		jsonMap.put("swapColors", swapColors);
-		jsonMap.put("whiteGovernment", whiteGovernment.name());
-		jsonMap.put("blackGovernment", whiteGovernment.name());
+		jsonMap.put("whiteGovernment", whiteGovernment);
+		jsonMap.put("blackGovernment", blackGovernment);
 		jsonMap.put("moveList", moveList);
 		return new Gson().toJson(jsonMap);
 
@@ -111,12 +114,28 @@ public class GameState {
 	public String processMoveRequests() {
 		final List<MoveRequest> moveRequestList = new ArrayList<MoveRequest>(moveRequests);
 		Collections.sort(moveRequestList);
-		if (getSystemOfGovernemnt().isReady(getTimeOfLastMove(), moveRequestList)) {
-			addMove(getSystemOfGovernemnt().getMove(moveRequestList));
-			return moveList.get(moveList.size() - 1);
+		if (getSystemOfGovernemnt().isReady(getExtraInfo(), getTimeOfLastMove(), moveRequestList)) {
+			final MoveResult moveResult = getSystemOfGovernemnt().getMove(getExtraInfo(), moveRequestList);
+			addMove(moveResult.getMove());
+			setExtraInfo(moveResult.getExtraInfo());
+			if (!moveList.isEmpty()) {
+				return moveList.get(moveList.size() - 1);
+			}
 		}
 		return null;
 
+	}
+
+	private void setExtraInfo(final String extraInfo) {
+		if (getCurrentPlayer() == Color.WHITE) {
+			whiteExtraInfo = extraInfo;
+		} else {
+			blackExtraInfo = extraInfo;
+		}
+	}
+
+	private String getExtraInfo() {
+		return getCurrentPlayer() == Color.WHITE ? whiteExtraInfo : blackExtraInfo;
 	}
 
 	private long getTimeOfLastMove() {

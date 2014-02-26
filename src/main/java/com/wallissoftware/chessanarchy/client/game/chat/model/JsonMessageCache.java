@@ -7,9 +7,9 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsonUtils;
 
-public final class MessageCache extends JavaScriptObject {
+public final class JsonMessageCache extends JavaScriptObject {
 
-	protected MessageCache() {
+	protected JsonMessageCache() {
 	};
 
 	public native String getPreviousId() /*-{
@@ -20,26 +20,26 @@ public final class MessageCache extends JavaScriptObject {
 		return this.id;
 	}-*/;
 
-	private native JsArray<Message> getNativeMessages() /*-{
+	private native JsArray<JsonMessage> getNativeMessages() /*-{
 		return this.messages;
 	}-*/;
 
-	public List<Message> getMessages() {
-		final List<Message> result = new ArrayList<Message>();
-		final JsArray<Message> jsArray = getNativeMessages();
+	public List<JsonMessage> getMessages() {
+		final List<JsonMessage> result = new ArrayList<JsonMessage>();
+		final JsArray<JsonMessage> jsArray = getNativeMessages();
 		for (int i = 0; i < jsArray.length(); i++) {
 			result.add(jsArray.get(i));
 		}
 		return result;
 	}
 
-	private static JsArray<MessageCache> nativeFromJson(final String json) {
+	private static JsArray<JsonMessageCache> nativeFromJson(final String json) {
 		return JsonUtils.safeEval(json);
 	}
 
-	public static List<MessageCache> fromJson(final String json) {
-		final List<MessageCache> result = new ArrayList<MessageCache>();
-		final JsArray<MessageCache> jsArray = nativeFromJson(json);
+	public static List<JsonMessageCache> fromJson(final String json) {
+		final List<JsonMessageCache> result = new ArrayList<JsonMessageCache>();
+		final JsArray<JsonMessageCache> jsArray = nativeFromJson(json);
 		for (int i = 0; i < jsArray.length(); i++) {
 			result.add(jsArray.get(i));
 		}

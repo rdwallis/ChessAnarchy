@@ -8,7 +8,7 @@ public class LastUpdateTime {
 	private final static String LAST_UPDATE_TIME_KEY = "lut";
 
 	public static boolean isTimeToUpdate() {
-		final Long latest = getLastUpdateTime();
+		final Long latest = getLastUpdateTime(false);
 		if (latest == null) {
 			return true;
 		} else if (System.currentTimeMillis() - latest > 1000) {
@@ -19,13 +19,20 @@ public class LastUpdateTime {
 	}
 
 	public static Long getLastUpdateTime() {
+		return getLastUpdateTime(true);
+	}
+
+	private static Long getLastUpdateTime(final boolean preventNull) {
 		final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 		final Long result = (Long) cache.get(LAST_UPDATE_TIME_KEY);
 		if (result != null) {
 			return result;
+		} else if (preventNull) {
+			markUpdated();
+			return getLastUpdateTime();
+		} else {
+			return null;
 		}
-		markUpdated();
-		return getLastUpdateTime();
 	}
 
 	public static void markUpdated() {

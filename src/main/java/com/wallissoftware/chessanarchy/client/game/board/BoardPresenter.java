@@ -14,18 +14,20 @@ import com.wallissoftware.chessanarchy.client.game.board.promotion.PromotionPres
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent.ReceivedMessageCacheHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
-import com.wallissoftware.chessanarchy.client.game.chat.model.Message;
+import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessage;
 import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent.GameStateUpdatedHandler;
+import com.wallissoftware.chessanarchy.client.user.User;
+import com.wallissoftware.chessanarchy.client.user.UserChangedEvent;
+import com.wallissoftware.chessanarchy.client.user.UserChangedEvent.UserChangedHandler;
 import com.wallissoftware.chessanarchy.shared.game.Board;
 import com.wallissoftware.chessanarchy.shared.game.Move;
 import com.wallissoftware.chessanarchy.shared.game.Square;
-import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Piece;
 import com.wallissoftware.chessanarchy.shared.game.pieces.PieceMoveHandler;
 
-public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler, GameStateUpdatedHandler {
+public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler, GameStateUpdatedHandler, UserChangedHandler {
 	public interface MyView extends View, HasUiHandlers<BoardUiHandlers> {
 
 		void setPieceInSquare(IsWidget isWidget, Square square);
@@ -61,6 +63,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		super.onBind();
 		addRegisteredHandler(ReceivedMessageCacheEvent.getType(), this);
 		addRegisteredHandler(GameStateUpdatedEvent.getType(), this);
+		addRegisteredHandler(UserChangedEvent.getType(), this);
 		drawBoard();
 
 	}
@@ -122,8 +125,8 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	@Override
 	public void onReceivedMessageCache(final ReceivedMessageCacheEvent event) {
 		final Map<String, Move> notationMap = board.getLegalMovesWithNotation();
-		for (final Message msg : event.getMessageCache().getMessages()) {
-			final String message = msg.getMessage();
+		for (final JsonMessage msg : event.getMessageCache().getMessages()) {
+			final String message = msg.getText();
 			final long created = msg.getCreated();
 			if (System.currentTimeMillis() - created < 4000) {
 				if (message.length() == 5 && message.charAt(2) == '-') {
@@ -146,7 +149,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	}
 
 	private void makeGhostMove(final double startTime, final Move move) {
-		getView().makeGhostMove(startTime, board.getPieceAt(move.getStart()), move.getEnd());
+		getView().makeGhostMove(startTime, gameStateProvider.getSyncedBoard().getPieceAt(move.getStart()), move.getEnd());
 
 	}
 
@@ -155,9 +158,41 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		try {
 			board.resetFromMoveList(gameStateProvider.get().getMoveList());
 			drawBoard();
-		} catch (final IllegalMoveException e) {
+		} catch (final Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+
+	}
+
+	@Override
+	public void onUserChanged(final UserChangedEvent event) {
+		drawBoard();
+
+	}
+
+	@Override
+	public boolean canMove(final Square square) {
+		try {
+			if (User.get().getColor() == null) {
+				return false;
+			}
+			if (board.getCurrentPlayer() != User.get().getColor()) {
+				return false;
+			}
+			if (board.getPieceAt(square) == null) {
+				return false;
+			}
+
+			for (final Move move : board.getLegalMovesWithNotation().values()) {
+				if (move.getStart().equals(square)) {
+					return true;
+				}
+			}
+
+			return false;
+		} catch (final NullPointerException e) {
+			return false;
 		}
 
 	}

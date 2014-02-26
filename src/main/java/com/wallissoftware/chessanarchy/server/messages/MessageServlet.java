@@ -25,6 +25,8 @@ import com.google.appengine.api.taskqueue.TaskOptions.Method;
 import com.google.inject.Singleton;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.wallissoftware.chessanarchy.server.gamestate.GameState;
+import com.wallissoftware.chessanarchy.server.gamestate.LatestGameStateId;
 import com.wallissoftware.chessanarchy.server.session.SessionUtils;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 
@@ -94,17 +96,41 @@ public class MessageServlet extends HttpServlet {
 		final StringWriter writer = new StringWriter();
 		IOUtils.copy(req.getInputStream(), writer, "UTF-8");
 		final String message = StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(writer.toString()));
+		boolean sessionModified = false;
 		if (message != null && !message.isEmpty()) {
 			final Map<String, String> map = new HashMap<String, String>();
 			map.put("userId", SessionUtils.getUserId(req.getSession()));
 			map.put("name", SessionUtils.getName(req.getSession()));
-			if (message.toLowerCase().startsWith("/nick")) {
-				String name = message.substring(5);
+			if (message.toLowerCase().startsWith("\\/nick")) {
+				String name = message.substring(6);
 				name = name.replace(" ", "");
 				if (name.length() > 20) {
 					name = name.substring(0, 20);
 				}
 				SessionUtils.setName(req.getSession(), name);
+				sessionModified = true;
+			}
+			if (message.toLowerCase().startsWith("\\/team")) {
+				final String clr = message.substring(6).trim().toUpperCase();
+				try {
+					Color color = Color.valueOf(clr);
+					final Long id = LatestGameStateId.get();
+
+					if (id != null) {
+						final Objectify ofy = ObjectifyService.ofy();
+						final GameState gameState = ofy.load().type(GameState.class).id(id).getValue();
+						if (gameState != null) {
+							if (gameState.swapColors()) {
+								color = color == Color.WHITE ? Color.BLACK : Color.WHITE;
+							}
+							SessionUtils.setColor(req.getSession(), color);
+							sessionModified = true;
+						}
+					}
+
+				} catch (final Exception e) {
+
+				}
 			}
 
 			map.put("created", System.currentTimeMillis() + "");
@@ -127,6 +153,10 @@ public class MessageServlet extends HttpServlet {
 				queue.add(withUrl("/processmessages").method(Method.GET));
 			}
 
+		}
+		if (sessionModified) {
+			resp.setContentType("application/json");
+			resp.getWriter().write(SessionUtils.getUserJson(req.getSession()));
 		}
 
 	}

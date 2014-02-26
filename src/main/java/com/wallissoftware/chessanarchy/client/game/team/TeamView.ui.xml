@@ -8,5 +8,6 @@
     	
     	<g:Label ui:field="playerCount">1000 anarchists</g:Label>
     	<g:Button ui:field="joinTeamButton">Become an Anarchist</g:Button>
+    	<g:Label ui:field="joinTeamCountDown" visible="false"></g:Label>
     </g:HTMLPanel>
 </ui:UiBinder>

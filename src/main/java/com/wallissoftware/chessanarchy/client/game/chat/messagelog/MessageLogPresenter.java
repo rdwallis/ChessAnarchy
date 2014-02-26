@@ -21,14 +21,14 @@ import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
 import com.wallissoftware.chessanarchy.client.game.chat.events.GameMasterMessageEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
-import com.wallissoftware.chessanarchy.client.game.chat.model.Message;
-import com.wallissoftware.chessanarchy.client.game.chat.model.MessageCache;
-import com.wallissoftware.chessanarchy.client.game.chat.model.MessageComparator;
+import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessageCache;
+import com.wallissoftware.chessanarchy.shared.message.Message;
+import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
 public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyView> implements MessageLogUiHandlers {
 	public interface MyView extends View, HasUiHandlers<MessageLogUiHandlers> {
 
-		void addMessage(Message message);
+		void addMessage(MessageWrapper message);
 
 		boolean isScrollBarShowing();
 	}
@@ -37,19 +37,16 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
 	private Set<String> loadedMessageCacheIds = new HashSet<String>();
 
-	private List<Message> messages = new ArrayList<Message>();
+	private List<MessageWrapper> messages = new ArrayList<MessageWrapper>();
 
-	private List<Message> gameMasterMessages = new ArrayList<Message>();
+	private List<MessageWrapper> gameMasterMessages = new ArrayList<MessageWrapper>();
 
 	private long earliestMessageCacheCreationTime = -1;
 	private String earliestMessageCacheId = null;
 
-	private final MessageComparator messageComparator;
-
 	@Inject
-	MessageLogPresenter(final EventBus eventBus, final MyView view, final MessageComparator messageComparator) {
+	MessageLogPresenter(final EventBus eventBus, final MyView view) {
 		super(eventBus, view);
-		this.messageComparator = messageComparator;
 		getView().setUiHandlers(this);
 		fullRequestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/message"));
 	}
@@ -94,11 +91,11 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	}
 
 	private void processMessages(final String messagesJson, final boolean toGameStart) {
-		final List<MessageCache> messageCacheList = MessageCache.fromJson(messagesJson);
-		for (final MessageCache messageCache : messageCacheList) {
+		final List<JsonMessageCache> messageCacheList = JsonMessageCache.fromJson(messagesJson);
+		for (final JsonMessageCache messageCache : messageCacheList) {
 			if (loadedMessageCacheIds.add(messageCache.getId())) {
 				for (final Message message : messageCache.getMessages()) {
-					addMessage(message);
+					addMessage(new MessageWrapper(message));
 
 				}
 				if (!toGameStart) {
@@ -120,21 +117,21 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
 	}
 
-	private void addMessage(final Message message) {
+	private void addMessage(final MessageWrapper message) {
 		getView().addMessage(message);
 		messages.add(message);
 		if (message.isFromGameMaster()) {
 			gameMasterMessages.add(message);
 			if (System.currentTimeMillis() - message.getCreated() < 10000) {
-				fireEvent(new GameMasterMessageEvent(message.getMessage()));
+				fireEvent(new GameMasterMessageEvent(message.getText()));
 			}
 		}
 
 	}
 
 	public String getGameId(int gamesAgo) {
-		Collections.sort(gameMasterMessages, messageComparator);
-		for (final Message gameMasterMessage : gameMasterMessages) {
+		Collections.sort(gameMasterMessages);
+		for (final MessageWrapper gameMasterMessage : gameMasterMessages) {
 			final String gameId = gameMasterMessage.getNewGameId();
 			if (gameId != null) {
 				gamesAgo -= 1;
@@ -146,27 +143,35 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 		return null;
 	}
 
-	public List<Message> getMessagesForGame(final String gameId) {
+	private List<MessageWrapper> getMessagesForGame(final String gameId) {
+		if (gameId != null) {
+			Collections.sort(gameMasterMessages);
+			for (final MessageWrapper gameMasterMessage : gameMasterMessages) {
+				if (gameId.equals(gameMasterMessage.getNewGameId())) {
+					Collections.sort(messages);
+					final List<MessageWrapper> result = new ArrayList<MessageWrapper>();
+					result.add(gameMasterMessage);
+					for (int index = Collections.binarySearch(messages, gameMasterMessage) - 1; index >= 0; index--) {
+						if (messages.get(index).getNewGameId() == null) {
+							result.add(messages.get(index));
+						} else {
+							return result;
+						}
 
-		Collections.sort(gameMasterMessages, messageComparator);
-		for (final Message gameMasterMessage : gameMasterMessages) {
-			if (gameId.equals(gameMasterMessage.getNewGameId())) {
-				Collections.sort(messages, messageComparator);
-				final List<Message> result = new ArrayList<Message>();
-				result.add(gameMasterMessage);
-				for (int index = Collections.binarySearch(messages, gameMasterMessage, messageComparator) - 1; index >= 0; index--) {
-					if (messages.get(index).getNewGameId() == null) {
-						result.add(messages.get(index));
-					} else {
-						return result;
 					}
-
+					return result;
 				}
-				return result;
 			}
 		}
+		return new ArrayList<MessageWrapper>();
+	}
 
-		return new ArrayList<Message>();
+	public List<MessageWrapper> getMessagesForGames(final String... gameIds) {
+		final List<MessageWrapper> result = new ArrayList<MessageWrapper>();
+		for (final String gameId : gameIds) {
+			result.addAll(getMessagesForGame(gameId));
+		}
+		return result;
 	}
 
 	private void fetchMessage(final String id, final boolean toGameStart) {

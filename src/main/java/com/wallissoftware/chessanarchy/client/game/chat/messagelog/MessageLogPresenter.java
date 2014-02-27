@@ -19,9 +19,9 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
-import com.wallissoftware.chessanarchy.client.game.chat.events.GameMasterMessageEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessageCache;
+import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
 import com.wallissoftware.chessanarchy.shared.message.Message;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
@@ -42,6 +42,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	private List<MessageWrapper> gameMasterMessages = new ArrayList<MessageWrapper>();
 
 	private long earliestMessageCacheCreationTime = -1;
+	private Set<String> loadedMessageIds = new HashSet<String>();
 	private String earliestMessageCacheId = null;
 
 	@Inject
@@ -118,12 +119,13 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	}
 
 	private void addMessage(final MessageWrapper message) {
-		getView().addMessage(message);
-		messages.add(message);
-		if (message.isFromGameMaster()) {
-			gameMasterMessages.add(message);
-			if (System.currentTimeMillis() - message.getCreated() < 10000) {
-				fireEvent(new GameMasterMessageEvent(message.getText()));
+		if (loadedMessageIds.add(message.getId())) {
+			getView().addMessage(message);
+			messages.add(message);
+			if (message.isFromGameMaster()) {
+				gameMasterMessages.add(message);
+				fireEvent(new GameStateUpdatedEvent());
+
 			}
 		}
 
@@ -134,10 +136,11 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 		for (final MessageWrapper gameMasterMessage : gameMasterMessages) {
 			final String gameId = gameMasterMessage.getNewGameId();
 			if (gameId != null) {
-				gamesAgo -= 1;
+
 				if (gamesAgo == 0) {
 					return gameId;
 				}
+				gamesAgo -= 1;
 			}
 		}
 		return null;
@@ -204,6 +207,10 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 			fetchMessage(earliestMessageCacheId, true);
 		}
 
+	}
+
+	public List<MessageWrapper> getCurrentGameMessages() {
+		return getMessagesForGame(getGameId(0));
 	}
 
 }

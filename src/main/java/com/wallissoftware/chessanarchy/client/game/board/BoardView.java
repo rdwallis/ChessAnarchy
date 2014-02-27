@@ -81,10 +81,14 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		dragController.registerDropController(dropController);
 		dragController.addDragHandler(this);
 
+	}
+
+	@Override
+	public void setUiHandlers(final BoardUiHandlers uiHandlers) {
+		super.setUiHandlers(uiHandlers);
 		drawSquares();
 		resetGridLabels();
 		startGhostAnimations();
-
 	}
 
 	private void startGhostAnimations() {
@@ -171,12 +175,17 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	}
 
 	private Color getOrientation() {
-		return User.get().getColor(true) == null ? null : User.get().getColor(true);
+		try {
+			return User.get().getColor(true) == null ? null : getUiHandlers().swapBoard() ? User.get().getColor(true).getOpposite() : User.get().getColor(true);
+		} catch (final NullPointerException e) {
+			return Color.WHITE;
+		}
 
 	}
 
 	@Override
 	public void onDragEnd(final DragEndEvent event) {
+		getUiHandlers().allowRedraw();
 		if (event.getContext().vetoException == null) {
 			final Square endSquare = getSquareAtMouseCoordinate(event.getContext().mouseX, event.getContext().mouseY);
 			getUiHandlers().makeMove(startDragSquare, endSquare);
@@ -203,6 +212,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	public void onPreviewDragStart(final DragStartEvent event) throws VetoDragException {
 		if (!getUiHandlers().canMove(getSquareAtMouseCoordinate(event.getContext().mouseX, event.getContext().mouseY))) {
 			throw new VetoDragException();
+		} else {
+			getUiHandlers().preventRedraw();
 		}
 
 	}

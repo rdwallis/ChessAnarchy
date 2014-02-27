@@ -42,6 +42,7 @@ public final class JsonMessage extends JavaScriptObject implements Message {
 		return Color.valueOf(color);
 	}
 
+	@Override
 	public long getCreated() {
 		final String created = getNativeCreated();
 
@@ -52,4 +53,8 @@ public final class JsonMessage extends JavaScriptObject implements Message {
 		return JsonUtils.safeEval(json);
 	}
 
+	@Override
+	public final native String getId() /*-{
+		return this.id;
+	}-*/;
 }

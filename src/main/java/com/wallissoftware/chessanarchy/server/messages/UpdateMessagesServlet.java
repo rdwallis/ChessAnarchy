@@ -2,6 +2,7 @@ package com.wallissoftware.chessanarchy.server.messages;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,21 +38,37 @@ public class UpdateMessagesServlet extends HttpServlet {
 		if (messageQueue != null) {
 			final Long previousId = LatestMessageId.get();
 			cache.clearAll();
-			final Map<String, Object> messageMap = new HashMap<String, Object>();
-			if (previousId != null) {
-				messageMap.put("previous", previousId + "");
-			}
-			messageMap.put("created", System.currentTimeMillis() + "");
 
-			messageMap.put("messages", messageQueue);
-
-			final Objectify ofy = ObjectifyService.ofy();
+			final Objectify ofy = ObjectifyService.factory().begin();
 			final Long latestGameStateId = LatestGameStateId.get();
+			final Set<Map<String, String>> gameStateMessages = new HashSet<Map<String, String>>();
+			if (Math.random() < 0.2) {
+				//run every five updates or so.
+				final Long previousGameStateId = LatestGameStateId.getPrevious();
+
+				if (previousGameStateId != null) {
+					gameStateMessages.addAll(ofy.load().type(GameState.class).id(previousGameStateId).getValue().getMessages());
+
+				}
+				if (latestGameStateId != null) {
+					gameStateMessages.addAll(ofy.load().type(GameState.class).id(latestGameStateId).getValue().getMessages());
+				}
+
+			}
 			ofy.transact(new VoidWork() {
 
 				@Override
 				public void vrun() {
-					final MessageCache messageCache = new MessageCache(updateGameState(ofy, latestGameStateId, messageQueue), previousId, new Gson().toJson(messageMap));
+					final boolean isGameStart = updateGameState(ofy, latestGameStateId, messageQueue);
+					final Map<String, Object> messageMap = new HashMap<String, Object>();
+					if (previousId != null) {
+						messageMap.put("previous", previousId + "");
+					}
+					messageMap.put("created", System.currentTimeMillis() + "");
+
+					messageQueue.addAll(gameStateMessages);
+					messageMap.put("messages", messageQueue);
+					final MessageCache messageCache = new MessageCache(isGameStart, previousId, new Gson().toJson(messageMap));
 					ofy.save().entities(messageCache);
 
 					LatestMessageId.set(messageCache.getId());
@@ -80,44 +97,30 @@ public class UpdateMessagesServlet extends HttpServlet {
 					}
 				}
 
-				final String serverMessage = gameState.processMoveRequests();
-				if (serverMessage != null) {
-
-					messageQueue.add(createServerMessageMap(serverMessage));
-				}
+				gameState.processMoveRequests();
+				messageQueue.addAll(gameState.getMessages());
 				ofy.save().entity(gameState);
 
 				if (gameState.isComplete()) {
-
-					messageQueue.add(createServerMessageMap("STARTING NEW GAME: " + createNewGameState(ofy, !gameState.swapColors())));
+					messageQueue.addAll(createNewGameState(ofy, !gameState.swapColors()).getMessages());
 					return true;
 				}
 			}
 
 		} else {
-
-			messageQueue.add(createServerMessageMap("STARTING NEW GAME: " + createNewGameState(ofy, false)));
+			messageQueue.addAll(createNewGameState(ofy, false).getMessages());
 			return true;
 		}
 		return false;
 
 	}
 
-	private long createNewGameState(final Objectify ofy, final boolean swapColors) {
+	private GameState createNewGameState(final Objectify ofy, final boolean swapColors) {
 		final GameState gameState = new GameState(swapColors);
 		ofy.save().entity(gameState).now();
 		LatestGameStateId.set(gameState.getId());
-		return gameState.getId();
+		return gameState;
 
-	}
-
-	private Map<String, String> createServerMessageMap(final String message) {
-		final Map<String, String> serverMessageMap = new HashMap<String, String>();
-		serverMessageMap.put("userId", "Game Master");
-		serverMessageMap.put("name", "Game Master");
-		serverMessageMap.put("created", System.currentTimeMillis() + "");
-		serverMessageMap.put("message", message);
-		return serverMessageMap;
 	}
 
 }

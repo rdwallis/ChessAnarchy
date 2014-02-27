@@ -53,7 +53,7 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
 	public void setColor(final Color color) {
 		this.color = color;
 		if (color != null) {
-			getView().setColor(color);
+			getView().setColor(getColor());
 			update();
 		}
 	}
@@ -81,7 +81,7 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
 			getView().setJoinButtonText(government.getJoinMessage());
 			getView().setPlayerCountMessage(government.getPlayerCount(getColor(), messageLogPresenter.getMessagesForGames(messageLogPresenter.getGameId(0), messageLogPresenter.getGameId(1))));
 
-			getView().setJoinCountDown(User.get().getColorJoinTime(getColor()));
+			getView().setJoinCountDown(User.get().getColorJoinTime(color));
 
 		} catch (final NullPointerException e) {
 

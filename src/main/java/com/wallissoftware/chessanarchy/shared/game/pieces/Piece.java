@@ -12,7 +12,7 @@ public abstract class Piece implements Dto {
 	private static final long serialVersionUID = 1L;
 
 	private Color color;
-	private Square position;
+	private Square position, recyclePosition;
 	private int moveCount;
 	private boolean captured = false;
 
@@ -41,10 +41,12 @@ public abstract class Piece implements Dto {
 		this(color, 0);
 	}
 
-	public void reset() {
+	public void recycle() {
 		justMoved = false;
 		moveCount = 0;
+		recyclePosition = position;
 		position = null;
+
 	}
 
 	public boolean justMoved() {
@@ -103,9 +105,10 @@ public abstract class Piece implements Dto {
 				moveCount += 1;
 			}
 			this.position = position;
-			if (fireEvents) {
+			if (fireEvents && !this.position.equals(recyclePosition)) {
 				notfiyHandlersOfPosition();
 			}
+			recyclePosition = null;
 		}
 
 	}

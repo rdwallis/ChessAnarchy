@@ -10,6 +10,12 @@
 			font-style: italic;
 			color: #888;
 		}
+		
+		.gameMaster {
+	
+			font-weight:bold;
+			color: black;
+		}
 	</ui:style>
 	<g:HTMLPanel>
 	<g:InlineLabel ui:field="creation" addStyleNames="{style.creation}"/>

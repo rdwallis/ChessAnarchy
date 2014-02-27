@@ -14,4 +14,6 @@ public interface Message {
 
 	long getCreated();
 
+	String getId();
+
 }

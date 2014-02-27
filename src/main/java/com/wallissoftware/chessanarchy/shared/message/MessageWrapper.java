@@ -35,13 +35,19 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 	}
 
 	public String getNewGameId() {
-		if (isFromGameMaster() && getText().startsWith("STARTING NEW GAME: ")) {
-			return getText().replace("STARTING NEW GAME: ", "");
+		if (isFromGameMaster() && getText().startsWith("STARTING GAME: ")) {
+			return getText().replace("STARTING GAME: ", "");
 		}
 		return null;
 	}
 
 	public String getFormattedMessage() {
+		if (getMove() != null) {
+			if (getColor() != null) {
+				return getColor() + " makes move: " + getMove();
+			}
+			return getMove();
+		}
 		if (isNickChange()) {
 			String name = getText().substring(6);
 			name = name.replace(" ", "");
@@ -92,4 +98,29 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 		}
 		return 0;
 	}
+
+	public String getBlackGovernment() {
+		return getText().startsWith("BLACK USES ") ? getText().replace("BLACK USES ", "") : null;
+
+	}
+
+	public String getWhiteGovernment() {
+		return getText().startsWith("WHITE USES ") ? getText().replace("WHITE USES ", "") : null;
+
+	}
+
+	public String getMove() {
+		return isFromGameMaster() && getText().startsWith("m") ? getText().substring(1) : null;
+	}
+
+	@Override
+	public String toString() {
+		return getCreated() + ": <" + getName() + "> : " + getText();
+	}
+
+	@Override
+	public String getId() {
+		return message.getId();
+	}
+
 }

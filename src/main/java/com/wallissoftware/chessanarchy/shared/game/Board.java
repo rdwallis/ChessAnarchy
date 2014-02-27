@@ -29,7 +29,7 @@ public class Board {
 
 	private King blackKing;
 
-	private Set<Piece> pieces = new HashSet<Piece>();
+	private List<Piece> pieces = new ArrayList<Piece>();
 
 	private Set<Move> lastCalculatedLegalMoves = new HashSet<Move>();
 
@@ -227,8 +227,7 @@ public class Board {
 	}
 
 	private boolean isCheckMate() {
-		return false;
-		//return calculateLegalMoves().isEmpty();
+		return isCheck() && calculateLegalMoves().isEmpty();
 	}
 
 	private List<Piece> getOtherPiecesOfSameTypeThatCanMoveToSquare(final Piece piece, final Square square) {
@@ -292,7 +291,7 @@ public class Board {
 		moveList = new ArrayList<Move>();
 		lastMoved = null;
 		for (final Piece piece : getPieces()) {
-			piece.reset();
+			piece.recycle();
 		}
 		this.board = new Piece[8][8];
 		final String startPos = "RNBQKBNR";
@@ -411,7 +410,7 @@ public class Board {
 		return moveList.size() % 2 == 0 ? Color.WHITE : Color.BLACK;
 	}
 
-	public Set<Piece> getPieces() {
+	public List<Piece> getPieces() {
 		return pieces;
 	}
 

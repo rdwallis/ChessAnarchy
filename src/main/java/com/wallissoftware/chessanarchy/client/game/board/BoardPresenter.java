@@ -25,6 +25,7 @@ import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.client.user.UserChangedEvent;
 import com.wallissoftware.chessanarchy.client.user.UserChangedEvent.UserChangedHandler;
 import com.wallissoftware.chessanarchy.shared.game.Board;
+import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Move;
 import com.wallissoftware.chessanarchy.shared.game.Square;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Piece;
@@ -50,9 +51,13 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		@Override
 		public void run() {
 			try {
-				logger.info("Resetting Board:\n" + gameStateProvider.get().getMoveList());
-				board.resetFromMoveList(gameStateProvider.get().getMoveList());
-				//drawBoard();
+				if (!preventRedraw) {
+					logger.info("Resetting Board:\n" + gameStateProvider.get().getMoveList());
+					board.resetFromMoveList(gameStateProvider.get().getMoveList());
+					if (shouldRedraw()) {
+						drawBoard();
+					}
+				}
 			} catch (final Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -69,6 +74,13 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	private final PromotionPresenter promotionPresenter;
 	private final GameStateProvider gameStateProvider;
 	private final static Logger logger = Logger.getLogger(BoardPresenter.class.getName());
+	private Color lastUserColor = null;
+	private boolean preventRedraw;
+	private String lastGameId = "";
+
+	private boolean shouldRedraw() {
+		return User.get().getColor(true) != lastUserColor || lastGameId == null || lastGameId.equals(gameStateProvider.get().getId());
+	}
 
 	@Inject
 	BoardPresenter(final EventBus eventBus, final MyView view, final Provider<PiecePresenter> piecePresenterProvider, final Board board, final PromotionPresenter promotionPresenter, final GameStateProvider gameStateProvider) {
@@ -92,7 +104,8 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	}
 
 	private void drawBoard() {
-		//getView().clearBoard();
+		lastUserColor = User.get().getColor(true);
+		lastGameId = gameStateProvider.get().getId();
 		for (final Piece piece : board.getPieces()) {
 			final PiecePresenter piecePresenter = getPiecePresenter(piece);
 			getView().setPieceInSquare(piecePresenter.getView(), piecePresenter.getPosition());
@@ -205,7 +218,11 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 			if (User.get().getColor() == null) {
 				return false;
 			}
-			if (board.getCurrentPlayer() != User.get().getColor()) {
+			Color userColor = User.get().getColor();
+			if (userColor != null && gameStateProvider.get().swapColors()) {
+				userColor = userColor.getOpposite();
+			}
+			if (board.getCurrentPlayer() != userColor) {
 				return false;
 			}
 			if (board.getPieceAt(square) == null) {
@@ -222,6 +239,27 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		} catch (final NullPointerException e) {
 			return false;
 		}
+
+	}
+
+	@Override
+	public boolean swapBoard() {
+		try {
+			return gameStateProvider.get().swapColors();
+		} catch (final NullPointerException e) {
+			return false;
+		}
+	}
+
+	@Override
+	public void preventRedraw() {
+		preventRedraw = true;
+
+	}
+
+	@Override
+	public void allowRedraw() {
+		preventRedraw = false;
 
 	}
 

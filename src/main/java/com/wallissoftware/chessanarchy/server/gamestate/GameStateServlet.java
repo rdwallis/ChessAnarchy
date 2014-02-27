@@ -27,7 +27,7 @@ public class GameStateServlet extends HttpServlet {
 			id = LatestGameStateId.get();
 		}
 		if (id != null) {
-			final Objectify ofy = ObjectifyService.ofy();
+			final Objectify ofy = ObjectifyService.factory().begin();
 			final GameState gameState = ofy.load().type(GameState.class).id(id).getValue();
 			if (gameState != null) {
 				resp.setContentType("application/json");

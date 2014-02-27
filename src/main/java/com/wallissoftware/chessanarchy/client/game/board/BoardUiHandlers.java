@@ -10,4 +10,10 @@ public interface BoardUiHandlers extends UiHandlers {
 	void makeMove(Square startDragSquare, Square endSquare);
 
 	boolean canMove(Square square);
+
+	boolean swapBoard();
+
+	void preventRedraw();
+
+	void allowRedraw();
 }

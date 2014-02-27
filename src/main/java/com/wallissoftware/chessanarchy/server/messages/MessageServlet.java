@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -132,7 +133,7 @@ public class MessageServlet extends HttpServlet {
 
 				}
 			}
-
+			map.put("id", UUID.randomUUID().toString());
 			map.put("created", System.currentTimeMillis() + "");
 			map.put("message", message);
 			final Color color = SessionUtils.getColor(req.getSession());
@@ -150,7 +151,7 @@ public class MessageServlet extends HttpServlet {
 			cache.put(MESSAGE_QUEUE_KEY, messageQueue);
 			if (messageQueue.size() % 100 == 0 || LastUpdateTime.isTimeToUpdate()) {
 				final Queue queue = QueueFactory.getDefaultQueue();
-				queue.add(withUrl("/processmessages").method(Method.GET));
+				queue.add(withUrl("/admin/processmessages").method(Method.GET));
 			}
 
 		}

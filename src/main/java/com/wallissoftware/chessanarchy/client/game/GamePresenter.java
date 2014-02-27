@@ -28,13 +28,15 @@ import com.gwtplatform.mvp.client.annotations.ProxyStandard;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 import com.wallissoftware.chessanarchy.client.game.board.BoardPresenter;
 import com.wallissoftware.chessanarchy.client.game.chat.ChatPresenter;
+import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
+import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent.GameStateUpdatedHandler;
 import com.wallissoftware.chessanarchy.client.game.team.TeamPresenter;
 import com.wallissoftware.chessanarchy.client.place.NameTokens;
 import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.client.user.UserChangedEvent;
 import com.wallissoftware.chessanarchy.client.user.UserChangedEvent.UserChangedHandler;
 
-public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter.MyProxy> implements UserChangedHandler {
+public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter.MyProxy> implements UserChangedHandler, GameStateUpdatedHandler {
 	public interface MyView extends View {
 	}
 
@@ -69,6 +71,7 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 		setInSlot(BOTTOM_TEAM_SLOT, bottomTeamPresenter);
 		setInSlot(TOP_TEAM_SLOT, topTeamPresenter);
 		addRegisteredHandler(UserChangedEvent.getType(), this);
+		addRegisteredHandler(GameStateUpdatedEvent.getType(), this);
 	}
 
 	@Override
@@ -93,6 +96,12 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 			}, 50);
 
 		}
+
+	}
+
+	@Override
+	public void onGameStateUpdated(final GameStateUpdatedEvent event) {
+		update();
 
 	}
 

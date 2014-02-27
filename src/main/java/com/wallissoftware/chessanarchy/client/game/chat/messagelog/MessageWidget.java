@@ -22,6 +22,8 @@ public class MessageWidget extends Composite {
 
 	interface MyStyle extends CssResource {
 		String command();
+
+		String gameMaster();
 	}
 
 	@UiField MyStyle style;
@@ -37,9 +39,14 @@ public class MessageWidget extends Composite {
 		this.creation = new InlineLabel(DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM).format(new Date(message.getCreated())));
 		this.creationTime = message.getCreated();
 		initWidget(uiBinder.createAndBindUi(this));
-		if (message.is3rdPerson() || message.isNickChange() || message.isTeamChange()) {
+		if (message.is3rdPerson() || message.isNickChange() || message.isTeamChange() || message.isFromGameMaster()) {
 			name.setVisible(false);
-			this.message.addStyleName(style.command());
+
+			if (message.isFromGameMaster()) {
+				this.message.addStyleName(style.gameMaster());
+			} else {
+				this.message.addStyleName(style.command());
+			}
 		} else {
 			name.getElement().getStyle().setColor(intToColor(getHash(message.getUserId())));
 		}

@@ -1,7 +1,10 @@
 package com.wallissoftware.chessanarchy.client.game.board;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -42,10 +45,30 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	}
 
+	private final Timer resetBoardTimer = new Timer() {
+
+		@Override
+		public void run() {
+			try {
+				logger.info("Resetting Board:\n" + gameStateProvider.get().getMoveList());
+				board.resetFromMoveList(gameStateProvider.get().getMoveList());
+				//drawBoard();
+			} catch (final Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
+
+	};
+
+	private final Map<Piece, PiecePresenter> piecePresenterMap = new HashMap<Piece, PiecePresenter>();
+
 	private final Provider<PiecePresenter> piecePresenterProvider;
 	private final Board board;
 	private final PromotionPresenter promotionPresenter;
 	private final GameStateProvider gameStateProvider;
+	private final static Logger logger = Logger.getLogger(BoardPresenter.class.getName());
 
 	@Inject
 	BoardPresenter(final EventBus eventBus, final MyView view, final Provider<PiecePresenter> piecePresenterProvider, final Board board, final PromotionPresenter promotionPresenter, final GameStateProvider gameStateProvider) {
@@ -69,7 +92,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	}
 
 	private void drawBoard() {
-		getView().clearBoard();
+		//getView().clearBoard();
 		for (final Piece piece : board.getPieces()) {
 			final PiecePresenter piecePresenter = getPiecePresenter(piece);
 			getView().setPieceInSquare(piecePresenter.getView(), piecePresenter.getPosition());
@@ -78,24 +101,28 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	}
 
 	private PiecePresenter getPiecePresenter(final Piece piece) {
-		final PiecePresenter piecePresenter = piecePresenterProvider.get();
-		piecePresenter.setPiece(piece);
-		piece.addPieceMoveHandler(new PieceMoveHandler() {
+		if (!piecePresenterMap.containsKey(piece)) {
+			final PiecePresenter piecePresenter = piecePresenterProvider.get();
+			piecePresenter.setPiece(piece);
+			piece.addPieceMoveHandler(new PieceMoveHandler() {
 
-			@Override
-			public void afterMove() {
-				if (piece.getPromotedTo() != null) {
-					getView().removeFromBoard(piecePresenter.getView());
-					getView().setPieceInSquare(getPiecePresenter(piece.getPromotedTo()), piece.getPromotedTo().getPosition());
-				} else if (piece.isCaptured()) {
-					getView().capture(piecePresenter.getView());
-				} else {
-					getView().setPieceInSquare(piecePresenter.getView(), piece.getPosition());
+				@Override
+				public void afterMove() {
+					logger.info("Redrawing Piece: " + piece);
+					if (piece.getPromotedTo() != null) {
+						getView().removeFromBoard(piecePresenter.getView());
+						getView().setPieceInSquare(getPiecePresenter(piece.getPromotedTo()), piece.getPromotedTo().getPosition());
+					} else if (piece.isCaptured()) {
+						getView().capture(piecePresenter.getView());
+					} else {
+						getView().setPieceInSquare(piecePresenter.getView(), piece.getPosition());
+					}
+
 				}
-
-			}
-		});
-		return piecePresenter;
+			});
+			piecePresenterMap.put(piece, piecePresenter);
+		}
+		return piecePresenterMap.get(piece);
 	}
 
 	@Override
@@ -119,31 +146,35 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	}
 
 	private void makeMove(final Move move) {
-		fireEvent(new SendMessageEvent(board.doMove(move, true)));
+		fireEvent(new SendMessageEvent(board.doMove(move, true, true)));
 	}
 
 	@Override
 	public void onReceivedMessageCache(final ReceivedMessageCacheEvent event) {
-		final Map<String, Move> notationMap = board.getLegalMovesWithNotation();
-		for (final JsonMessage msg : event.getMessageCache().getMessages()) {
-			final String message = msg.getText();
-			final long created = msg.getCreated();
-			if (System.currentTimeMillis() - created < 4000) {
-				if (message.length() == 5 && message.charAt(2) == '-') {
-					final Square startSquare = Square.fromString(message.substring(0, 2));
-					if (startSquare != null) {
-						final Square endSquare = Square.fromString(message.substring(3, 5));
-						if (endSquare != null) {
-							makeGhostMove(created, new Move(startSquare, endSquare));
+		try {
+			final Map<String, Move> notationMap = board.getLegalMovesWithNotation();
+			for (final JsonMessage msg : event.getMessageCache().getMessages()) {
+				final String message = msg.getText();
+				final long created = msg.getCreated();
+				if (System.currentTimeMillis() - created < 4000 && board.getCurrentPlayer() == msg.getColor()) {
+					if (message.length() == 5 && message.charAt(2) == '-') {
+						final Square startSquare = Square.fromString(message.substring(0, 2));
+						if (startSquare != null) {
+							final Square endSquare = Square.fromString(message.substring(3, 5));
+							if (endSquare != null) {
+								makeGhostMove(created, new Move(startSquare, endSquare));
+							}
 						}
+					} else if (notationMap.containsKey(message)) {
+						makeGhostMove(created, notationMap.get(message));
+					} else {
+						//TODO maybe ghost guess at illegal moves???
 					}
-				} else if (notationMap.containsKey(message)) {
-					makeGhostMove(created, notationMap.get(message));
-				} else {
-					//TODO maybe ghost guess at illegal moves???
 				}
-			}
 
+			}
+		} catch (final Exception e) {
+			logger.info("Problem processing ghost moves");
 		}
 
 	}
@@ -155,19 +186,16 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	@Override
 	public void onGameStateUpdated(final GameStateUpdatedEvent event) {
-		try {
-			board.resetFromMoveList(gameStateProvider.get().getMoveList());
-			drawBoard();
-		} catch (final Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
+		resetBoard();
 	}
 
 	@Override
 	public void onUserChanged(final UserChangedEvent event) {
-		drawBoard();
+		resetBoard();
+	}
+
+	private void resetBoard() {
+		resetBoardTimer.schedule(100);
 
 	}
 

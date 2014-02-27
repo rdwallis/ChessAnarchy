@@ -53,4 +53,9 @@ public final class GameState extends JavaScriptObject {
 		return JsonUtils.safeEval(json);
 	}
 
+	public native void addMove(String move) /*-{
+		this.moveList.push(move);
+
+	}-*/;
+
 }

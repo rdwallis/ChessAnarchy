@@ -16,6 +16,7 @@ import com.google.gson.Gson;
 import com.google.inject.Singleton;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.VoidWork;
 import com.wallissoftware.chessanarchy.server.gamestate.GameState;
 import com.wallissoftware.chessanarchy.server.gamestate.LatestGameStateId;
 import com.wallissoftware.chessanarchy.shared.game.Color;
@@ -28,6 +29,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
+
 		LastUpdateTime.markUpdated();
 		final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 		@SuppressWarnings("unchecked")
@@ -43,18 +45,26 @@ public class UpdateMessagesServlet extends HttpServlet {
 
 			messageMap.put("messages", messageQueue);
 
-			final MessageCache messageCache = new MessageCache(updateGameState(messageQueue), previousId, new Gson().toJson(messageMap));
 			final Objectify ofy = ObjectifyService.ofy();
-			ofy.save().entities(messageCache).now();
+			final Long latestGameStateId = LatestGameStateId.get();
+			ofy.transact(new VoidWork() {
 
-			LatestMessageId.set(messageCache.getId());
+				@Override
+				public void vrun() {
+					final MessageCache messageCache = new MessageCache(updateGameState(ofy, latestGameStateId, messageQueue), previousId, new Gson().toJson(messageMap));
+					ofy.save().entities(messageCache);
+
+					LatestMessageId.set(messageCache.getId());
+
+				}
+
+			});
 
 		}
 	}
 
-	private boolean updateGameState(final Set<Map<String, String>> messageQueue) {
-		final Objectify ofy = ObjectifyService.ofy();
-		final Long latestGameStateId = LatestGameStateId.get();
+	private boolean updateGameState(final Objectify ofy, final Long latestGameStateId, final Set<Map<String, String>> messageQueue) {
+
 		if (latestGameStateId != null) {
 			final GameState gameState = ofy.load().type(GameState.class).id(LatestGameStateId.get()).getValue();
 			if (gameState != null) {
@@ -65,7 +75,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 						message.put("color", Color.valueOf(message.get("color")) == Color.WHITE ? Color.BLACK.name() : Color.WHITE.name());
 					}
 
-					if (message.get("color") != null && currentPlayer == Color.valueOf(message.get("color")) || moveMap.containsKey(message.get("message"))) {
+					if (message.get("color") != null && currentPlayer == Color.valueOf(message.get("color")) && moveMap.containsKey(message.get("message"))) {
 						gameState.addMoveRequest(new MoveRequest(Color.valueOf(message.get("color")), message.get("userId"), moveMap.get(message.get("message"))));
 					}
 				}
@@ -79,22 +89,21 @@ public class UpdateMessagesServlet extends HttpServlet {
 
 				if (gameState.isComplete()) {
 
-					messageQueue.add(createServerMessageMap("STARTING NEW GAME: " + createNewGameState(!gameState.swapColors())));
+					messageQueue.add(createServerMessageMap("STARTING NEW GAME: " + createNewGameState(ofy, !gameState.swapColors())));
 					return true;
 				}
 			}
 
 		} else {
 
-			messageQueue.add(createServerMessageMap("STARTING NEW GAME: " + createNewGameState(false)));
+			messageQueue.add(createServerMessageMap("STARTING NEW GAME: " + createNewGameState(ofy, false)));
 			return true;
 		}
 		return false;
 
 	}
 
-	private long createNewGameState(final boolean swapColors) {
-		final Objectify ofy = ObjectifyService.ofy();
+	private long createNewGameState(final Objectify ofy, final boolean swapColors) {
 		final GameState gameState = new GameState(swapColors);
 		ofy.save().entity(gameState).now();
 		LatestGameStateId.set(gameState.getId());

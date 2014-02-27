@@ -92,6 +92,7 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
 	@Override
 	public void joinTeam() {
 		fireEvent(new SendMessageEvent("/team " + getColor().name()));
+		User.get().joinTeam(getEventBus(), getColor());
 	}
 
 }

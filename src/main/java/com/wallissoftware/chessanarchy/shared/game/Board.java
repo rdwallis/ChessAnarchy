@@ -7,7 +7,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
+import com.google.gwt.logging.client.LogConfiguration;
 import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Bishop;
 import com.wallissoftware.chessanarchy.shared.game.pieces.King;
@@ -21,26 +23,28 @@ public class Board {
 
 	Piece[][] board;
 
-	private final List<Move> moveList = new ArrayList<Move>();
+	private List<Move> moveList;
 
 	private King whiteKing;
 
 	private King blackKing;
 
-	private Piece lastCapture;
-
-	private Piece lastMovedPiece;
-
-	private Set<Piece> capturedPieces = new HashSet<Piece>();
+	private Set<Piece> pieces = new HashSet<Piece>();
 
 	private Set<Move> lastCalculatedLegalMoves = new HashSet<Move>();
+
+	private Piece lastMoved;
+
+	private boolean requiresFullUndo = false;
+
+	private final static Logger logger = Logger.getLogger(Board.class.getName());
 
 	public Board(final List<String> moveList) throws IllegalMoveException {
 		resetFromMoveList(moveList);
 	}
 
 	public void resetFromMoveList(final List<String> moveList) throws IllegalMoveException {
-		reset();
+		reset(true);
 		for (final String pgn : moveList) {
 			doMove(pgn);
 		}
@@ -49,63 +53,72 @@ public class Board {
 	private void doMove(final String pgn) throws IllegalMoveException {
 		final Map<String, Move> notationMap = getLegalMovesWithNotation();
 		if (notationMap.containsKey(pgn)) {
-			doMove(notationMap.get(pgn), true);
+			doMove(notationMap.get(pgn), true, false);
 		} else {
+			logger.info(pgn + " is not contained in legal move list: " + notationMap.keySet());
 			throw new IllegalMoveException();
 		}
 
 	}
 
 	public Board() {
-		reset();
+		reset(true);
 	}
 
-	public final String doMove(final Move move, final boolean recordMove) {
+	public final String doMove(final Move move, final boolean recordMove, final boolean calcFullPgn) {
+		requiresFullUndo = false;
 		final Square start = move.getStart();
 		final Square end = move.getEnd();
 
 		String pgn = end.toString();
 
-		this.lastCapture = board[end.getRank()][end.getFile()];
-		if (lastCapture != null) {
-			pgn = "x" + pgn;
-		}
-
-		this.lastMovedPiece = board[start.getRank()][start.getFile()];
-
-		final List<Piece> otherPiecesOfSameType = getOtherPiecesOfSameTypeThatCanMoveToSquare(lastMovedPiece, end);
-
-		boolean fileIsUnique = true;
-		boolean rankIsUnique = true;
-		for (final Piece piece : otherPiecesOfSameType) {
-			final Square otherPosition = piece.getPosition();
-			final Square position = move.getStart();
-			if (otherPosition.getRank() == position.getRank()) {
-				rankIsUnique = false;
-			}
-			if (otherPosition.getFile() == position.getFile()) {
-				fileIsUnique = false;
-			}
-		}
-
-		if (!fileIsUnique) {
-			pgn = start.toString().charAt(1) + pgn;
-		}
-
-		if (!rankIsUnique) {
-			pgn = start.toString().charAt(0) + pgn;
-		}
-
-		pgn = lastMovedPiece.getPgnAbbreviation() + pgn;
-
-		if (lastCapture == null && start.getRank() != end.getRank() && lastMovedPiece instanceof Pawn) {
+		Piece capture = board[end.getRank()][end.getFile()];
+		final Piece movedPiece = board[start.getRank()][start.getFile()];
+		if (capture == null && start.getRank() != end.getRank() && movedPiece instanceof Pawn) {
 			//en passant
-			lastCapture = board[end.getRank()][start.getFile()];
+			capture = board[end.getRank()][start.getFile()];
 			board[end.getRank()][start.getFile()] = null;
 
 		}
 
-		if (Math.abs(end.getRank() - start.getRank()) > 1 && lastMovedPiece instanceof King) {
+		if (capture != null) {
+			pgn = "x" + pgn;
+			requiresFullUndo = true;
+		}
+
+		if (movedPiece == null) {
+			logBoardAndHighlightSquare(start);
+			return "";
+		}
+		if (calcFullPgn) {
+
+			final List<Piece> otherPiecesOfSameType = getOtherPiecesOfSameTypeThatCanMoveToSquare(movedPiece, end);
+
+			boolean fileIsUnique = true;
+			boolean rankIsUnique = true;
+			for (final Piece piece : otherPiecesOfSameType) {
+				final Square otherPosition = piece.getPosition();
+				final Square position = move.getStart();
+				if (otherPosition.getRank() == position.getRank()) {
+					rankIsUnique = false;
+				}
+				if (otherPosition.getFile() == position.getFile()) {
+					fileIsUnique = false;
+				}
+			}
+
+			if (!fileIsUnique) {
+				pgn = start.toString().charAt(1) + pgn;
+			}
+
+			if (!rankIsUnique) {
+				pgn = start.toString().charAt(0) + pgn;
+			}
+
+			pgn = movedPiece.getPgnAbbreviation() + pgn;
+		}
+
+		if (Math.abs(end.getRank() - start.getRank()) > 1 && movedPiece instanceof King) {
 			//castling
 			if (end.getRank() == 2) {
 				//queenside
@@ -125,31 +138,74 @@ public class Board {
 
 		Piece movingPiece = move.getPromote();
 		if (movingPiece == null) {
-			movingPiece = lastMovedPiece;
+			movingPiece = movedPiece;
 
-		} else if (recordMove) {
+		} else {
 			pgn = pgn + "=" + movingPiece.getPgnAbbreviation();
-			lastMovedPiece.notfiyHandlersOfPosition();
+			pieces.add(movingPiece);
+			if (recordMove) {
+				movedPiece.notfiyHandlersOfPosition();
+			}
 		}
+		setLastMovedPiece(movingPiece);
+
 		board[start.getRank()][start.getFile()] = null;
 
 		board[end.getRank()][end.getFile()] = movingPiece;
 		movingPiece.setPosition(end, recordMove);
 		moveList.add(move);
-		if (lastCapture != null) {
-			capturedPieces.add(lastCapture);
-			if (recordMove) {
-				lastCapture.capture();
-			}
+		if (capture != null && recordMove) {
+			capture.capture();
 		}
-		if (recordMove) {
+		if (calcFullPgn) {
 			if (isCheckMate()) {
 				pgn = pgn + "#";
 			} else if (isCheck()) {
 				pgn = pgn + "+";
 			}
 		}
+
 		return pgn;
+
+	}
+
+	private void setLastMovedPiece(final Piece movingPiece) {
+		if (lastMoved != null) {
+			lastMoved.setJustMoved(false);
+		}
+		this.lastMoved = movingPiece;
+		if (lastMoved != null) {
+			lastMoved.setJustMoved(true);
+		}
+
+	}
+
+	private void logBoardAndHighlightSquare(final Square highlightSquare) {
+		if (LogConfiguration.loggingIsEnabled()) {
+
+			final StringBuilder sb = new StringBuilder();
+			sb.append("\n");
+			final String line = "---------------------------------\n";
+			sb.append(line);
+			for (int file = 0; file < 8; file++) {
+				for (int rank = 0; rank < 8; rank++) {
+					final Square square = new Square(rank, file);
+					sb.append(square.equals(highlightSquare) ? "[" : "|");
+					final Piece p = board[rank][file];
+					if (p == null) {
+						sb.append("  ");
+					} else {
+						sb.append(p.getColor().name().charAt(0));
+						sb.append(p.getPgnAbbreviation().isEmpty() ? "P" : p.getPgnAbbreviation());
+					}
+					sb.append(square.equals(highlightSquare) ? "]" : "|");
+
+				}
+				sb.append("\n");
+				sb.append(line);
+			}
+			logger.info(sb.toString());
+		}
 
 	}
 
@@ -171,7 +227,8 @@ public class Board {
 	}
 
 	private boolean isCheckMate() {
-		return calculateLegalMoves().isEmpty();
+		return false;
+		//return calculateLegalMoves().isEmpty();
 	}
 
 	private List<Piece> getOtherPiecesOfSameTypeThatCanMoveToSquare(final Piece piece, final Square square) {
@@ -192,73 +249,97 @@ public class Board {
 	}
 
 	private void undoLastMove() {
-		final Move move = moveList.remove(moveList.size() - 1);
-		final Square start = move.getStart();
-		final Square end = move.getEnd();
-
-		board[start.getRank()][start.getFile()] = lastMovedPiece;
-		board[end.getRank()][end.getFile()] = null;
-		if (lastCapture != null) {
-			capturedPieces.remove(lastCapture);
-			board[lastCapture.getPosition().getRank()][lastCapture.getPosition().getFile()] = lastCapture;
-		}
-
-		if (Math.abs(end.getRank() - start.getRank()) > 1 && lastMovedPiece instanceof King) {
-			//castling
-			if (end.getRank() == 1) {
-				final Piece castle = board[2][start.getFile()];
-				board[0][start.getFile()] = castle;
-				castle.setPosition(new Square(0, start.getFile()), false, false);
-			} else if (end.getRank() == 6) {
-				final Piece castle = board[5][start.getFile()];
-				board[7][start.getFile()] = castle;
-				castle.setPosition(new Square(7, start.getFile()), false, false);
+		if (requiresFullUndo) {
+			final List<Move> moveList = this.moveList;
+			reset(false);
+			moveList.remove(moveList.size() - 1);
+			for (final Move move : moveList) {
+				doMove(move, false, false);
 			}
-		}
+		} else {
+			final Move move = moveList.remove(moveList.size() - 1);
+			final Square start = move.getStart();
+			final Square end = move.getEnd();
 
-		lastMovedPiece.setPosition(start, false, false);
-		lastMovedPiece.decrememntMoveCount();
+			board[start.getRank()][start.getFile()] = lastMoved;
+			board[end.getRank()][end.getFile()] = null;
 
-	}
-
-	private void reset() {
-		capturedPieces.clear();
-		this.board = new Piece[8][8];
-		board[0][0] = new Rook(Color.WHITE);
-		board[1][0] = new Knight(Color.WHITE);
-		board[2][0] = new Bishop(Color.WHITE);
-		board[3][0] = new Queen(Color.WHITE);
-		this.whiteKing = new King(Color.WHITE);
-		board[4][0] = whiteKing;
-		board[5][0] = new Bishop(Color.WHITE);
-		board[6][0] = new Knight(Color.WHITE);
-		board[7][0] = new Rook(Color.WHITE);
-
-		for (int i = 0; i < 8; i++) {
-			board[i][1] = new Pawn(Color.WHITE);
-			board[i][6] = new Pawn(Color.BLACK);
-		}
-
-		board[0][7] = new Rook(Color.BLACK);
-		board[1][7] = new Knight(Color.BLACK);
-		board[2][7] = new Bishop(Color.BLACK);
-		board[3][7] = new Queen(Color.BLACK);
-		this.blackKing = new King(Color.BLACK);
-		board[4][7] = blackKing;
-		board[5][7] = new Bishop(Color.BLACK);
-		board[6][7] = new Knight(Color.BLACK);
-		board[7][7] = new Rook(Color.BLACK);
-		resetPiecePositions();
-	}
-
-	private void resetPiecePositions() {
-		for (int rank = 0; rank < 8; rank++) {
-			for (int file = 0; file < 8; file++) {
-				if (board[rank][file] != null) {
-					board[rank][file].setPosition(new Square(rank, file), true);
+			if (Math.abs(end.getRank() - start.getRank()) > 1 && lastMoved instanceof King) {
+				//castling
+				if (end.getRank() == 1) {
+					final Piece castle = board[2][start.getFile()];
+					board[0][start.getFile()] = castle;
+					castle.setPosition(new Square(0, start.getFile()), false, false);
+				} else if (end.getRank() == 6) {
+					final Piece castle = board[5][start.getFile()];
+					board[7][start.getFile()] = castle;
+					castle.setPosition(new Square(7, start.getFile()), false, false);
 				}
 			}
+
+			lastMoved.setPosition(start, false, false);
+			lastMoved.decrememntMoveCount();
+
+			if (!moveList.isEmpty()) {
+				setLastMovedPiece(getPieceAt(moveList.get(moveList.size() - 1).getEnd()));
+			}
 		}
+
+	}
+
+	private void reset(final boolean redraw) {
+		logger.info("reseting board");
+		moveList = new ArrayList<Move>();
+		lastMoved = null;
+		for (final Piece piece : getPieces()) {
+			piece.reset();
+		}
+		this.board = new Piece[8][8];
+		final String startPos = "RNBQKBNR";
+
+		for (int i = 0; i < 8; i++) {
+			createPiece(new Square(i, 0), startPos.substring(i, i + 1), Color.WHITE, redraw);
+			createPiece(new Square(i, 1), "", Color.WHITE, redraw);
+			createPiece(new Square(i, 6), "", Color.BLACK, redraw);
+			createPiece(new Square(i, 7), startPos.substring(i, i + 1), Color.BLACK, redraw);
+		}
+	}
+
+	private void createPiece(final Square square, final String abbreviation, final Color color, final boolean redraw) {
+		for (final Piece piece : getPieces()) {
+			if (piece.canRecycle() && piece.getPgnAbbreviation().equals(abbreviation) && piece.getColor() == color) {
+				setPieceAtSquare(piece, square, redraw);
+				return;
+			}
+		}
+		final Piece newPiece;
+		if (abbreviation.equals("")) {
+			newPiece = new Pawn(color);
+
+		} else if (abbreviation.equals("Q")) {
+			newPiece = new Queen(color);
+		} else if (abbreviation.equals("R")) {
+			newPiece = new Rook(color);
+		} else if (abbreviation.equals("K")) {
+			newPiece = new King(color);
+			if (color == Color.WHITE) {
+				whiteKing = (King) newPiece;
+			} else {
+				blackKing = (King) newPiece;
+			}
+		} else if (abbreviation.equals("N")) {
+			newPiece = new Knight(color);
+		} else {
+			newPiece = new Bishop(color);
+		}
+		setPieceAtSquare(newPiece, square, redraw);
+		pieces.add(newPiece);
+
+	}
+
+	private void setPieceAtSquare(final Piece piece, final Square square, final boolean fireEvents) {
+		board[square.getRank()][square.getFile()] = piece;
+		piece.setPosition(square, fireEvents);
 
 	}
 
@@ -310,7 +391,7 @@ public class Board {
 				}
 			}
 		}
-		doMove(move, false);
+		doMove(move, false, false);
 		final King currentKing = getCurrentPlayer() != Color.WHITE ? whiteKing : blackKing;
 		protectedSquares.add(currentKing.getPosition());
 		for (final Move opponentMove : calculateLegalMoves(true)) {
@@ -331,16 +412,7 @@ public class Board {
 	}
 
 	public Set<Piece> getPieces() {
-		final Set<Piece> allPieces = new HashSet<Piece>();
-		allPieces.addAll(capturedPieces);
-		for (int rank = 0; rank < 8; rank++) {
-			for (int file = 0; file < 8; file++) {
-				if (board[rank][file] != null) {
-					allPieces.add(board[rank][file]);
-				}
-			}
-		}
-		return allPieces;
+		return pieces;
 	}
 
 	public boolean isMovePromotion(final Square start, final Square end) {
@@ -378,7 +450,7 @@ public class Board {
 	public Map<String, Move> getLegalMovesWithNotation() {
 		final Map<String, Move> result = new HashMap<String, Move>();
 		for (final Move move : calculateLegalMoves()) {
-			result.put(doMove(move, false), move);
+			result.put(doMove(move, false, true), move);
 			undoLastMove();
 		}
 		return result;
@@ -387,7 +459,7 @@ public class Board {
 	public Map<String, String> getAllLegalMovesWithNotation() {
 		final Map<String, String> result = new HashMap<String, String>();
 		for (final Move move : calculateLegalMoves()) {
-			final String pgn = doMove(move, false);
+			final String pgn = doMove(move, false, true);
 			result.put(pgn, pgn);
 			result.put(move.toString(), pgn);
 			undoLastMove();

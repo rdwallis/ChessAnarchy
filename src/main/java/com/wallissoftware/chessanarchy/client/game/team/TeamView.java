@@ -60,11 +60,15 @@ public class TeamView extends ViewWithUiHandlers<TeamUiHandlers> implements Team
 	public void setJoinCountDown(final Long joinTime) {
 
 		joinTeamButton.setVisible(joinTime == null);
+		if (joinTime != null) {
 
-		final long timeSinceStart = System.currentTimeMillis() - joinTime;
-		if (timeSinceStart < CAConstants.JOIN_TEAM_WAIT) {
-			joinTeamCountDown.setText("Joining in " + (CAConstants.JOIN_TEAM_WAIT - timeSinceStart) / 1000 + " seconds.");
-			joinTeamCountDown.setVisible(true);
+			final long timeSinceStart = System.currentTimeMillis() - joinTime;
+			if (timeSinceStart < CAConstants.JOIN_TEAM_WAIT) {
+				joinTeamCountDown.setText("Joining in " + (CAConstants.JOIN_TEAM_WAIT - timeSinceStart) / 1000 + " seconds.");
+				joinTeamCountDown.setVisible(true);
+			} else {
+				joinTeamCountDown.setVisible(false);
+			}
 		} else {
 			joinTeamCountDown.setVisible(false);
 		}

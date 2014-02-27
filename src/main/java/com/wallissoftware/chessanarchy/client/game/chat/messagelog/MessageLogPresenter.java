@@ -54,7 +54,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	@Override
 	protected void onBind() {
 		super.onBind();
-		fetchLatestMessages();
+		//fetchLatestMessages();
 		Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
 
 			@Override

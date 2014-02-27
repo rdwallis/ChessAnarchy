@@ -16,6 +16,8 @@
 
 package com.wallissoftware.chessanarchy.client.game;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.web.bindery.event.shared.EventBus;
@@ -79,6 +81,17 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 		if (User.get().getColor(true) != null) {
 			bottomTeamPresenter.setColor(User.get().getColor(true));
 			topTeamPresenter.setColor(User.get().getColor(true).getOpposite());
+		} else {
+			Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+
+				@Override
+				public boolean execute() {
+					update();
+					return false;
+				}
+
+			}, 50);
+
 		}
 
 	}

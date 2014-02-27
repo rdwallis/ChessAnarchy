@@ -75,7 +75,7 @@ public class PromotionPresenter extends PresenterWidget<PromotionPresenter.MyVie
 	}
 
 	private void makeMove(final Move move) {
-		fireEvent(new SendMessageEvent(board.doMove(move, true)));
+		fireEvent(new SendMessageEvent(board.doMove(move, true, true)));
 	}
 
 }

@@ -80,7 +80,7 @@ public final class User extends JavaScriptObject {
 	}
 
 	public Color getColor(final boolean ignoreTeamWait) {
-		final long teamWaitTime = ignoreTeamWait ? -1 : CAConstants.JOIN_TEAM_WAIT;
+		final long teamWaitTime = ignoreTeamWait ? -1000 : CAConstants.JOIN_TEAM_WAIT;
 		if (getWhiteJoinTime() != null && System.currentTimeMillis() - getWhiteJoinTime() > teamWaitTime) {
 			return Color.WHITE;
 		}
@@ -89,4 +89,23 @@ public final class User extends JavaScriptObject {
 		}
 		return null;
 	}
+
+	public void joinTeam(final EventBus eventBus, final Color color) {
+		if (color == Color.WHITE) {
+			setWhiteColorJoinTime(System.currentTimeMillis() + "");
+		} else {
+			setBlackColorJoinTime(System.currentTimeMillis() + "");
+		}
+		eventBus.fireEvent(new UserChangedEvent());
+
+	}
+
+	private native void setWhiteColorJoinTime(String joinTime) /*-{
+		this.white = joinTime;
+
+	}-*/;
+
+	private native void setBlackColorJoinTime(String joinTime) /*-{
+		this.black = joinTime;
+	}-*/;
 }

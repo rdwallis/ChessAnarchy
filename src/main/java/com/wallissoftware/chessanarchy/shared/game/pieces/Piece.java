@@ -27,6 +27,8 @@ public abstract class Piece implements Dto {
 
 	private Set<PieceMoveHandler> pieceMoveHandlers = new HashSet<PieceMoveHandler>();
 
+	private boolean justMoved;
+
 	Piece() {
 	};
 
@@ -37,6 +39,20 @@ public abstract class Piece implements Dto {
 
 	public Piece(final Color color) {
 		this(color, 0);
+	}
+
+	public void reset() {
+		justMoved = false;
+		moveCount = 0;
+		position = null;
+	}
+
+	public boolean justMoved() {
+		return justMoved;
+	}
+
+	public boolean canRecycle() {
+		return position == null;
 	}
 
 	Piece(final Pawn promotedFrom) {
@@ -82,12 +98,14 @@ public abstract class Piece implements Dto {
 	public abstract Set<Move> getLegalMoves(Piece[][] board);
 
 	public void setPosition(final Square position, final boolean fireEvents, final boolean countMove) {
-		if (countMove && this.position != null) {
-			moveCount += 1;
-		}
-		this.position = position;
-		if (fireEvents) {
-			notfiyHandlersOfPosition();
+		if (this.position != position) {
+			if (countMove && this.position != null) {
+				moveCount += 1;
+			}
+			this.position = position;
+			if (fireEvents) {
+				notfiyHandlersOfPosition();
+			}
 		}
 
 	}
@@ -144,6 +162,11 @@ public abstract class Piece implements Dto {
 
 	public static Set<String> getAllAbbreviations() {
 		return abbreviationSet;
+	}
+
+	public void setJustMoved(final boolean justMoved) {
+		this.justMoved = justMoved;
+
 	};
 
 }

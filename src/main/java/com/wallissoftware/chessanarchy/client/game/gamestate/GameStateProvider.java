@@ -44,7 +44,7 @@ public class GameStateProvider implements Provider<GameState>, GameMasterMessage
 				return true;
 			}
 
-		}, 10000);
+		}, 5000);
 		fetchLatestGameState();
 	}
 
@@ -94,7 +94,10 @@ public class GameStateProvider implements Provider<GameState>, GameMasterMessage
 
 	@Override
 	public void onGameMasterMessage(final GameMasterMessageEvent event) {
-		fetchLatestGameState();
+		if (getSyncedBoard().getLegalMovesWithNotation().containsKey(event.getMessage())) {
+			gameState.addMove(event.getMessage());
+			eventBus.fireEvent(new GameStateUpdatedEvent());
+		}
 
 	}
 

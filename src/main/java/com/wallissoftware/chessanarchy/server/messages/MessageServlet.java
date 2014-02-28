@@ -96,14 +96,14 @@ public class MessageServlet extends HttpServlet {
 	protected void doPut(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
 		final StringWriter writer = new StringWriter();
 		IOUtils.copy(req.getInputStream(), writer, "UTF-8");
-		final String message = StringEscapeUtils.escapeJavaScript(StringEscapeUtils.escapeHtml(writer.toString()));
+		final String message = StringEscapeUtils.escapeHtml(writer.toString());
 		boolean sessionModified = false;
 		if (message != null && !message.isEmpty()) {
 			final Map<String, String> map = new HashMap<String, String>();
 			map.put("userId", SessionUtils.getUserId(req.getSession()));
 			map.put("name", SessionUtils.getName(req.getSession()));
-			if (message.toLowerCase().startsWith("\\/nick")) {
-				String name = message.substring(6);
+			if (message.toLowerCase().startsWith("/nick")) {
+				String name = message.substring(5);
 				name = name.replace(" ", "");
 				if (name.length() > 20) {
 					name = name.substring(0, 20);
@@ -111,8 +111,8 @@ public class MessageServlet extends HttpServlet {
 				SessionUtils.setName(req.getSession(), name);
 				sessionModified = true;
 			}
-			if (message.toLowerCase().startsWith("\\/team")) {
-				final String clr = message.substring(6).trim().toUpperCase();
+			if (message.toLowerCase().startsWith("/team")) {
+				final String clr = message.substring(5).trim().toUpperCase();
 				try {
 					Color color = Color.valueOf(clr);
 					final Long id = LatestGameStateId.get();

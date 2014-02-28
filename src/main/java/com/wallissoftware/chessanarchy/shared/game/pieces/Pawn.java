@@ -109,4 +109,10 @@ public class Pawn extends Piece {
 		return "";
 	}
 
+	@Override
+	public void recycle() {
+		super.recycle();
+		promotedTo = null;
+	}
+
 }

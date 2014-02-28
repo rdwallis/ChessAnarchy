@@ -251,7 +251,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	@Override
 	public void makeGhostMove(final double startTime, final Piece piece, final Square end) {
-		if (ghostAnimations.size() > 20 || piece == null) {
+		if (ghostAnimations.size() > 40 || piece == null) {
 			return;
 		}
 		final Image image = new Image();

@@ -49,16 +49,16 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 			return getMove();
 		}
 		if (isNickChange()) {
-			String name = getText().substring(6);
+			String name = getText().substring(5);
 			name = name.replace(" ", "");
 			if (name.length() > 20) {
 				name = name.substring(0, 20);
 			}
 			return getName() + " changed their nick to " + name;
 		} else if (is3rdPerson()) {
-			return getName() + " " + getText().substring(4);
+			return getName() + " " + getText().substring(3);
 		} else if (isTeamChange()) {
-			String team = getText().substring(6);
+			String team = getText().substring(5);
 			team = team.replace(" ", "");
 			if (team.toLowerCase().equals("white") || team.toLowerCase().equals("black")) {
 				return getName() + " joins the " + team.toLowerCase() + " team.";
@@ -71,17 +71,17 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 	}
 
 	public boolean isNickChange() {
-		return getText().toLowerCase().startsWith("\\/nick");
+		return getText().toLowerCase().startsWith("/nick");
 
 	}
 
 	public boolean is3rdPerson() {
-		return getText().toLowerCase().startsWith("\\/me");
+		return getText().toLowerCase().startsWith("/me");
 
 	}
 
 	public boolean isTeamChange() {
-		return getText().toLowerCase().startsWith("\\/team");
+		return getText().toLowerCase().startsWith("/team");
 	}
 
 	@Override

@@ -84,9 +84,11 @@ public abstract class Piece implements Dto {
 
 	}
 
-	public void capture() {
+	public void capture(final boolean fireEvents) {
 		captured = true;
-		notfiyHandlersOfPosition();
+		if (fireEvents) {
+			notfiyHandlersOfPosition();
+		}
 	}
 
 	public boolean isCaptured() {

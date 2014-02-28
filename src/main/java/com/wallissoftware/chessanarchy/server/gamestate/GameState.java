@@ -71,7 +71,7 @@ public class GameState {
 			addMessage("m" + move, getCurrentPlayer().getOpposite());
 
 		} catch (final IllegalMoveException e) {
-			//moveList.remove(moveList.size() - 1);
+			addMessage("Illegal MoveException for move: " + move, null);
 		}
 
 	}
@@ -96,6 +96,7 @@ public class GameState {
 		jsonMap.put("whiteGovernment", whiteGovernment);
 		jsonMap.put("blackGovernment", blackGovernment);
 		jsonMap.put("moveList", moveList);
+		jsonMap.put("legalMoves", getLegalMoves());
 		return new Gson().toJson(jsonMap);
 
 	}

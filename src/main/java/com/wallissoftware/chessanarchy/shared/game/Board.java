@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import com.google.gwt.logging.client.LogConfiguration;
 import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Bishop;
 import com.wallissoftware.chessanarchy.shared.game.pieces.King;
@@ -66,7 +65,6 @@ public class Board {
 	}
 
 	public final String doMove(final Move move, final boolean recordMove, final boolean calcFullPgn) {
-		requiresFullUndo = false;
 		final Square start = move.getStart();
 		final Square end = move.getEnd();
 
@@ -86,10 +84,6 @@ public class Board {
 			requiresFullUndo = true;
 		}
 
-		if (movedPiece == null) {
-			logBoardAndHighlightSquare(start);
-			return "";
-		}
 		if (calcFullPgn) {
 
 			final List<Piece> otherPiecesOfSameType = getOtherPiecesOfSameTypeThatCanMoveToSquare(movedPiece, end);
@@ -154,8 +148,8 @@ public class Board {
 		board[end.getRank()][end.getFile()] = movingPiece;
 		movingPiece.setPosition(end, recordMove);
 		moveList.add(move);
-		if (capture != null && recordMove) {
-			capture.capture();
+		if (capture != null) {
+			capture.capture(recordMove);
 		}
 		if (calcFullPgn) {
 			if (isCheckMate()) {
@@ -180,33 +174,29 @@ public class Board {
 
 	}
 
-	private void logBoardAndHighlightSquare(final Square highlightSquare) {
-		if (LogConfiguration.loggingIsEnabled()) {
-
-			final StringBuilder sb = new StringBuilder();
-			sb.append("\n");
-			final String line = "---------------------------------\n";
-			sb.append(line);
-			for (int file = 0; file < 8; file++) {
-				for (int rank = 0; rank < 8; rank++) {
-					final Square square = new Square(rank, file);
-					sb.append(square.equals(highlightSquare) ? "[" : "|");
-					final Piece p = board[rank][file];
-					if (p == null) {
-						sb.append("  ");
-					} else {
-						sb.append(p.getColor().name().charAt(0));
-						sb.append(p.getPgnAbbreviation().isEmpty() ? "P" : p.getPgnAbbreviation());
-					}
-					sb.append(square.equals(highlightSquare) ? "]" : "|");
-
+	private String getBoardAsText(final Square highlightSquare) {
+		final StringBuilder sb = new StringBuilder();
+		sb.append("\n");
+		final String line = "---------------------------------\n";
+		sb.append(line);
+		for (int file = 0; file < 8; file++) {
+			for (int rank = 0; rank < 8; rank++) {
+				final Square square = new Square(rank, file);
+				sb.append(square.equals(highlightSquare) ? "[" : "|");
+				final Piece p = board[rank][file];
+				if (p == null) {
+					sb.append("  ");
+				} else {
+					sb.append(p.getColor().name().charAt(0));
+					sb.append(p.getPgnAbbreviation().isEmpty() ? "P" : p.getPgnAbbreviation());
 				}
-				sb.append("\n");
-				sb.append(line);
-			}
-			logger.info(sb.toString());
-		}
+				sb.append(square.equals(highlightSquare) ? "]" : "|");
 
+			}
+			sb.append("\n");
+			sb.append(line);
+		}
+		return sb.toString();
 	}
 
 	private boolean isCheck() {
@@ -249,12 +239,14 @@ public class Board {
 
 	private void undoLastMove() {
 		if (requiresFullUndo) {
+			requiresFullUndo = false;
 			final List<Move> moveList = this.moveList;
 			reset(false);
 			moveList.remove(moveList.size() - 1);
 			for (final Move move : moveList) {
 				doMove(move, false, false);
 			}
+
 		} else {
 			final Move move = moveList.remove(moveList.size() - 1);
 			final Square start = move.getStart();

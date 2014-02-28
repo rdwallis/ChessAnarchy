@@ -46,12 +46,13 @@ public class UpdateMessagesServlet extends HttpServlet {
 				//run every five updates or so.
 				final Long previousGameStateId = LatestGameStateId.getPrevious();
 
-				if (previousGameStateId != null) {
-					gameStateMessages.addAll(ofy.load().type(GameState.class).id(previousGameStateId).getValue().getMessages());
-
-				}
 				if (latestGameStateId != null) {
 					gameStateMessages.addAll(ofy.load().type(GameState.class).id(latestGameStateId).getValue().getMessages());
+				}
+
+				if (gameStateMessages.size() < 10 && previousGameStateId != null) {
+					gameStateMessages.addAll(ofy.load().type(GameState.class).id(previousGameStateId).getValue().getMessages());
+
 				}
 
 			}
@@ -99,6 +100,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 
 				gameState.processMoveRequests();
 				messageQueue.addAll(gameState.getMessages());
+
 				ofy.save().entity(gameState);
 
 				if (gameState.isComplete()) {

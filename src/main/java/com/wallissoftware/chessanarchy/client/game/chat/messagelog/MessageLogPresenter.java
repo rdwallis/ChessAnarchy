@@ -93,10 +93,11 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
 	private void processMessages(final String messagesJson, final boolean toGameStart) {
 		final List<JsonMessageCache> messageCacheList = JsonMessageCache.fromJson(messagesJson);
+		boolean gameStateUpdated = false;
 		for (final JsonMessageCache messageCache : messageCacheList) {
 			if (loadedMessageCacheIds.add(messageCache.getId())) {
 				for (final Message message : messageCache.getMessages()) {
-					addMessage(new MessageWrapper(message));
+					gameStateUpdated = addMessage(new MessageWrapper(message)) || gameStateUpdated;
 
 				}
 				if (!toGameStart) {
@@ -112,22 +113,26 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 			}
 
 		}
+		if (gameStateUpdated) {
+			fireEvent(new GameStateUpdatedEvent());
+		}
 		if (!getView().isScrollBarShowing()) {
 			prependEarlierMessages();
 		}
 
 	}
 
-	private void addMessage(final MessageWrapper message) {
+	private boolean addMessage(final MessageWrapper message) {
 		if (loadedMessageIds.add(message.getId())) {
 			getView().addMessage(message);
 			messages.add(message);
 			if (message.isFromGameMaster()) {
 				gameMasterMessages.add(message);
-				fireEvent(new GameStateUpdatedEvent());
+				return true;
 
 			}
 		}
+		return false;
 
 	}
 

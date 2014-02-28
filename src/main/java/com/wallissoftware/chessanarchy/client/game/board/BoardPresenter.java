@@ -53,10 +53,15 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		public void run() {
 			try {
 				if (!preventRedraw) {
-					logger.info("Resetting Board:\n" + gameStateProvider.get().getMoveList());
+
 					board.resetFromMoveList(gameStateProvider.get().getMoveList());
+					/*
 					if (shouldRedraw()) {
+						logger.info("Resetting Board:\n" + gameStateProvider.get().getMoveList());
 						drawBoard();
+					}*/
+					for (final Piece piece : board.getPieces()) {
+						piece.notfiyHandlersOfPosition();
 					}
 				}
 			} catch (final Exception e) {
@@ -124,11 +129,12 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 				@Override
 				public void afterMove() {
-					logger.info("Redrawing Piece: " + piece);
+					//logger.info("Redrawing Piece: " + piece);
 					if (piece.getPromotedTo() != null) {
 						getView().removeFromBoard(piecePresenter.getView());
 						getView().setPieceInSquare(getPiecePresenter(piece.getPromotedTo()), piece.getPromotedTo().getPosition());
 					} else if (piece.isCaptured()) {
+						logger.info("Capturing piece: " + piece);
 						getView().capture(piecePresenter.getView());
 					} else {
 						getView().setPieceInSquare(piecePresenter.getView(), piece.getPosition());
@@ -144,7 +150,9 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	@Override
 	public boolean isMoveLegal(final Square start, final Square end) {
 		if (!board.isPartialMoveLegal(start, end)) {
-			fireEvent(new SendMessageEvent(new Move(start, end).toString()));
+			if (!start.equals(end)) {
+				fireEvent(new SendMessageEvent(new Move(start, end).toString()));
+			}
 			return false;
 		}
 		return true;

@@ -21,6 +21,7 @@ import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessage;
 import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent.GameStateUpdatedHandler;
+import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.client.user.UserChangedEvent;
 import com.wallissoftware.chessanarchy.client.user.UserChangedEvent.UserChangedHandler;
@@ -108,7 +109,9 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		lastGameId = gameStateProvider.get().getId();
 		for (final Piece piece : board.getPieces()) {
 			final PiecePresenter piecePresenter = getPiecePresenter(piece);
-			getView().setPieceInSquare(piecePresenter.getView(), piecePresenter.getPosition());
+			if (!piece.isCaptured()) {
+				getView().setPieceInSquare(piecePresenter.getView(), piecePresenter.getPosition());
+			}
 		}
 
 	}
@@ -169,7 +172,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 			for (final JsonMessage msg : event.getMessageCache().getMessages()) {
 				final String message = msg.getText();
 				final long created = msg.getCreated();
-				if (System.currentTimeMillis() - created < 4000 && board.getCurrentPlayer() == msg.getColor()) {
+				if (SyncedTime.get() - created < 4000 && board.getCurrentPlayer() == msg.getColor()) {
 					if (message.length() == 5 && message.charAt(2) == '-') {
 						final Square startSquare = Square.fromString(message.substring(0, 2));
 						if (startSquare != null) {

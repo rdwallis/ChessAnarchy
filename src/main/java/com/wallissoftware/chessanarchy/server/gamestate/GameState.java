@@ -54,7 +54,7 @@ public class GameState {
 		this.swapColors = swapColors;
 
 		addMessage("WHITE USES " + getWhiteSystemOfGovernment(), null);
-		addMessage("Black USES " + getBlackSystemOfGovernment(), null);
+		addMessage("BLACK USES " + getBlackSystemOfGovernment(), null);
 	}
 
 	@OnSave

@@ -3,6 +3,7 @@ package com.wallissoftware.chessanarchy.client.user;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsonUtils;
 import com.google.web.bindery.event.shared.EventBus;
+import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 
@@ -81,10 +82,10 @@ public final class User extends JavaScriptObject {
 
 	public Color getColor(final boolean ignoreTeamWait) {
 		final long teamWaitTime = ignoreTeamWait ? -1000 : CAConstants.JOIN_TEAM_WAIT;
-		if (getWhiteJoinTime() != null && System.currentTimeMillis() - getWhiteJoinTime() > teamWaitTime) {
+		if (getWhiteJoinTime() != null && SyncedTime.get() - getWhiteJoinTime() > teamWaitTime) {
 			return Color.WHITE;
 		}
-		if (getBlackJoinTime() != null && System.currentTimeMillis() - getBlackJoinTime() > teamWaitTime) {
+		if (getBlackJoinTime() != null && SyncedTime.get() - getBlackJoinTime() > teamWaitTime) {
 			return Color.BLACK;
 		}
 		return null;
@@ -92,9 +93,9 @@ public final class User extends JavaScriptObject {
 
 	public void joinTeam(final EventBus eventBus, final Color color) {
 		if (color == Color.WHITE) {
-			setWhiteColorJoinTime(System.currentTimeMillis() + "");
+			setWhiteColorJoinTime(SyncedTime.get() + "");
 		} else {
-			setBlackColorJoinTime(System.currentTimeMillis() + "");
+			setBlackColorJoinTime(SyncedTime.get() + "");
 		}
 		eventBus.fireEvent(new UserChangedEvent());
 

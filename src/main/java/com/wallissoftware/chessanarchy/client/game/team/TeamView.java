@@ -10,6 +10,7 @@ import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.Label;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
+import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 
@@ -62,7 +63,7 @@ public class TeamView extends ViewWithUiHandlers<TeamUiHandlers> implements Team
 		joinTeamButton.setVisible(joinTime == null);
 		if (joinTime != null) {
 
-			final long timeSinceStart = System.currentTimeMillis() - joinTime;
+			final long timeSinceStart = SyncedTime.get() - joinTime;
 			if (timeSinceStart < CAConstants.JOIN_TEAM_WAIT) {
 				joinTeamCountDown.setText("Joining in " + (CAConstants.JOIN_TEAM_WAIT - timeSinceStart) / 1000 + " seconds.");
 				joinTeamCountDown.setVisible(true);

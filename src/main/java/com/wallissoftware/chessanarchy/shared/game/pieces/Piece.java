@@ -46,7 +46,7 @@ public abstract class Piece implements Dto {
 		moveCount = 0;
 		recyclePosition = position;
 		position = null;
-
+		captured = false;
 	}
 
 	public boolean justMoved() {

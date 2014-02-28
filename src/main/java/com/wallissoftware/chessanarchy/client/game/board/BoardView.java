@@ -28,6 +28,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
 import com.wallissoftware.chessanarchy.client.game.board.piece.images.PieceSprites;
+import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Square;
@@ -105,7 +106,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	}
 
 	private void updateGhostAnimations() {
-		final long milli = System.currentTimeMillis();
+		final long milli = SyncedTime.get();
 		final Iterator<GhostAnimation> it = ghostAnimations.iterator();
 		while (it.hasNext()) {
 			final GhostAnimation ghostAnimation = it.next();

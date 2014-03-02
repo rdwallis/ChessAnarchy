@@ -10,7 +10,9 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.InlineLabel;
+import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
 public class MessageWidget extends Composite {
@@ -24,11 +26,16 @@ public class MessageWidget extends Composite {
 		String command();
 
 		String gameMaster();
+
+		String black();
+
+		String white();
 	}
 
 	@UiField MyStyle style;
 
 	@UiField(provided = true) InlineLabel message, creation, name;
+	@UiField SimplePanel color;
 	private final double creationTime;
 
 	public MessageWidget(final MessageWrapper message) {
@@ -49,6 +56,9 @@ public class MessageWidget extends Composite {
 			}
 		} else {
 			name.getElement().getStyle().setColor(intToColor(getHash(message.getUserId())));
+		}
+		if (message.getColor() != null) {
+			this.color.addStyleName(message.getColor() == Color.WHITE ? style.white() : style.black());
 		}
 	}
 

@@ -87,7 +87,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 				final Color currentPlayer = gameState.getCurrentPlayer();
 				for (final Map<String, String> message : messageQueue) {
 					if (gameState.swapColors() && message.containsKey("color")) {
-						message.put("color", Color.valueOf(message.get("color")) == Color.WHITE ? Color.BLACK.name() : Color.WHITE.name());
+						message.put("color", Color.valueOf(message.get("color")).getOpposite().name());
 					}
 
 					if (message.get("color") != null && currentPlayer == Color.valueOf(message.get("color")) && moveMap.containsKey(message.get("message"))) {

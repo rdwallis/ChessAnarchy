@@ -16,10 +16,22 @@
 			font-weight:bold;
 			color: black;
 		}
+		.black, .white {
+			display:inline-block;
+			width: 10px;
+			height:10px;
+			border: 1px solid black;
+		}
+		
+		.black {
+			background-color: black;
+		}
+		
 	</ui:style>
 	<g:HTMLPanel>
 	<g:InlineLabel ui:field="creation" addStyleNames="{style.creation}"/>
 	<g:InlineLabel ui:field="name"/>
+	<g:SimplePanel ui:field="color"/>
 	<g:InlineLabel ui:field="message"/>
 	</g:HTMLPanel>
 </ui:UiBinder> 

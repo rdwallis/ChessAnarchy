@@ -93,14 +93,18 @@ public class Board {
 
 				boolean fileIsUnique = true;
 				boolean rankIsUnique = true;
+
 				for (final Piece piece : otherPiecesOfSameType) {
 					final Square otherPosition = piece.getPosition();
-					final Square position = move.getStart();
-					if (otherPosition.getRank() == position.getRank()) {
-						rankIsUnique = false;
-					}
-					if (otherPosition.getFile() == position.getFile()) {
-						fileIsUnique = false;
+					if (!otherPosition.equals(start)) {
+						if (otherPosition.getRank() == start.getRank()) {
+
+							rankIsUnique = false;
+						}
+						if (otherPosition.getFile() == start.getFile()) {
+
+							fileIsUnique = false;
+						}
 					}
 				}
 
@@ -108,7 +112,7 @@ public class Board {
 					pgn = start.toString().charAt(1) + pgn;
 				}
 
-				if (!rankIsUnique) {
+				if (!rankIsUnique || (capture != null && movedPiece instanceof Pawn)) {
 					pgn = start.toString().charAt(0) + pgn;
 				}
 
@@ -123,12 +127,14 @@ public class Board {
 					final Piece castle = board[0][start.getFile()];
 					board[3][start.getFile()] = castle;
 					castle.setPosition(new Square(3, start.getFile()), recordMove, false);
+					board[0][start.getFile()] = null;
 				} else if (end.getRank() == 6) {
 					//king side
 					pgn = "O-O";
 					final Piece castle = board[7][start.getFile()];
 					board[5][start.getFile()] = castle;
 					castle.setPosition(new Square(5, start.getFile()), recordMove, false);
+					board[7][start.getFile()] = null;
 				}
 
 			}
@@ -235,7 +241,7 @@ public class Board {
 			return result;
 		}
 		for (final Move move : getLastCalculatedLegalMoves()) {
-			if (move.getEnd().equals(square) && !move.getStart().equals(piece.getPosition())) {
+			if (move.getEnd().equals(square)) {
 				final Piece other = getPieceAt(move.getStart());
 
 				if (other != null && other.getColor() == piece.getColor() && other.getPgnAbbreviation().equals(piece.getPgnAbbreviation())) {

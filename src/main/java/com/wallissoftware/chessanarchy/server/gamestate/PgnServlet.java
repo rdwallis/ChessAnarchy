@@ -30,7 +30,7 @@ public class PgnServlet extends HttpServlet {
 			final Objectify ofy = ObjectifyService.factory().begin();
 			final GameState gameState = ofy.load().type(GameState.class).id(id).getValue();
 			if (gameState != null) {
-				resp.setContentType("application/x-chess-pgn");
+				resp.setContentType("text/x-chess-pgn");
 				final String maxAge = idSupplied && gameState.isComplete() ? "31556926" : "0";
 				resp.setHeader("cache-control", "public, max-age=" + maxAge);
 				resp.getWriter().write(gameState.getPgn());
@@ -38,26 +38,6 @@ public class PgnServlet extends HttpServlet {
 			}
 		}
 		resp.sendError(404);
-	}
-
-	@Override
-	protected long getLastModified(final HttpServletRequest req) {
-		final String idStr = req.getParameter("id");
-		final Long id;
-		final boolean idSupplied = idStr != null;
-		if (idSupplied) {
-			id = Long.valueOf(idStr);
-		} else {
-			id = LatestGameStateId.get();
-		}
-		if (id != null) {
-			final Objectify ofy = ObjectifyService.ofy();
-			final GameState gameState = ofy.load().type(GameState.class).id(id).getValue();
-			if (gameState != null) {
-				return gameState.getLastUpdated();
-			}
-		}
-		return super.getLastModified(req);
 	}
 
 }

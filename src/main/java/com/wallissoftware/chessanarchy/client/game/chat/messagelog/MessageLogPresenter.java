@@ -19,13 +19,17 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
+import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent;
+import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent.MessageInLimboHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
+import com.wallissoftware.chessanarchy.client.game.chat.messageinput.MessageInputPresenter;
 import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessageCache;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
+import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.shared.message.Message;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
-public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyView> implements MessageLogUiHandlers {
+public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyView> implements MessageLogUiHandlers, MessageInLimboHandler {
 	public interface MyView extends View, HasUiHandlers<MessageLogUiHandlers> {
 
 		void addMessage(MessageWrapper message);
@@ -33,96 +37,40 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 		boolean isScrollBarShowing();
 	}
 
-	private final RequestBuilder fullRequestBuilder;
-
-	private Set<String> loadedMessageCacheIds = new HashSet<String>();
-
 	private List<MessageWrapper> messages = new ArrayList<MessageWrapper>();
 
 	private List<MessageWrapper> gameMasterMessages = new ArrayList<MessageWrapper>();
 
-	private long earliestMessageCacheCreationTime = -1;
 	private Set<String> loadedMessageIds = new HashSet<String>();
-	private String earliestMessageCacheId = null;
+
+	private final MessageInputPresenter messageInputPresenter;
 
 	@Inject
-	MessageLogPresenter(final EventBus eventBus, final MyView view) {
+	MessageLogPresenter(final EventBus eventBus, final MyView view, final MessageInputPresenter messageInputPresenter) {
 		super(eventBus, view);
 		getView().setUiHandlers(this);
-		fullRequestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/message"));
+		this.messageInputPresenter = messageInputPresenter;
 	}
 
 	@Override
 	protected void onBind() {
 		super.onBind();
-		//fetchLatestMessages();
+		addRegisteredHandler(MessageInLimboEvent.getType(), this);
 		Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
 
 			@Override
 			public boolean execute() {
-				fetchLatestMessages();
+				fetchLatestMessage();
 				return true;
 			}
 
-		}, 1019);
+		}, 2003);
 	}
 
-	private void fetchLatestMessages() {
-
-		try {
-			fullRequestBuilder.sendRequest(null, new RequestCallback() {
-				@Override
-				public void onError(final Request request, final Throwable exception) {
-				}
-
-				@Override
-				public void onResponseReceived(final Request request, final Response response) {
-					if (200 == response.getStatusCode()) {
-						processMessages("[" + response.getText() + "]", false);
-					} else {
-					}
-
-				}
-
-			});
-		} catch (final RequestException e) {
-			// Couldn't connect to server
+	private boolean addMessage(final MessageWrapper message, final boolean inLimbo) {
+		if (!inLimbo) {
+			messageInputPresenter.markMessageArrived(message);
 		}
-
-	}
-
-	private void processMessages(final String messagesJson, final boolean toGameStart) {
-		final List<JsonMessageCache> messageCacheList = JsonMessageCache.fromJson(messagesJson);
-		boolean gameStateUpdated = false;
-		for (final JsonMessageCache messageCache : messageCacheList) {
-			if (loadedMessageCacheIds.add(messageCache.getId())) {
-				for (final Message message : messageCache.getMessages()) {
-					gameStateUpdated = addMessage(new MessageWrapper(message)) || gameStateUpdated;
-
-				}
-				if (!toGameStart) {
-					if (messageCache.getPreviousId() != null && !loadedMessageCacheIds.contains(messageCache.getPreviousId())) {
-						fetchMessage(messageCache.getPreviousId(), true);
-					}
-				}
-				if (earliestMessageCacheCreationTime == -1 || messageCache.getCreated() < earliestMessageCacheCreationTime) {
-					earliestMessageCacheId = messageCache.getPreviousId();
-					earliestMessageCacheCreationTime = messageCache.getCreated();
-				}
-				fireEvent(new ReceivedMessageCacheEvent(messageCache));
-			}
-
-		}
-		if (gameStateUpdated) {
-			fireEvent(new GameStateUpdatedEvent());
-		}
-		if (!getView().isScrollBarShowing()) {
-			prependEarlierMessages();
-		}
-
-	}
-
-	private boolean addMessage(final MessageWrapper message) {
 		if (loadedMessageIds.add(message.getId())) {
 			getView().addMessage(message);
 			messages.add(message);
@@ -182,8 +130,12 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 		return result;
 	}
 
-	private void fetchMessage(final String id, final boolean toGameStart) {
-		final RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/message?id=" + id + (toGameStart ? "&tgs" : "")));
+	private void fetchLatestMessage() {
+		fetchMessage(null, 10);
+	}
+
+	private void fetchMessage(final String id, final int messageCount) {
+		final RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/message" + (id == null ? "" : "?id=" + id)));
 		try {
 			requestBuilder.sendRequest(null, new RequestCallback() {
 				@Override
@@ -193,8 +145,37 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 				@Override
 				public void onResponseReceived(final Request request, final Response response) {
 					if (200 == response.getStatusCode()) {
-						processMessages(response.getText(), toGameStart);
+						processMessages("[" + response.getText() + "]", messageCount);
 					} else {
+					}
+
+				}
+
+				private void processMessages(final String messagesJson, final int messageCount) {
+					final List<JsonMessageCache> messageCacheList = JsonMessageCache.fromJson(messagesJson);
+					boolean gameStateUpdated = false;
+					for (final JsonMessageCache messageCache : messageCacheList) {
+						if (MessageLink.addMessageLink(messageCache)) {
+							for (final Message message : messageCache.getMessages()) {
+								gameStateUpdated = addMessage(new MessageWrapper(message), false) || gameStateUpdated;
+
+							}
+							if (messageCount >= 0) {
+								if (messageCache.getPreviousId() != null) {
+									fetchMessage(messageCache.getPreviousId(), messageCount - 1);
+								}
+							}
+							if (Math.abs(SyncedTime.get() - messageCache.getCreated()) < 10000) {
+								fireEvent(new ReceivedMessageCacheEvent(messageCache));
+							}
+						}
+
+					}
+					if (gameStateUpdated) {
+						fireEvent(new GameStateUpdatedEvent());
+					}
+					if (!getView().isScrollBarShowing()) {
+						prependEarlierMessages();
 					}
 
 				}
@@ -208,14 +189,21 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
 	@Override
 	public void prependEarlierMessages() {
-		if (earliestMessageCacheId != null) {
-			fetchMessage(earliestMessageCacheId, true);
+		final MessageLink tail = MessageLink.getTail();
+		if (tail != null && tail.getPreviousId() != null) {
+			fetchMessage(tail.getPreviousId(), 10);
 		}
 
 	}
 
 	public List<MessageWrapper> getCurrentGameMessages() {
 		return getMessagesForGame(getGameId(0));
+	}
+
+	@Override
+	public void onMessageInLimbo(final MessageInLimboEvent event) {
+		addMessage(event.getMessage(), true);
+
 	}
 
 }

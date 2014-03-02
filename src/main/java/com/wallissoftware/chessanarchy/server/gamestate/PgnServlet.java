@@ -12,7 +12,7 @@ import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
 
 @Singleton
-public class GameStateServlet extends HttpServlet {
+public class PgnServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
@@ -30,10 +30,10 @@ public class GameStateServlet extends HttpServlet {
 			final Objectify ofy = ObjectifyService.factory().begin();
 			final GameState gameState = ofy.load().type(GameState.class).id(id).getValue();
 			if (gameState != null) {
-				resp.setContentType("application/json");
+				resp.setContentType("application/x-chess-pgn");
 				final String maxAge = idSupplied && gameState.isComplete() ? "31556926" : "0";
 				resp.setHeader("cache-control", "public, max-age=" + maxAge);
-				resp.getWriter().write(gameState.getJson());
+				resp.getWriter().write(gameState.getPgn());
 				return;
 			}
 		}

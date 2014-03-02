@@ -65,102 +65,111 @@ public class Board {
 	}
 
 	public final String doMove(final Move move, final boolean recordMove, final boolean calcFullPgn) {
-		final Square start = move.getStart();
-		final Square end = move.getEnd();
+		try {
 
-		String pgn = end.toString();
+			final Square start = move.getStart();
+			final Square end = move.getEnd();
 
-		Piece capture = board[end.getRank()][end.getFile()];
-		final Piece movedPiece = board[start.getRank()][start.getFile()];
-		if (capture == null && start.getRank() != end.getRank() && movedPiece instanceof Pawn) {
-			//en passant
-			capture = board[end.getRank()][start.getFile()];
-			board[end.getRank()][start.getFile()] = null;
+			String pgn = end.toString();
 
-		}
+			Piece capture = board[end.getRank()][end.getFile()];
+			final Piece movedPiece = board[start.getRank()][start.getFile()];
 
-		if (capture != null) {
-			pgn = "x" + pgn;
-			requiresFullUndo = true;
-		}
+			if (capture == null && start.getRank() != end.getRank() && movedPiece instanceof Pawn) {
+				//en passant
+				capture = board[end.getRank()][start.getFile()];
+				board[end.getRank()][start.getFile()] = null;
 
-		if (calcFullPgn) {
+			}
 
-			final List<Piece> otherPiecesOfSameType = getOtherPiecesOfSameTypeThatCanMoveToSquare(movedPiece, end);
+			if (capture != null) {
+				pgn = "x" + pgn;
+				requiresFullUndo = true;
+			}
 
-			boolean fileIsUnique = true;
-			boolean rankIsUnique = true;
-			for (final Piece piece : otherPiecesOfSameType) {
-				final Square otherPosition = piece.getPosition();
-				final Square position = move.getStart();
-				if (otherPosition.getRank() == position.getRank()) {
-					rankIsUnique = false;
+			if (calcFullPgn) {
+
+				final List<Piece> otherPiecesOfSameType = getOtherPiecesOfSameTypeThatCanMoveToSquare(movedPiece, end);
+
+				boolean fileIsUnique = true;
+				boolean rankIsUnique = true;
+				for (final Piece piece : otherPiecesOfSameType) {
+					final Square otherPosition = piece.getPosition();
+					final Square position = move.getStart();
+					if (otherPosition.getRank() == position.getRank()) {
+						rankIsUnique = false;
+					}
+					if (otherPosition.getFile() == position.getFile()) {
+						fileIsUnique = false;
+					}
 				}
-				if (otherPosition.getFile() == position.getFile()) {
-					fileIsUnique = false;
+
+				if (!fileIsUnique) {
+					pgn = start.toString().charAt(1) + pgn;
+				}
+
+				if (!rankIsUnique) {
+					pgn = start.toString().charAt(0) + pgn;
+				}
+
+				pgn = movedPiece.getPgnAbbreviation() + pgn;
+			}
+
+			if (Math.abs(end.getRank() - start.getRank()) > 1 && movedPiece instanceof King) {
+				//castling
+				if (end.getRank() == 2) {
+					//queenside
+					pgn = "O-O-O";
+					final Piece castle = board[0][start.getFile()];
+					board[3][start.getFile()] = castle;
+					castle.setPosition(new Square(3, start.getFile()), recordMove, false);
+				} else if (end.getRank() == 6) {
+					//king side
+					pgn = "O-O";
+					final Piece castle = board[7][start.getFile()];
+					board[5][start.getFile()] = castle;
+					castle.setPosition(new Square(5, start.getFile()), recordMove, false);
+				}
+
+			}
+
+			Piece movingPiece = move.getPromote();
+			if (movingPiece == null) {
+				movingPiece = movedPiece;
+
+			} else {
+				pgn = pgn + "=" + movingPiece.getPgnAbbreviation();
+				pieces.add(movingPiece);
+				if (recordMove) {
+					movedPiece.notfiyHandlersOfPosition();
+				}
+			}
+			setLastMovedPiece(movingPiece);
+
+			board[start.getRank()][start.getFile()] = null;
+
+			board[end.getRank()][end.getFile()] = movingPiece;
+			movingPiece.setPosition(end, recordMove);
+			moveList.add(move);
+			if (capture != null) {
+				capture.capture(recordMove);
+			}
+			if (calcFullPgn) {
+				if (isCheckMate()) {
+					pgn = pgn + "#";
+				} else if (isCheck()) {
+					pgn = pgn + "+";
 				}
 			}
 
-			if (!fileIsUnique) {
-				pgn = start.toString().charAt(1) + pgn;
-			}
+			return pgn;
+		} catch (final NullPointerException e) {
 
-			if (!rankIsUnique) {
-				pgn = start.toString().charAt(0) + pgn;
-			}
-
-			pgn = movedPiece.getPgnAbbreviation() + pgn;
+			logger.warning("doMove: " + move);
+			logger.warning("moveList: " + moveList);
+			logger.warning(getBoardAsText(null));
+			throw e;
 		}
-
-		if (Math.abs(end.getRank() - start.getRank()) > 1 && movedPiece instanceof King) {
-			//castling
-			if (end.getRank() == 2) {
-				//queenside
-				pgn = "O-O-O";
-				final Piece castle = board[0][start.getFile()];
-				board[3][start.getFile()] = castle;
-				castle.setPosition(new Square(3, start.getFile()), recordMove, false);
-			} else if (end.getRank() == 6) {
-				//king side
-				pgn = "O-O";
-				final Piece castle = board[7][start.getFile()];
-				board[5][start.getFile()] = castle;
-				castle.setPosition(new Square(5, start.getFile()), recordMove, false);
-			}
-
-		}
-
-		Piece movingPiece = move.getPromote();
-		if (movingPiece == null) {
-			movingPiece = movedPiece;
-
-		} else {
-			pgn = pgn + "=" + movingPiece.getPgnAbbreviation();
-			pieces.add(movingPiece);
-			if (recordMove) {
-				movedPiece.notfiyHandlersOfPosition();
-			}
-		}
-		setLastMovedPiece(movingPiece);
-
-		board[start.getRank()][start.getFile()] = null;
-
-		board[end.getRank()][end.getFile()] = movingPiece;
-		movingPiece.setPosition(end, recordMove);
-		moveList.add(move);
-		if (capture != null) {
-			capture.capture(recordMove);
-		}
-		if (calcFullPgn) {
-			if (isCheckMate()) {
-				pgn = pgn + "#";
-			} else if (isCheck()) {
-				pgn = pgn + "+";
-			}
-		}
-
-		return pgn;
-
 	}
 
 	private void setLastMovedPiece(final Piece movingPiece) {
@@ -179,7 +188,7 @@ public class Board {
 		sb.append("\n");
 		final String line = "---------------------------------\n";
 		sb.append(line);
-		for (int file = 0; file < 8; file++) {
+		for (int file = 7; file <= 0; file--) {
 			for (int rank = 0; rank < 8; rank++) {
 				final Square square = new Square(rank, file);
 				sb.append(square.equals(highlightSquare) ? "[" : "|");
@@ -279,7 +288,7 @@ public class Board {
 	}
 
 	private void reset(final boolean redraw) {
-		logger.info("reseting board");
+		//logger.info("reseting board");
 		moveList = new ArrayList<Move>();
 		lastMoved = null;
 		for (final Piece piece : getPieces()) {

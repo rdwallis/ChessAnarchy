@@ -53,8 +53,13 @@ public final class JsonMessage extends JavaScriptObject implements Message {
 		return JsonUtils.safeEval(json);
 	}
 
+	public static native JsonMessage wrap(final JavaScriptObject object) /*-{
+		return object;
+	}-*/;
+
 	@Override
 	public final native String getId() /*-{
 		return this.id;
 	}-*/;
+
 }

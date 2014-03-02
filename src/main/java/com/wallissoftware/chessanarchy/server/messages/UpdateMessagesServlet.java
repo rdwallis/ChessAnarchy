@@ -42,20 +42,17 @@ public class UpdateMessagesServlet extends HttpServlet {
 			final Objectify ofy = ObjectifyService.factory().begin();
 			final Long latestGameStateId = LatestGameStateId.get();
 			final Set<Map<String, String>> gameStateMessages = new HashSet<Map<String, String>>();
-			if (Math.random() < 0.2) {
-				//run every five updates or so.
-				final Long previousGameStateId = LatestGameStateId.getPrevious();
+			final Long previousGameStateId = LatestGameStateId.getPrevious();
 
-				if (latestGameStateId != null) {
-					gameStateMessages.addAll(ofy.load().type(GameState.class).id(latestGameStateId).getValue().getMessages());
-				}
+			if (latestGameStateId != null) {
+				gameStateMessages.addAll(ofy.load().type(GameState.class).id(latestGameStateId).getValue().getMessages());
+			}
 
-				if (gameStateMessages.size() < 10 && previousGameStateId != null) {
-					gameStateMessages.addAll(ofy.load().type(GameState.class).id(previousGameStateId).getValue().getMessages());
-
-				}
+			if (gameStateMessages.size() < 10 && previousGameStateId != null) {
+				gameStateMessages.addAll(ofy.load().type(GameState.class).id(previousGameStateId).getValue().getMessages());
 
 			}
+
 			ofy.transact(new VoidWork() {
 
 				@Override
@@ -99,18 +96,17 @@ public class UpdateMessagesServlet extends HttpServlet {
 				}
 
 				gameState.processMoveRequests();
-				messageQueue.addAll(gameState.getMessages());
 
 				ofy.save().entity(gameState);
 
 				if (gameState.isComplete()) {
-					messageQueue.addAll(createNewGameState(ofy, !gameState.swapColors()).getMessages());
+					createNewGameState(ofy, !gameState.swapColors()).getMessages();
 					return true;
 				}
 			}
 
 		} else {
-			messageQueue.addAll(createNewGameState(ofy, false).getMessages());
+			createNewGameState(ofy, false).getMessages();
 			return true;
 		}
 		return false;

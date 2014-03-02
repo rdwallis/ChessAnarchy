@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.gson.Gson;
 import com.google.inject.Singleton;
 import com.wallissoftware.chessanarchy.server.session.SessionUtils;
 
@@ -19,7 +20,7 @@ public class MainPage extends HttpServlet {
 	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
 
 		resp.setContentType("text/html");
-		req.setAttribute("userJson", SessionUtils.getUserJson(req.getSession()));
+		req.setAttribute("userJson", new Gson().toJson(SessionUtils.getUserMap(req.getSession())));
 		req.getRequestDispatcher("/ChessAnarchy.jsp").include(req, resp);
 	}
 

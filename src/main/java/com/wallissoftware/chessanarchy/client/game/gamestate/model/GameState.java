@@ -2,7 +2,6 @@ package com.wallissoftware.chessanarchy.client.game.gamestate.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import com.wallissoftware.chessanarchy.shared.governments.SystemOfGovernment;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
@@ -14,7 +13,7 @@ public final class GameState {
 	private String blackGovernment;
 	private List<String> moveList = new ArrayList<String>();
 
-	private final static Logger logger = Logger.getLogger(GameState.class.getName());
+	//private final static Logger logger = Logger.getLogger(GameState.class.getName());
 
 	public GameState(final List<MessageWrapper> gameMessages) {
 		for (final MessageWrapper message : gameMessages) {

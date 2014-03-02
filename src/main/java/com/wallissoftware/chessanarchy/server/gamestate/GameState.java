@@ -71,6 +71,7 @@ public class GameState {
 			addMessage("m" + move, getCurrentPlayer().getOpposite());
 
 		} catch (final IllegalMoveException e) {
+			moveList.remove(moveList.size() - 1);
 			addMessage("Illegal MoveException for move: " + move, null);
 		}
 
@@ -204,5 +205,20 @@ public class GameState {
 			serverMessageMap.put("color", color.name());
 		}
 		return serverMessageMap;
+	}
+
+	public String getPgn() {
+		final StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < moveList.size(); i++) {
+			if (i % 2 == 0) {
+				if (i > 0) {
+					sb.append(" ");
+				}
+				sb.append((i / 2) + 1).append(".");
+			}
+			sb.append(" ").append(moveList.get(i));
+		}
+		return sb.toString();
+
 	}
 }

@@ -7,6 +7,7 @@ public class GameStateModule extends ServletModule {
 	@Override
 	protected void configureServlets() {
 		serve("/gamestate").with(GameStateServlet.class);
+		serve("/pgn").with(PgnServlet.class);
 	}
 
 }

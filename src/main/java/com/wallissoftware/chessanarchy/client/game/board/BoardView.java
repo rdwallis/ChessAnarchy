@@ -101,7 +101,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 				return true;
 			}
 
-		}, 100);
+		}, 20);
 
 	}
 

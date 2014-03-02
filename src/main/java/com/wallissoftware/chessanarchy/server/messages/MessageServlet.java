@@ -23,6 +23,7 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
+import com.google.gson.Gson;
 import com.google.inject.Singleton;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyService;
@@ -44,37 +45,21 @@ public class MessageServlet extends HttpServlet {
 
 		final Long id;
 		final boolean idSupplied = idStr != null;
-		boolean toGameStart = false;
 		if (idSupplied) {
 			id = Long.valueOf(idStr);
-			toGameStart = req.getParameter("tgs") != null;
 		} else {
 			id = LatestMessageId.get();
 		}
 		if (id != null) {
 
 			final Objectify ofy = ObjectifyService.ofy();
-			MessageCache messageCache = ofy.load().type(MessageCache.class).id(id).getValue();
+			final MessageCache messageCache = ofy.load().type(MessageCache.class).id(id).getValue();
 			if (messageCache != null) {
 				resp.setContentType("application/json");
 				final String maxAge = idSupplied ? "31556926" : "1";
 				resp.setHeader("cache-control", "public, max-age=" + maxAge);
 
-				if (toGameStart) {
-					resp.getWriter().write("[");
-					resp.getWriter().write(messageCache.getJson());
-					while (messageCache.getPreviousId() != null) {
-						messageCache = ofy.load().type(MessageCache.class).id(messageCache.getPreviousId()).getValue();
-						resp.getWriter().write(",");
-						resp.getWriter().write(messageCache.getJson());
-						if (messageCache.isGameStart()) {
-							break;
-						}
-					}
-					resp.getWriter().write("]");
-				} else {
-					resp.getWriter().write(messageCache.getJson());
-				}
+				resp.getWriter().write(messageCache.getJson());
 
 				return;
 			}
@@ -83,22 +68,23 @@ public class MessageServlet extends HttpServlet {
 
 	}
 
-	/*@Override
+	@Override
 	protected long getLastModified(final HttpServletRequest req) {
 		final Long lastUpdateTime = LastUpdateTime.getLastUpdateTime();
 		if (lastUpdateTime == null) {
 			return System.currentTimeMillis();
 		}
 		return lastUpdateTime;
-	}*/
+	}
 
 	@Override
 	protected void doPut(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
 		final StringWriter writer = new StringWriter();
 		IOUtils.copy(req.getInputStream(), writer, "UTF-8");
 		final String message = StringEscapeUtils.escapeHtml(writer.toString());
-		boolean sessionModified = false;
+
 		if (message != null && !message.isEmpty()) {
+			boolean sessionModified = false;
 			final Map<String, String> map = new HashMap<String, String>();
 			map.put("userId", SessionUtils.getUserId(req.getSession()));
 			map.put("name", SessionUtils.getName(req.getSession()));
@@ -153,11 +139,14 @@ public class MessageServlet extends HttpServlet {
 				final Queue queue = QueueFactory.getDefaultQueue();
 				queue.add(withUrl("/admin/processmessages").method(Method.GET));
 			}
-
-		}
-		if (sessionModified) {
 			resp.setContentType("application/json");
-			resp.getWriter().write(SessionUtils.getUserJson(req.getSession()));
+			final Map<String, Map<String, String>> resultMap = new HashMap<String, Map<String, String>>();
+			resultMap.put("message", map);
+			if (sessionModified) {
+				resultMap.put("user", SessionUtils.getUserMap(req.getSession()));
+			}
+			new Gson().toJson(resultMap, resp.getWriter());
+
 		}
 
 	}

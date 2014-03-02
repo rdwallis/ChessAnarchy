@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpSession;
 
-import com.google.gson.Gson;
 import com.wallissoftware.chessanarchy.server.words.Adjectives;
 import com.wallissoftware.chessanarchy.server.words.Nouns;
 import com.wallissoftware.chessanarchy.shared.CAConstants;
@@ -73,7 +72,7 @@ public class SessionUtils {
 
 	}
 
-	public static String getUserJson(final HttpSession session) {
+	public static Map<String, String> getUserMap(final HttpSession session) {
 		final Map<String, String> jsonMap = new HashMap<String, String>();
 		jsonMap.put("name", getName(session));
 		jsonMap.put("userId", getUserId(session));
@@ -84,6 +83,6 @@ public class SessionUtils {
 		if (session.getAttribute("white") != null) {
 			jsonMap.put("white", session.getAttribute("white") + "");
 		}
-		return new Gson().toJson(jsonMap);
+		return jsonMap;
 	}
 }

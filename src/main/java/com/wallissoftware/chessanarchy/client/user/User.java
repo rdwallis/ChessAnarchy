@@ -1,7 +1,6 @@
 package com.wallissoftware.chessanarchy.client.user;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.client.JsonUtils;
 import com.google.web.bindery.event.shared.EventBus;
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.shared.CAConstants;
@@ -52,16 +51,13 @@ public final class User extends JavaScriptObject {
 		return $wnd.user;
 	}-*/;
 
-	private static native void setUser(JavaScriptObject user) /*-{
-		$wnd.user = user;
+	private static native void setUser(JavaScriptObject usr) /*-{
+		$wnd.user = usr;
 	}-*/;
 
-	public static void update(final EventBus eventBus, final String json) {
-		if (json != null && json.length() > 10) {
-			setUser(JsonUtils.safeEval(json));
-			eventBus.fireEvent(new UserChangedEvent());
-		}
-
+	public static void update(final EventBus eventBus, final JavaScriptObject user) {
+		setUser(user);
+		eventBus.fireEvent(new UserChangedEvent());
 	}
 
 	public Long getColorJoinTime(final Color color) {

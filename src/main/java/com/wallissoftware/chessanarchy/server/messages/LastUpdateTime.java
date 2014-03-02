@@ -11,7 +11,7 @@ public class LastUpdateTime {
 		final Long latest = getLastUpdateTime(false);
 		if (latest == null) {
 			return true;
-		} else if (System.currentTimeMillis() - latest > 1000) {
+		} else if (System.currentTimeMillis() - latest > 2000) {
 			return true;
 		}
 		return false;

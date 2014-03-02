@@ -25,6 +25,7 @@ import com.wallissoftware.chessanarchy.server.mainpage.MainPageModule;
 import com.wallissoftware.chessanarchy.server.messages.MessageCache;
 import com.wallissoftware.chessanarchy.server.messages.MessageModule;
 import com.wallissoftware.chessanarchy.server.time.TimeModule;
+import com.wallissoftware.chessanarchy.server.wipe.WipeModule;
 
 public class ServerModule extends HandlerModule {
 	@Override
@@ -35,6 +36,7 @@ public class ServerModule extends HandlerModule {
 		install(new MainPageModule());
 		install(new GameStateModule());
 		install(new TimeModule());
+		install(new WipeModule());
 
 	}
 

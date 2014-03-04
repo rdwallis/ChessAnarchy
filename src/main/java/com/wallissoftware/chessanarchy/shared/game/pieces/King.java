@@ -34,7 +34,7 @@ public class King extends Piece {
 					continue;
 				}
 				if (board[rank][file] == null || board[rank][file].getColor() != getColor()) {
-					legalMoves.add(new Move(getPosition(), new Square(rank, file)));
+					legalMoves.add(new Move(getPosition(), Square.get(rank, file)));
 				}
 			}
 		}
@@ -50,7 +50,7 @@ public class King extends Piece {
 					}
 				}
 				if (!blocked) {
-					legalMoves.add(new Move(pos, new Square(2, pos.getFile())));
+					legalMoves.add(new Move(pos, Square.get(2, pos.getFile())));
 				}
 			}
 
@@ -64,7 +64,7 @@ public class King extends Piece {
 					}
 				}
 				if (!blocked) {
-					legalMoves.add(new Move(pos, new Square(6, pos.getFile())));
+					legalMoves.add(new Move(pos, Square.get(6, pos.getFile())));
 				}
 			}
 

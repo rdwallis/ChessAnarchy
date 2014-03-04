@@ -11,10 +11,10 @@ public class Move implements Dto {
 	private Character promote;
 
 	public Move(final Square start, final Square end) {
-		this(start, end, null);
+		this(start, end, 'x');
 	}
 
-	public Move(final Square start, final Square end, final Character promote) {
+	public Move(final Square start, final Square end, final char promote) {
 		this.start = start;
 		this.end = end;
 		this.promote = promote;
@@ -28,7 +28,7 @@ public class Move implements Dto {
 		return end;
 	}
 
-	public Character getPromote() {
+	public char getPromote() {
 		return promote;
 	}
 

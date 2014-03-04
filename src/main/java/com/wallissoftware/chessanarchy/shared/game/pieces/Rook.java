@@ -30,9 +30,9 @@ public class Rook extends Piece {
 		for (int rank = pos.getRank() + 1; rank < 8; rank++) {
 
 			if (board[rank][pos.getFile()] == null) {
-				legalMoves.add(new Move(pos, new Square(rank, pos.getFile())));
+				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
 			} else if (board[rank][pos.getFile()].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, new Square(rank, pos.getFile())));
+				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
 				break;
 			} else {
 				break;
@@ -41,9 +41,9 @@ public class Rook extends Piece {
 		//left
 		for (int rank = pos.getRank() - 1; rank >= 0; rank--) {
 			if (board[rank][pos.getFile()] == null) {
-				legalMoves.add(new Move(pos, new Square(rank, pos.getFile())));
+				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
 			} else if (board[rank][pos.getFile()].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, new Square(rank, pos.getFile())));
+				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
 				break;
 			} else {
 				break;
@@ -53,9 +53,9 @@ public class Rook extends Piece {
 		//up
 		for (int file = pos.getFile() - 1; file >= 0; file--) {
 			if (board[pos.getRank()][file] == null) {
-				legalMoves.add(new Move(pos, new Square(pos.getRank(), file)));
+				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
 			} else if (board[pos.getRank()][file].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, new Square(pos.getRank(), file)));
+				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
 				break;
 			} else {
 				break;
@@ -65,9 +65,9 @@ public class Rook extends Piece {
 		//down
 		for (int file = pos.getFile() + 1; file < 8; file++) {
 			if (board[pos.getRank()][file] == null) {
-				legalMoves.add(new Move(pos, new Square(pos.getRank(), file)));
+				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
 			} else if (board[pos.getRank()][file].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, new Square(pos.getRank(), file)));
+				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
 				break;
 			} else {
 				break;

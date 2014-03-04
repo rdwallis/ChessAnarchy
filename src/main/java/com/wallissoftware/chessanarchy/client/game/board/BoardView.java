@@ -270,7 +270,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 			rank = 7 - rank;
 			file = 7 - file;
 		}
-		return new Square(rank, file);
+		return Square.get(rank, file);
 
 	}
 

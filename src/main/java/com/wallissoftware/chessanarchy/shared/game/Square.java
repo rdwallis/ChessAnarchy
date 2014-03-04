@@ -2,14 +2,27 @@ package com.wallissoftware.chessanarchy.shared.game;
 
 public class Square {
 
+	private final static Square[][] squares = new Square[8][8];
+
+	static {
+		for (int rank = 0; rank < 8; rank++) {
+			for (int file = 0; file < 8; file++) {
+				squares[rank][file] = new Square(rank, file);
+			}
+		}
+
+	}
+
 	private final int rank;
 	private final int file;
 
-	public Square(final int rank, final int file) {
-		assert (rank <= 7) && (rank >= 0) : "rank cannot be: " + rank;
-		assert (file <= 7) && (file >= 0) : "file cannot be: " + file;
+	private Square(final int rank, final int file) {
 		this.rank = rank;
 		this.file = file;
+	}
+
+	public static Square get(final int rank, final int file) {
+		return squares[rank][file];
 	}
 
 	public int getFile() {
@@ -25,42 +38,10 @@ public class Square {
 		return ((char) (rank + 97)) + "" + (file + 1);
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + file;
-		result = prime * result + rank;
-		return result;
-	}
-
-	@Override
-	public boolean equals(final Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		final Square other = (Square) obj;
-		if (file != other.file)
-			return false;
-		if (rank != other.rank)
-			return false;
-		return true;
-	}
-
-	public static Square fromString(final String input) {
-		final int rank = input.toLowerCase().charAt(0) - 97;
-		final int file = input.charAt(1) - 49;
-		if (rank < 0 || rank > 7) {
-			return null;
-		}
-
-		if (file < 0 || file > 7) {
-			return null;
-		}
-		return new Square(rank, file);
+	public static Square get(final String square) {
+		final int rank = square.toLowerCase().charAt(0) - 97;
+		final int file = square.charAt(1) - 49;
+		return Square.get(rank, file);
 	}
 
 }

@@ -147,21 +147,21 @@ public class Board {
 					pgn = "O-O-O";
 					final Piece castle = board[0][start.getFile()];
 					board[3][start.getFile()] = castle;
-					castle.setPosition(new Square(3, start.getFile()), recordMove, false);
+					castle.setPosition(Square.get(3, start.getFile()), recordMove, false);
 					board[0][start.getFile()] = null;
 				} else if (end.getRank() == 6) {
 					//king side
 					pgn = "O-O";
 					final Piece castle = board[7][start.getFile()];
 					board[5][start.getFile()] = castle;
-					castle.setPosition(new Square(5, start.getFile()), recordMove, false);
+					castle.setPosition(Square.get(5, start.getFile()), recordMove, false);
 					board[7][start.getFile()] = null;
 				}
 
 			}
 
 			Piece movingPiece;
-			if (move.getPromote() != null) {
+			if (move.getPromote() != 'x') {
 				pgn = pgn + "=" + move.getPromote();
 				movingPiece = createPiece(end, move.getPromote(), movedPiece.getColor(), true);
 				movedPiece.setPromotedTo(movingPiece);
@@ -215,7 +215,7 @@ public class Board {
 		sb.append(line);
 		for (int file = 7; file >= 0; file--) {
 			for (int rank = 0; rank < 8; rank++) {
-				final Square square = new Square(rank, file);
+				final Square square = Square.get(rank, file);
 				sb.append(square.equals(highlightSquare) ? "[" : "|");
 				final Piece p = board[rank][file];
 				if (p == null) {
@@ -297,11 +297,11 @@ public class Board {
 				if (end.getRank() == 1) {
 					final Piece castle = board[2][start.getFile()];
 					board[0][start.getFile()] = castle;
-					castle.setPosition(new Square(0, start.getFile()), false, false);
+					castle.setPosition(Square.get(0, start.getFile()), false, false);
 				} else if (end.getRank() == 6) {
 					final Piece castle = board[5][start.getFile()];
 					board[7][start.getFile()] = castle;
-					castle.setPosition(new Square(7, start.getFile()), false, false);
+					castle.setPosition(Square.get(7, start.getFile()), false, false);
 				}
 			}
 
@@ -326,10 +326,10 @@ public class Board {
 		final String startPos = "RNBQKBNR";
 
 		for (int i = 0; i < 8; i++) {
-			createPiece(new Square(i, 0), startPos.charAt(i), Color.WHITE, redraw);
-			createPiece(new Square(i, 1), 'P', Color.WHITE, redraw);
-			createPiece(new Square(i, 6), 'P', Color.BLACK, redraw);
-			createPiece(new Square(i, 7), startPos.charAt(i), Color.BLACK, redraw);
+			createPiece(Square.get(i, 0), startPos.charAt(i), Color.WHITE, redraw);
+			createPiece(Square.get(i, 1), 'P', Color.WHITE, redraw);
+			createPiece(Square.get(i, 6), 'P', Color.BLACK, redraw);
+			createPiece(Square.get(i, 7), startPos.charAt(i), Color.BLACK, redraw);
 		}
 	}
 
@@ -428,10 +428,10 @@ public class Board {
 				final int file = move.getStart().getFile();
 				if (move.getEnd().getRank() == 2) {
 					protectedSquares.add(move.getStart());
-					protectedSquares.add(new Square(3, file));
-					protectedSquares.add(new Square(4, file));
+					protectedSquares.add(Square.get(3, file));
+					protectedSquares.add(Square.get(4, file));
 				} else if (move.getEnd().getRank() == 6) {
-					protectedSquares.add(new Square(5, file));
+					protectedSquares.add(Square.get(5, file));
 					protectedSquares.add(move.getStart());
 				}
 			}
@@ -464,7 +464,7 @@ public class Board {
 
 		if (getPieceAt(start) instanceof Pawn) {
 			for (final Move move : getPieceAt(start).getLegalMoves(board)) {
-				if (move.getPromote() != null && move.matchesWithoutPromotion(new Move(start, end))) {
+				if (move.getPromote() != 'x' && move.matchesWithoutPromotion(new Move(start, end))) {
 					return true;
 				}
 			}

@@ -81,7 +81,7 @@ public class Knight extends Piece {
 		}
 
 		if (board[rank][file] == null || board[rank][file].getColor() != getColor()) {
-			return new Move(getPosition(), new Square(rank, file));
+			return new Move(getPosition(), Square.get(rank, file));
 		} else {
 			return null;
 		}

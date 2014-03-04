@@ -125,8 +125,8 @@ public class Queen extends Piece {
 	}
 
 	@Override
-	public String getPgnAbbreviation() {
-		return "Q";
+	public char getPgnAbbreviation() {
+		return 'Q';
 
 	}
 

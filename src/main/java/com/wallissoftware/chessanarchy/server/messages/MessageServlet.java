@@ -47,6 +47,7 @@ public class MessageServlet extends HttpServlet {
 		final boolean idSupplied = idStr != null;
 		if (idSupplied) {
 			id = Long.valueOf(idStr);
+
 		} else {
 			id = LatestMessageId.get();
 		}
@@ -81,7 +82,7 @@ public class MessageServlet extends HttpServlet {
 	protected void doPut(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
 		final StringWriter writer = new StringWriter();
 		IOUtils.copy(req.getInputStream(), writer, "UTF-8");
-		final String message = StringEscapeUtils.escapeHtml(writer.toString());
+		final String message = StringEscapeUtils.escapeHtml(writer.toString()).trim();
 
 		if (message != null && !message.isEmpty()) {
 			boolean sessionModified = false;

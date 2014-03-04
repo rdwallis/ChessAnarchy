@@ -73,8 +73,8 @@ public class King extends Piece {
 	}
 
 	@Override
-	public String getPgnAbbreviation() {
-		return "K";
+	public char getPgnAbbreviation() {
+		return 'K';
 	}
 
 }

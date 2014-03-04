@@ -4,7 +4,6 @@ import com.googlecode.objectify.annotation.Cache;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.condition.IfTrue;
 
 @Entity
 @Cache
@@ -14,14 +13,13 @@ public class MessageCache {
 	private String json;
 	private Long previousId;
 	@Index private long creationTime;
-	@Index(IfTrue.class) private boolean isGameStart;
 
 	@SuppressWarnings("unused")
 	private MessageCache() {
 	};
 
-	public MessageCache(final boolean isGameStart, final Long previousId, final String json) {
-		this.isGameStart = isGameStart;
+	public MessageCache(final Long previousId, final String json) {
+
 		this.creationTime = System.currentTimeMillis();
 		this.previousId = previousId;
 		this.json = json;
@@ -37,10 +35,6 @@ public class MessageCache {
 
 	public Long getId() {
 		return id;
-	}
-
-	public boolean isGameStart() {
-		return isGameStart;
 	}
 
 }

@@ -1,6 +1,7 @@
 package com.wallissoftware.chessanarchy.client.game.chat.model;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsonUtils;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.message.Message;
@@ -61,5 +62,9 @@ public final class JsonMessage extends JavaScriptObject implements Message {
 	public final native String getId() /*-{
 		return this.id;
 	}-*/;
+
+	public static JsArray<JsonMessage> aryFromJson(final String json) {
+		return JsonUtils.safeEval(json);
+	};
 
 }

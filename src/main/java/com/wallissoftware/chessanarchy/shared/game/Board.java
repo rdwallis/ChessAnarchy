@@ -34,18 +34,25 @@ public class Board {
 
 	private Piece lastMoved;
 
+	private Move lastMove;
+
 	private boolean requiresFullUndo = false;
 
 	private final static Logger logger = Logger.getLogger(Board.class.getName());
 
 	public Board(final List<String> moveList) throws IllegalMoveException {
+		//reset(true);
 		resetFromMoveList(moveList);
 	}
 
 	public void resetFromMoveList(final List<String> moveList) throws IllegalMoveException {
-		reset(true);
-		for (final String pgn : moveList) {
-			doMove(pgn);
+		if (!moveList.equals(this.moveList)) {
+
+			reset(true);
+			for (final String pgn : moveList) {
+				doMove(pgn);
+			}
+
 		}
 	}
 
@@ -66,7 +73,9 @@ public class Board {
 
 	public final String doMove(final Move move, final boolean recordMove, final boolean calcFullPgn) {
 		try {
-
+			if (recordMove) {
+				lastMove = move;
+			}
 			final Square start = move.getStart();
 			final Square end = move.getEnd();
 
@@ -98,24 +107,25 @@ public class Board {
 					final Square otherPosition = piece.getPosition();
 					if (!otherPosition.equals(start)) {
 						if (otherPosition.getRank() == start.getRank()) {
-
 							rankIsUnique = false;
-						}
-						if (otherPosition.getFile() == start.getFile()) {
+						} else {
 
 							fileIsUnique = false;
 						}
+
 					}
 				}
 
-				if (!fileIsUnique) {
+				if (!rankIsUnique) {
 					pgn = start.toString().charAt(1) + pgn;
 				}
 
-				if (!rankIsUnique || (capture != null && movedPiece instanceof Pawn)) {
+				if (!fileIsUnique || (capture != null && movedPiece instanceof Pawn)) {
 					pgn = start.toString().charAt(0) + pgn;
 				}
 
+			}
+			if (movedPiece.getPgnAbbreviation() != 'P') {
 				pgn = movedPiece.getPgnAbbreviation() + pgn;
 			}
 
@@ -139,17 +149,18 @@ public class Board {
 
 			}
 
-			Piece movingPiece = move.getPromote();
-			if (movingPiece == null) {
-				movingPiece = movedPiece;
-
-			} else {
-				pgn = pgn + "=" + movingPiece.getPgnAbbreviation();
-				pieces.add(movingPiece);
+			Piece movingPiece;
+			if (move.getPromote() != null) {
+				pgn = pgn + "=" + move.getPromote();
+				movingPiece = createPiece(end, move.getPromote(), movedPiece.getColor(), true);
+				movedPiece.setPromotedTo(movingPiece);
 				if (recordMove) {
 					movedPiece.notfiyHandlersOfPosition();
 				}
+			} else {
+				movingPiece = movedPiece;
 			}
+
 			setLastMovedPiece(movingPiece);
 
 			board[start.getRank()][start.getFile()] = null;
@@ -194,7 +205,7 @@ public class Board {
 		sb.append("\n");
 		final String line = "---------------------------------\n";
 		sb.append(line);
-		for (int file = 7; file <= 0; file--) {
+		for (int file = 7; file >= 0; file--) {
 			for (int rank = 0; rank < 8; rank++) {
 				final Square square = new Square(rank, file);
 				sb.append(square.equals(highlightSquare) ? "[" : "|");
@@ -203,14 +214,16 @@ public class Board {
 					sb.append("  ");
 				} else {
 					sb.append(p.getColor().name().charAt(0));
-					sb.append(p.getPgnAbbreviation().isEmpty() ? "P" : p.getPgnAbbreviation());
+					sb.append(p.getPgnAbbreviation());
 				}
 				sb.append(square.equals(highlightSquare) ? "]" : "|");
 
 			}
+			sb.append(" ").append(file + 1);
 			sb.append("\n");
 			sb.append(line);
 		}
+		sb.append(" a   b   c   d   e   f   g   h");
 		return sb.toString();
 	}
 
@@ -244,8 +257,9 @@ public class Board {
 			if (move.getEnd().equals(square)) {
 				final Piece other = getPieceAt(move.getStart());
 
-				if (other != null && other.getColor() == piece.getColor() && other.getPgnAbbreviation().equals(piece.getPgnAbbreviation())) {
-					result.add(piece);
+				if (other != null && other != piece && other.getColor() == piece.getColor() && other.getPgnAbbreviation() == piece.getPgnAbbreviation()) {
+					//logger.info("found other piece:" + piece + " = " + other);
+					result.add(other);
 				}
 			}
 		}
@@ -304,42 +318,43 @@ public class Board {
 		final String startPos = "RNBQKBNR";
 
 		for (int i = 0; i < 8; i++) {
-			createPiece(new Square(i, 0), startPos.substring(i, i + 1), Color.WHITE, redraw);
-			createPiece(new Square(i, 1), "", Color.WHITE, redraw);
-			createPiece(new Square(i, 6), "", Color.BLACK, redraw);
-			createPiece(new Square(i, 7), startPos.substring(i, i + 1), Color.BLACK, redraw);
+			createPiece(new Square(i, 0), startPos.charAt(i), Color.WHITE, redraw);
+			createPiece(new Square(i, 1), 'P', Color.WHITE, redraw);
+			createPiece(new Square(i, 6), 'P', Color.BLACK, redraw);
+			createPiece(new Square(i, 7), startPos.charAt(i), Color.BLACK, redraw);
 		}
 	}
 
-	private void createPiece(final Square square, final String abbreviation, final Color color, final boolean redraw) {
+	private Piece createPiece(final Square square, final char abbreviation, final Color color, final boolean redraw) {
 		for (final Piece piece : getPieces()) {
-			if (piece.canRecycle() && piece.getPgnAbbreviation().equals(abbreviation) && piece.getColor() == color) {
+			if (piece.canRecycle() && piece.getPgnAbbreviation() == abbreviation && piece.getColor() == color) {
 				setPieceAtSquare(piece, square, redraw);
-				return;
+				return piece;
 			}
 		}
 		final Piece newPiece;
-		if (abbreviation.equals("")) {
+		if (abbreviation == 'P') {
 			newPiece = new Pawn(color);
 
-		} else if (abbreviation.equals("Q")) {
+		} else if (abbreviation == 'Q') {
 			newPiece = new Queen(color);
-		} else if (abbreviation.equals("R")) {
+		} else if (abbreviation == 'R') {
 			newPiece = new Rook(color);
-		} else if (abbreviation.equals("K")) {
+		} else if (abbreviation == 'K') {
 			newPiece = new King(color);
 			if (color == Color.WHITE) {
 				whiteKing = (King) newPiece;
 			} else {
 				blackKing = (King) newPiece;
 			}
-		} else if (abbreviation.equals("N")) {
+		} else if (abbreviation == 'N') {
 			newPiece = new Knight(color);
 		} else {
 			newPiece = new Bishop(color);
 		}
 		setPieceAtSquare(newPiece, square, redraw);
 		pieces.add(newPiece);
+		return newPiece;
 
 	}
 
@@ -472,6 +487,15 @@ public class Board {
 		}
 		return result;
 
+	}
+
+	public void printBoard() {
+		logger.info(getBoardAsText(null));
+
+	}
+
+	public Move getLastMove() {
+		return lastMove;
 	}
 
 }

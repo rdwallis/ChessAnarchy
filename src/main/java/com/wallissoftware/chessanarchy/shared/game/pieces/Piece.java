@@ -16,8 +16,8 @@ public abstract class Piece implements Dto {
 	private int moveCount;
 	private boolean captured = false;
 
-	private static String[] abbreviations = { "p", "k", "b", "q", "r", "n" };
-	private static Set<String> abbreviationSet = new HashSet<String>();
+	private static char[] abbreviations = { 'P', 'K', 'B', 'Q', 'R', 'N' };
+	private static Set<Character> abbreviationSet = new HashSet<Character>();
 
 	static {
 		for (int i = 0; i < abbreviations.length; i++) {
@@ -163,14 +163,19 @@ public abstract class Piece implements Dto {
 		return color + " " + getPgnAbbreviation() + " on " + position;
 	}
 
-	public abstract String getPgnAbbreviation();
+	public abstract char getPgnAbbreviation();
 
-	public static Set<String> getAllAbbreviations() {
+	public static Set<Character> getAllAbbreviations() {
 		return abbreviationSet;
 	}
 
 	public void setJustMoved(final boolean justMoved) {
 		this.justMoved = justMoved;
+
+	}
+
+	public void setPromotedTo(final Piece movingPiece) {
+		// TODO only neeeded for pawn
 
 	};
 

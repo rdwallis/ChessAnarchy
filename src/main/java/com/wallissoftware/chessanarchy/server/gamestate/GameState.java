@@ -42,7 +42,7 @@ public class GameState {
 
 	private String whiteExtraInfo, blackExtraInfo;
 
-	@Serialize private Set<Map<String, String>> messages = new HashSet<Map<String, String>>();
+	@Serialize private List<Map<String, String>> messages = new ArrayList<Map<String, String>>();
 	private static long lastServerMessage = -1;
 
 	@SuppressWarnings("unused")
@@ -179,7 +179,16 @@ public class GameState {
 
 	}
 
-	public Set<Map<String, String>> getMessages() {
+	public Set<Map<String, String>> getLast10Messages() {
+		final HashSet<Map<String, String>> result = new HashSet<Map<String, String>>(messages.subList(Math.max(0, messages.size() - 10), messages.size() - 1));
+		if (getId() != null && result.size() < 10) {
+			result.add(getMessage("Start" + getId(), creationTime, "STARTING GAME: " + getId() + (swapColors() ? "T" : "F"), null));
+		}
+
+		return result;
+	}
+
+	public Set<Map<String, String>> getAllMessages() {
 		final HashSet<Map<String, String>> result = new HashSet<Map<String, String>>(messages);
 		if (getId() != null) {
 			result.add(getMessage("Start" + getId(), creationTime, "STARTING GAME: " + getId() + (swapColors() ? "T" : "F"), null));
@@ -221,4 +230,5 @@ public class GameState {
 		return sb.toString();
 
 	}
+
 }

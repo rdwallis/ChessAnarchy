@@ -1,13 +1,13 @@
 package com.wallissoftware.chessanarchy.client.game.board;
 
-import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.Widget;
 
 public class GhostAnimation {
 
 	private final static double MOVE_DURATION = 2000;
 	private final static double FADE_DURATION = 1000;
 
-	private final Image image;
+	private final Widget widget;
 	private final double startTime;
 
 	private final int startX;
@@ -15,20 +15,20 @@ public class GhostAnimation {
 	private final int endX;
 	private final int endY;
 
-	public GhostAnimation(final double startTime, final Image image, final int startX, final int startY, final int endX, final int endY) {
+	public GhostAnimation(final double startTime, final Widget widget, final int startX, final int startY, final int endX, final int endY) {
 		super();
-		this.image = image;
+		this.widget = widget;
 		this.startTime = startTime;
 		this.startX = startX;
 		this.startY = startY;
 		this.endX = endX;
 		this.endY = endY;
 
-		image.getElement().getStyle().setOpacity(0.5);
+		//widget.getElement().getStyle().setOpacity(0.5);
 	}
 
-	public Image getImage() {
-		return image;
+	public Widget getWidget() {
+		return widget;
 	}
 
 	public int getX(final double milli) {

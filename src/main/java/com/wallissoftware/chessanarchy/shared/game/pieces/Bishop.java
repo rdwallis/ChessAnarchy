@@ -76,8 +76,8 @@ public class Bishop extends Piece {
 	}
 
 	@Override
-	public String getPgnAbbreviation() {
-		return "B";
+	public char getPgnAbbreviation() {
+		return 'B';
 	}
 
 }

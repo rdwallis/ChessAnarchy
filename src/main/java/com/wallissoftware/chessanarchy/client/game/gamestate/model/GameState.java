@@ -55,6 +55,12 @@ public final class GameState {
 	}
 
 	public List<String> getMoveList() {
+		/*final String[] moves = { "e4", "d5", "e5", "f5", "exf6", "d4", "fxg7", "Nc6", "gxh8=Q", "Be6", "c4", "Qd7", "b4", "O-O-O", "b5" };
+		final List<String> moveList = new ArrayList<String>();
+		for (int i = 0; i < moves.length; i++) {
+			moveList.add(moves[i]);
+		}*/
+
 		return moveList;
 	}
 

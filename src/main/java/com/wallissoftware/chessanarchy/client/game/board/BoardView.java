@@ -31,6 +31,7 @@ import com.wallissoftware.chessanarchy.client.game.board.piece.images.PieceSprit
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.shared.game.Color;
+import com.wallissoftware.chessanarchy.shared.game.Move;
 import com.wallissoftware.chessanarchy.shared.game.Square;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Bishop;
 import com.wallissoftware.chessanarchy.shared.game.pieces.King;
@@ -51,6 +52,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 		String lightSquare();
 
+		String highlight();
+
 	}
 
 	private final PieceSprites sprites;
@@ -68,7 +71,13 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	private final Set<GhostAnimation> ghostAnimations = new HashSet<GhostAnimation>();
 
+	private SimplePanel[][] squares = new SimplePanel[8][8];
+
+	private Set<SimplePanel> highlightedSquares = new HashSet<SimplePanel>();
+
 	private Square startDragSquare;
+
+	private Color lastDrawOrientation;
 
 	@Inject
 	BoardView(final Binder binder, final PieceSprites sprites) {
@@ -112,10 +121,10 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 			final GhostAnimation ghostAnimation = it.next();
 			if (ghostAnimation.isFinished(milli)) {
 				it.remove();
-				dropSurface.remove(ghostAnimation.getImage());
+				dropSurface.remove(ghostAnimation.getWidget());
 			} else {
-				ghostAnimation.getImage().getElement().getStyle().setOpacity(ghostAnimation.getOpacity(milli));
-				dropSurface.setWidgetPosition(ghostAnimation.getImage(), ghostAnimation.getX(milli), ghostAnimation.getY(milli));
+				ghostAnimation.getWidget().getElement().getStyle().setOpacity(ghostAnimation.getOpacity(milli));
+				dropSurface.setWidgetPosition(ghostAnimation.getWidget(), ghostAnimation.getX(milli), ghostAnimation.getY(milli));
 			}
 		}
 
@@ -126,6 +135,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 			for (int file = 0; file < 8; file++) {
 				final boolean dark = ((rank + file) % 2 == 1);
 				final SimplePanel square = new SimplePanel();
+				squares[rank][file] = square;
 				square.addStyleName(dark ? style.darkSquare() : style.lightSquare());
 				boardBackground.insert(square, 0);
 				boardBackground.setWidgetLeftWidth(square, rank * 50, Unit.PX, 50, Unit.PX);
@@ -135,43 +145,68 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	}
 
-	private void resetGridLabels() {
-		if (rankLabels.isEmpty()) {
-			for (int i = 0; i < 8; i++) {
-				final Label rankLabel = new Label("" + ((char) (i + 97)));
-				rankLabel.addStyleName(style.gridLabel());
-				rankLabels.add(rankLabel);
-				layoutPanel.insert(rankLabel, 0);
-				layoutPanel.setWidgetBottomHeight(rankLabel, 5, Unit.PX, 26, Unit.PX);
+	@Override
+	public void resetGridLabels() {
+		if (lastDrawOrientation != getOrientation()) {
+			this.lastDrawOrientation = getOrientation();
+			if (rankLabels.isEmpty()) {
+				for (int i = 0; i < 8; i++) {
+					final Label rankLabel = new Label("" + ((char) (i + 97)));
+					rankLabel.addStyleName(style.gridLabel());
+					rankLabels.add(rankLabel);
+					layoutPanel.insert(rankLabel, 0);
+					layoutPanel.setWidgetBottomHeight(rankLabel, 5, Unit.PX, 26, Unit.PX);
 
-				final Label fileLabel = new Label("" + (i + 1));
-				fileLabel.addStyleName(style.gridLabel());
-				fileLabels.add(fileLabel);
-				layoutPanel.insert(fileLabel, 0);
-				layoutPanel.setWidgetRightWidth(fileLabel, 10, Unit.PX, 16, Unit.PX);
+					final Label fileLabel = new Label("" + (i + 1));
+					fileLabel.addStyleName(style.gridLabel());
+					fileLabels.add(fileLabel);
+					layoutPanel.insert(fileLabel, 0);
+					layoutPanel.setWidgetRightWidth(fileLabel, 10, Unit.PX, 16, Unit.PX);
+				}
 			}
-		}
 
-		for (int i = 0; i < 8; i++) {
-			final Widget rankLabel = getOrientation() == Color.WHITE ? rankLabels.get(i) : rankLabels.get(7 - i);
-			final Widget fileLabel = getOrientation() == Color.WHITE ? fileLabels.get(7 - i) : fileLabels.get(i);
-			layoutPanel.setWidgetLeftWidth(rankLabel, (i * 50) + 30, Unit.PX, 16, Unit.PX);
-			layoutPanel.setWidgetTopHeight(fileLabel, (i * 50) + 26, Unit.PX, 16, Unit.PX);
+			for (int i = 0; i < 8; i++) {
+				final Widget rankLabel = getOrientation() == Color.WHITE ? rankLabels.get(i) : rankLabels.get(7 - i);
+				final Widget fileLabel = getOrientation() == Color.WHITE ? fileLabels.get(7 - i) : fileLabels.get(i);
+				layoutPanel.setWidgetLeftWidth(rankLabel, (i * 50) + 30, Unit.PX, 16, Unit.PX);
+				layoutPanel.setWidgetTopHeight(fileLabel, (i * 50) + 26, Unit.PX, 16, Unit.PX);
+			}
 		}
 
 	}
 
 	@Override
-	public void setPieceInSquare(final IsWidget piece, final Square square) {
+	public void setPieceInSquare(final IsWidget piece, final Square square, final Square animateFrom) {
 		int x = square.getRank() * 50;
 		int y = 350 - (square.getFile() * 50);
 		if (getOrientation() == Color.BLACK) {
 			x = 350 - x;
 			y = 350 - y;
 		}
+		if (animateFrom == null || dropSurface.getWidgetIndex(piece) == -1) {
+			dropSurface.add(piece, x, y);
+			dragController.makeDraggable(piece.asWidget());
+		} else {
 
-		dropSurface.add(piece, x, y);
-		dragController.makeDraggable(piece.asWidget());
+			int startX = animateFrom.getRank() * 50;
+			int startY = 350 - (animateFrom.getFile() * 50);
+			if (getOrientation() == Color.BLACK) {
+				startX = 350 - startX;
+				startY = 350 - startY;
+			}
+
+			final GhostAnimation animation = new GhostAnimation(System.currentTimeMillis(), piece.asWidget(), startX, startY, x, y);
+			Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+
+				@Override
+				public boolean execute() {
+					final long time = System.currentTimeMillis();
+					dropSurface.setWidgetPosition(piece.asWidget(), animation.getX(time), animation.getY(time));
+					return !animation.isMovementComplete(time);
+				}
+			}, 50);
+
+		}
 
 	}
 
@@ -309,13 +344,33 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		}
 
 		dropSurface.add(image, x, y);
-		ghostAnimations.add(new GhostAnimation(startTime + 1000, image, x, y, x1, y1));
+		ghostAnimations.add(new GhostAnimation(startTime + 3000, image, x, y, x1, y1));
 
 	}
 
 	@Override
-	public void clearBoard() {
-		dropSurface.clear();
+	public void highlightMove(final Move move) {
+		for (final SimplePanel square : highlightedSquares) {
+			square.removeStyleName(style.highlight());
+		}
+		highlightedSquares.clear();
+		if (move != null) {
+			highlightSquare(move.getStart());
+			highlightSquare(move.getEnd());
+		}
+
+	}
+
+	private void highlightSquare(final Square square) {
+		int rank = square.getRank();
+		int file = square.getFile();
+		if (getOrientation() == Color.WHITE) {
+			file = 7 - file;
+		} else {
+			rank = 7 - rank;
+		}
+		squares[rank][file].addStyleName(style.highlight());
+		highlightedSquares.add(squares[rank][file]);
 
 	}
 

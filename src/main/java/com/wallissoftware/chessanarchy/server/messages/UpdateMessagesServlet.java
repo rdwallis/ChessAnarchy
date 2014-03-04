@@ -45,11 +45,11 @@ public class UpdateMessagesServlet extends HttpServlet {
 			final Long previousGameStateId = LatestGameStateId.getPrevious();
 
 			if (latestGameStateId != null) {
-				gameStateMessages.addAll(ofy.load().type(GameState.class).id(latestGameStateId).getValue().getMessages());
+				gameStateMessages.addAll(ofy.load().type(GameState.class).id(latestGameStateId).getValue().getLast10Messages());
 			}
 
-			if (gameStateMessages.size() < 10 && previousGameStateId != null) {
-				gameStateMessages.addAll(ofy.load().type(GameState.class).id(previousGameStateId).getValue().getMessages());
+			if (gameStateMessages.size() < 8 && previousGameStateId != null) {
+				gameStateMessages.addAll(ofy.load().type(GameState.class).id(previousGameStateId).getValue().getLast10Messages());
 
 			}
 
@@ -66,7 +66,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 
 					messageQueue.addAll(gameStateMessages);
 					messageMap.put("messages", messageQueue);
-					final MessageCache messageCache = new MessageCache(isGameStart, previousId, new Gson().toJson(messageMap));
+					final MessageCache messageCache = new MessageCache(previousId, new Gson().toJson(messageMap));
 					ofy.save().entities(messageCache);
 
 					LatestMessageId.set(messageCache.getId());
@@ -100,13 +100,13 @@ public class UpdateMessagesServlet extends HttpServlet {
 				ofy.save().entity(gameState);
 
 				if (gameState.isComplete()) {
-					createNewGameState(ofy, !gameState.swapColors()).getMessages();
+					createNewGameState(ofy, !gameState.swapColors()).getLast10Messages();
 					return true;
 				}
 			}
 
 		} else {
-			createNewGameState(ofy, false).getMessages();
+			createNewGameState(ofy, false).getLast10Messages();
 			return true;
 		}
 		return false;

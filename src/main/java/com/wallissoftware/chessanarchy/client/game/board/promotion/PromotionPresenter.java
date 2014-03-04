@@ -10,11 +10,7 @@ import com.wallissoftware.chessanarchy.shared.game.Board;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Move;
 import com.wallissoftware.chessanarchy.shared.game.Square;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Bishop;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Knight;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Pawn;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Queen;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Rook;
 
 public class PromotionPresenter extends PresenterWidget<PromotionPresenter.MyView> implements PromotionUiHandlers {
 	public interface MyView extends PopupView, HasUiHandlers<PromotionUiHandlers> {
@@ -48,7 +44,7 @@ public class PromotionPresenter extends PresenterWidget<PromotionPresenter.MyVie
 
 	@Override
 	public void promoteToRook() {
-		makeMove(new Move(start, end, new Rook(getPromotedPawn())));
+		makeMove(new Move(start, end, 'R'));
 
 	}
 
@@ -58,19 +54,19 @@ public class PromotionPresenter extends PresenterWidget<PromotionPresenter.MyVie
 
 	@Override
 	public void promoteToBishop() {
-		makeMove(new Move(start, end, new Bishop(getPromotedPawn())));
+		makeMove(new Move(start, end, 'B'));
 
 	}
 
 	@Override
 	public void promoteToKnight() {
-		makeMove(new Move(start, end, new Knight(getPromotedPawn())));
+		makeMove(new Move(start, end, 'N'));
 
 	}
 
 	@Override
 	public void promoteToQueen() {
-		makeMove(new Move(start, end, new Queen(getPromotedPawn())));
+		makeMove(new Move(start, end, 'Q'));
 
 	}
 

@@ -35,7 +35,7 @@ import com.wallissoftware.chessanarchy.shared.game.pieces.PieceMoveHandler;
 public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler, GameStateUpdatedHandler, UserChangedHandler {
 	public interface MyView extends View, HasUiHandlers<BoardUiHandlers> {
 
-		void setPieceInSquare(IsWidget isWidget, Square square);
+		void setPieceInSquare(IsWidget isWidget, Square square, Square animateFrom);
 
 		void capture(IsWidget isWidget);
 
@@ -43,7 +43,9 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 		void makeGhostMove(final double startTime, Piece piece, Square end);
 
-		void clearBoard();
+		void highlightMove(Move move);
+
+		void resetGridLabels();
 
 	}
 
@@ -53,16 +55,24 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		public void run() {
 			try {
 				if (!preventRedraw) {
+					//preventRedraw();
 
 					board.resetFromMoveList(gameStateProvider.get().getMoveList());
+					if (!boardDrawn) {
+						boardDrawn = true;
+						drawBoard();
+					}
 					/*
 					if (shouldRedraw()) {
 						logger.info("Resetting Board:\n" + gameStateProvider.get().getMoveList());
 						drawBoard();
 					}*/
+					getView().resetGridLabels();
 					for (final Piece piece : board.getPieces()) {
 						piece.notfiyHandlersOfPosition();
 					}
+					getView().highlightMove(board.getLastMove());
+					//allowRedraw();
 				}
 			} catch (final Exception e) {
 				// TODO Auto-generated catch block
@@ -80,13 +90,8 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	private final PromotionPresenter promotionPresenter;
 	private final GameStateProvider gameStateProvider;
 	private final static Logger logger = Logger.getLogger(BoardPresenter.class.getName());
-	private Color lastUserColor = null;
 	private boolean preventRedraw;
-	private String lastGameId = "";
-
-	private boolean shouldRedraw() {
-		return User.get().getColor(true) != lastUserColor || lastGameId == null || lastGameId.equals(gameStateProvider.get().getId());
-	}
+	private boolean boardDrawn = false;
 
 	@Inject
 	BoardPresenter(final EventBus eventBus, final MyView view, final Provider<PiecePresenter> piecePresenterProvider, final Board board, final PromotionPresenter promotionPresenter, final GameStateProvider gameStateProvider) {
@@ -105,17 +110,14 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		addRegisteredHandler(ReceivedMessageCacheEvent.getType(), this);
 		addRegisteredHandler(GameStateUpdatedEvent.getType(), this);
 		addRegisteredHandler(UserChangedEvent.getType(), this);
-		drawBoard();
 
 	}
 
 	private void drawBoard() {
-		lastUserColor = User.get().getColor(true);
-		lastGameId = gameStateProvider.get().getId();
 		for (final Piece piece : board.getPieces()) {
 			final PiecePresenter piecePresenter = getPiecePresenter(piece);
 			if (!piece.isCaptured()) {
-				getView().setPieceInSquare(piecePresenter.getView(), piecePresenter.getPosition());
+				getView().setPieceInSquare(piecePresenter.getView(), piecePresenter.getPosition(), null);
 			}
 		}
 
@@ -130,14 +132,17 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 				@Override
 				public void afterMove() {
 					//logger.info("Redrawing Piece: " + piece);
+					final Move lastMove = gameStateProvider.getSyncedBoard().getLastMove();
+					final boolean animate = lastMove != null && lastMove.getEnd().equals(piece.getPosition());
 					if (piece.getPromotedTo() != null) {
+						logger.info("Pawn Promoted");
 						getView().removeFromBoard(piecePresenter.getView());
-						getView().setPieceInSquare(getPiecePresenter(piece.getPromotedTo()), piece.getPromotedTo().getPosition());
+						getView().setPieceInSquare(getPiecePresenter(piece.getPromotedTo()), piece.getPromotedTo().getPosition(), animate ? lastMove.getStart() : null);
 					} else if (piece.isCaptured()) {
 						logger.info("Capturing piece: " + piece);
 						getView().capture(piecePresenter.getView());
 					} else {
-						getView().setPieceInSquare(piecePresenter.getView(), piece.getPosition());
+						getView().setPieceInSquare(piecePresenter.getView(), piece.getPosition(), animate ? lastMove.getStart() : null);
 					}
 
 				}
@@ -219,7 +224,8 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	}
 
 	private void resetBoard() {
-		resetBoardTimer.schedule(100);
+		resetBoardTimer.schedule(10);
+		;
 
 	}
 

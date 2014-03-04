@@ -78,8 +78,8 @@ public class Rook extends Piece {
 	}
 
 	@Override
-	public String getPgnAbbreviation() {
-		return "R";
+	public char getPgnAbbreviation() {
+		return 'R';
 	}
 
 }

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.http.client.Request;
@@ -23,6 +24,7 @@ import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEve
 import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent.MessageInLimboHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.messageinput.MessageInputPresenter;
+import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessage;
 import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessageCache;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
@@ -56,6 +58,8 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	protected void onBind() {
 		super.onBind();
 		addRegisteredHandler(MessageInLimboEvent.getType(), this);
+		fetchGameStateMessages();
+		fetchLatestMessage();
 		Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
 
 			@Override
@@ -65,6 +69,39 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 			}
 
 		}, 2003);
+	}
+
+	private void fetchGameStateMessages() {
+		final RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/gamemessages"));
+		try {
+			requestBuilder.sendRequest(null, new RequestCallback() {
+				@Override
+				public void onError(final Request request, final Throwable exception) {
+				}
+
+				@Override
+				public void onResponseReceived(final Request request, final Response response) {
+					if (200 == response.getStatusCode()) {
+						processRawMessages(response.getText());
+					} else {
+					}
+
+				}
+
+				private void processRawMessages(final String json) {
+					final JsArray<JsonMessage> msgAry = JsonMessage.aryFromJson(json);
+					for (int i = 0; i < msgAry.length(); i++) {
+						addMessage(new MessageWrapper(msgAry.get(i)), false);
+					}
+					fireEvent(new GameStateUpdatedEvent());
+
+				}
+
+			});
+		} catch (final RequestException e) {
+			// Couldn't connect to server
+		}
+
 	}
 
 	private boolean addMessage(final MessageWrapper message, final boolean inLimbo) {
@@ -131,7 +168,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	}
 
 	private void fetchLatestMessage() {
-		fetchMessage(null, 10);
+		fetchMessage(null, 1);
 	}
 
 	private void fetchMessage(final String id, final int messageCount) {
@@ -204,6 +241,16 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	public void onMessageInLimbo(final MessageInLimboEvent event) {
 		addMessage(event.getMessage(), true);
 
+	}
+
+	public List<MessageWrapper> getCurrentGameMasterMessages() {
+		final List<MessageWrapper> result = new ArrayList<MessageWrapper>();
+		for (final MessageWrapper message : getCurrentGameMessages()) {
+			if (message.isFromGameMaster()) {
+				result.add(message);
+			}
+		}
+		return result;
 	}
 
 }

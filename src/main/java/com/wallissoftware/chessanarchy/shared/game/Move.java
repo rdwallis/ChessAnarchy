@@ -1,7 +1,6 @@
 package com.wallissoftware.chessanarchy.shared.game;
 
 import com.wallissoftware.chessanarchy.shared.dto.Dto;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Piece;
 
 public class Move implements Dto {
 
@@ -9,13 +8,13 @@ public class Move implements Dto {
 
 	private Square start;
 	private Square end;
-	private Piece promote;
+	private Character promote;
 
 	public Move(final Square start, final Square end) {
 		this(start, end, null);
 	}
 
-	public Move(final Square start, final Square end, final Piece promote) {
+	public Move(final Square start, final Square end, final Character promote) {
 		this.start = start;
 		this.end = end;
 		this.promote = promote;
@@ -29,7 +28,7 @@ public class Move implements Dto {
 		return end;
 	}
 
-	public Piece getPromote() {
+	public Character getPromote() {
 		return promote;
 	}
 

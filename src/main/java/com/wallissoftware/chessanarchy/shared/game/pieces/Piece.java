@@ -12,7 +12,7 @@ public abstract class Piece implements Dto {
 	private static final long serialVersionUID = 1L;
 
 	private Color color;
-	private Square position, recyclePosition;
+	private Square position;
 	private int moveCount;
 	private boolean captured = false;
 
@@ -24,8 +24,6 @@ public abstract class Piece implements Dto {
 			abbreviationSet.add(abbreviations[i]);
 		}
 	}
-
-	private Set<PieceMoveHandler> pieceMoveHandlers = new HashSet<PieceMoveHandler>();
 
 	private boolean justMoved;
 
@@ -44,7 +42,6 @@ public abstract class Piece implements Dto {
 	public void recycle() {
 		justMoved = false;
 		moveCount = 0;
-		recyclePosition = position;
 		position = null;
 		captured = false;
 	}
@@ -67,10 +64,6 @@ public abstract class Piece implements Dto {
 		return null;
 	}
 
-	public void addPieceMoveHandler(final PieceMoveHandler pieceMoveHandler) {
-		pieceMoveHandlers.add(pieceMoveHandler);
-	}
-
 	public Color getColor() {
 		return color;
 	}
@@ -86,9 +79,6 @@ public abstract class Piece implements Dto {
 
 	public void capture(final boolean fireEvents) {
 		captured = true;
-		if (fireEvents) {
-			notfiyHandlersOfPosition();
-		}
 	}
 
 	public boolean isCaptured() {
@@ -107,18 +97,7 @@ public abstract class Piece implements Dto {
 				moveCount += 1;
 			}
 			this.position = position;
-			if (fireEvents && !this.position.equals(recyclePosition)) {
-				notfiyHandlersOfPosition();
-			}
-			recyclePosition = null;
-		}
 
-	}
-
-	public void notfiyHandlersOfPosition() {
-
-		for (final PieceMoveHandler handler : pieceMoveHandlers) {
-			handler.afterMove();
 		}
 
 	}
@@ -131,7 +110,9 @@ public abstract class Piece implements Dto {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + (captured ? 1231 : 1237);
 		result = prime * result + ((color == null) ? 0 : color.hashCode());
+		result = prime * result + (justMoved ? 1231 : 1237);
 		result = prime * result + moveCount;
 		result = prime * result + ((position == null) ? 0 : position.hashCode());
 		return result;
@@ -146,7 +127,11 @@ public abstract class Piece implements Dto {
 		if (getClass() != obj.getClass())
 			return false;
 		final Piece other = (Piece) obj;
+		if (captured != other.captured)
+			return false;
 		if (color != other.color)
+			return false;
+		if (justMoved != other.justMoved)
 			return false;
 		if (moveCount != other.moveCount)
 			return false;

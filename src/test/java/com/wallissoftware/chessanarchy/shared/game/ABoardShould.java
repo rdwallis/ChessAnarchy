@@ -23,6 +23,11 @@ public class ABoardShould {
 				"Nc4", "Qe8", "h3", "Qe1", "Qf3", "f5", "Nh2", "g5", "Qd5+", "Kh8", "Nf3", "Qe8", "Qxf5", "Bf6", "Nxg5", "Kg7", "Ne6+", "Kg8", "Nxf4", "Kf7", "Qh7+", "Bg7", "Qg6+", "Kg8", "Qxe8+");
 
 		System.out.println("SECOND TEST PASSED");
+
+		playGame("e4", "e5", "f4", "d5", "d4", "dxe4", "fxe5", "Be6", "Bb5+", "c6", "Be2", "Nh6", "Bxh6", "Qh4+", "g3", "Qxh6", "Nd2", "e3", "Nf1", "Bb4+", "c3", "Be7", "Qd3", "Bg5", "h4", "O-O", "Nh3", "Be7", "Nf4", "Nd7", "Nxe3", "Rad8", "Qe4", "Kh8", "O-O-O", "Nb6", "Nxe6",
+				"Qxe6", "Nf5", "Nc8", "Kb1", "f6", "h5", "fxe5", "Bd3", "Qd5", "dxe5", "Bc5", "e6", "a5", "Qg4", "Qe5", "Rhe1");
+
+		System.out.println("THIRD TEST PASSED");
 	}
 
 	public void playGame(final String... moves) {
@@ -30,12 +35,16 @@ public class ABoardShould {
 		for (int i = 0; i < moves.length; i++) {
 			moveList.add(moves[i]);
 		}
+		Board board = null;
 		try {
-			final Board board = new Board(moveList.subList(0, moveList.size() - 1));
+			board = new Board(moveList.subList(0, moveList.size() - 1));
 			board.resetFromMoveList(moveList);
 			board.printBoard();
 
 		} catch (final IllegalMoveException e) {
+			if (board != null) {
+				board.printBoard();
+			}
 			fail();
 		}
 	}

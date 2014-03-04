@@ -23,6 +23,7 @@ import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
+import com.google.appengine.api.utils.SystemProperty;
 import com.google.gson.Gson;
 import com.google.inject.Singleton;
 import com.googlecode.objectify.Objectify;
@@ -71,6 +72,9 @@ public class MessageServlet extends HttpServlet {
 
 	@Override
 	protected long getLastModified(final HttpServletRequest req) {
+		if (SystemProperty.environment.value() != SystemProperty.Environment.Value.Production) {
+			return super.getLastModified(req);
+		}
 		final Long lastUpdateTime = LastUpdateTime.getLastUpdateTime();
 		if (lastUpdateTime == null) {
 			return System.currentTimeMillis();

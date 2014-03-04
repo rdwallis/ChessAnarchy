@@ -40,24 +40,4 @@ public class GameStateServlet extends HttpServlet {
 		resp.sendError(404);
 	}
 
-	/*@Override
-	protected long getLastModified(final HttpServletRequest req) {
-		final String idStr = req.getParameter("id");
-		final Long id;
-		final boolean idSupplied = idStr != null;
-		if (idSupplied) {
-			id = Long.valueOf(idStr);
-		} else {
-			id = LatestGameStateId.get();
-		}
-		if (id != null) {
-			final Objectify ofy = ObjectifyService.ofy();
-			final GameState gameState = ofy.load().type(GameState.class).id(id).getValue();
-			if (gameState != null) {
-				return gameState.getLastUpdated();
-			}
-		}
-		return super.getLastModified(req);
-	}*/
-
 }

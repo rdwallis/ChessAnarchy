@@ -226,10 +226,10 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
 	@Override
 	public void prependEarlierMessages() {
-		final MessageLink tail = MessageLink.getTail();
+		/*final MessageLink tail = MessageLink.getTail();
 		if (tail != null && tail.getPreviousId() != null) {
 			fetchMessage(tail.getPreviousId(), 10);
-		}
+		}*/
 
 	}
 

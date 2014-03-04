@@ -1,7 +1,8 @@
 package com.wallissoftware.chessanarchy.client.game.board;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import com.google.gwt.user.client.Timer;
@@ -28,16 +29,16 @@ import com.wallissoftware.chessanarchy.client.user.UserChangedEvent.UserChangedH
 import com.wallissoftware.chessanarchy.shared.game.Board;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Move;
+import com.wallissoftware.chessanarchy.shared.game.PieceCreationHandler;
 import com.wallissoftware.chessanarchy.shared.game.Square;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Piece;
-import com.wallissoftware.chessanarchy.shared.game.pieces.PieceMoveHandler;
 
-public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler, GameStateUpdatedHandler, UserChangedHandler {
+public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler, GameStateUpdatedHandler, UserChangedHandler, PieceCreationHandler {
 	public interface MyView extends View, HasUiHandlers<BoardUiHandlers> {
 
-		void setPieceInSquare(IsWidget isWidget, Square square, Square animateFrom);
+		void setPieceInSquare(IsWidget isWidget, Square square, Move lastMove);
 
-		void capture(IsWidget isWidget);
+		void capture(PiecePresenter piecePresenter, Move lastMove);
 
 		void removeFromBoard(IsWidget piece);
 
@@ -55,24 +56,8 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		public void run() {
 			try {
 				if (!preventRedraw) {
-					//preventRedraw();
-
 					board.resetFromMoveList(gameStateProvider.get().getMoveList());
-					if (!boardDrawn) {
-						boardDrawn = true;
-						drawBoard();
-					}
-					/*
-					if (shouldRedraw()) {
-						logger.info("Resetting Board:\n" + gameStateProvider.get().getMoveList());
-						drawBoard();
-					}*/
-					getView().resetGridLabels();
-					for (final Piece piece : board.getPieces()) {
-						piece.notfiyHandlersOfPosition();
-					}
-					getView().highlightMove(board.getLastMove());
-					//allowRedraw();
+					drawBoard();
 				}
 			} catch (final Exception e) {
 				// TODO Auto-generated catch block
@@ -83,7 +68,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	};
 
-	private final Map<Piece, PiecePresenter> piecePresenterMap = new HashMap<Piece, PiecePresenter>();
+	private final Set<PiecePresenter> piecePresenters = new HashSet<PiecePresenter>();
 
 	private final Provider<PiecePresenter> piecePresenterProvider;
 	private final Board board;
@@ -91,7 +76,8 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	private final GameStateProvider gameStateProvider;
 	private final static Logger logger = Logger.getLogger(BoardPresenter.class.getName());
 	private boolean preventRedraw;
-	private boolean boardDrawn = false;
+
+	int piecePresenterCount = 0;
 
 	@Inject
 	BoardPresenter(final EventBus eventBus, final MyView view, final Provider<PiecePresenter> piecePresenterProvider, final Board board, final PromotionPresenter promotionPresenter, final GameStateProvider gameStateProvider) {
@@ -100,6 +86,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		this.promotionPresenter = promotionPresenter;
 		this.piecePresenterProvider = piecePresenterProvider;
 		this.board = board;
+		board.setPieceCreationHandler(this);
 		getView().setUiHandlers(this);
 
 	}
@@ -114,42 +101,18 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	}
 
 	private void drawBoard() {
-		for (final Piece piece : board.getPieces()) {
-			final PiecePresenter piecePresenter = getPiecePresenter(piece);
-			if (!piece.isCaptured()) {
-				getView().setPieceInSquare(piecePresenter.getView(), piecePresenter.getPosition(), null);
+		getView().resetGridLabels();
+		getView().highlightMove(board.getLastMove());
+		logger.info("Number of pieces: " + board.getPieces().size());
+		for (final PiecePresenter piecePresenter : piecePresenters) {
+			if (piecePresenter.getPiece().isCaptured()) {
+				getView().capture(piecePresenter, board.getLastMove());
+			} else {
+				getView().setPieceInSquare(piecePresenter, piecePresenter.getPiece().getPosition(), board.getLastMove());
 			}
+
 		}
 
-	}
-
-	private PiecePresenter getPiecePresenter(final Piece piece) {
-		if (!piecePresenterMap.containsKey(piece)) {
-			final PiecePresenter piecePresenter = piecePresenterProvider.get();
-			piecePresenter.setPiece(piece);
-			piece.addPieceMoveHandler(new PieceMoveHandler() {
-
-				@Override
-				public void afterMove() {
-					//logger.info("Redrawing Piece: " + piece);
-					final Move lastMove = gameStateProvider.getSyncedBoard().getLastMove();
-					final boolean animate = lastMove != null && lastMove.getEnd().equals(piece.getPosition());
-					if (piece.getPromotedTo() != null) {
-						logger.info("Pawn Promoted");
-						getView().removeFromBoard(piecePresenter.getView());
-						getView().setPieceInSquare(getPiecePresenter(piece.getPromotedTo()), piece.getPromotedTo().getPosition(), animate ? lastMove.getStart() : null);
-					} else if (piece.isCaptured()) {
-						logger.info("Capturing piece: " + piece);
-						getView().capture(piecePresenter.getView());
-					} else {
-						getView().setPieceInSquare(piecePresenter.getView(), piece.getPosition(), animate ? lastMove.getStart() : null);
-					}
-
-				}
-			});
-			piecePresenterMap.put(piece, piecePresenter);
-		}
-		return piecePresenterMap.get(piece);
 	}
 
 	@Override
@@ -176,16 +139,18 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	private void makeMove(final Move move) {
 		fireEvent(new SendMessageEvent(board.doMove(move, true, true)));
+		drawBoard();
 	}
 
 	@Override
 	public void onReceivedMessageCache(final ReceivedMessageCacheEvent event) {
 		try {
-			final Map<String, Move> notationMap = board.getLegalMovesWithNotation();
+			final Board syncedBoard = gameStateProvider.getSyncedBoard();
+			final Map<String, Move> notationMap = syncedBoard.getLegalMovesWithNotation();
 			for (final JsonMessage msg : event.getMessageCache().getMessages()) {
 				final String message = msg.getText();
 				final long created = msg.getCreated();
-				if (SyncedTime.get() - created < 4000 && board.getCurrentPlayer() == msg.getColor()) {
+				if (SyncedTime.get() - created < 4000 && syncedBoard.getCurrentPlayer() == msg.getColor()) {
 					if (message.length() == 5 && message.charAt(2) == '-') {
 						final Square startSquare = Square.fromString(message.substring(0, 2));
 						if (startSquare != null) {
@@ -225,8 +190,6 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	private void resetBoard() {
 		resetBoardTimer.schedule(10);
-		;
-
 	}
 
 	@Override
@@ -239,20 +202,20 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 			if (userColor != null && gameStateProvider.get().swapColors()) {
 				userColor = userColor.getOpposite();
 			}
-			if (board.getCurrentPlayer() != userColor) {
+			/*if (board.getCurrentPlayer() != userColor) {
 				return false;
-			}
+			}*/
 			if (board.getPieceAt(square) == null) {
 				return false;
 			}
-
-			for (final Move move : board.getLegalMovesWithNotation().values()) {
+			return true;
+			/*for (final Move move : board.getLegalMovesWithNotation().values()) {
 				if (move.getStart().equals(square)) {
 					return true;
 				}
 			}
 
-			return false;
+			return false;*/
 		} catch (final NullPointerException e) {
 			return false;
 		}
@@ -277,6 +240,14 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	@Override
 	public void allowRedraw() {
 		preventRedraw = false;
+
+	}
+
+	@Override
+	public void onPieceCreated(final Piece piece) {
+		final PiecePresenter piecePresenter = piecePresenterProvider.get();
+		piecePresenter.setPiece(piece);
+		piecePresenters.add(piecePresenter);
 
 	}
 

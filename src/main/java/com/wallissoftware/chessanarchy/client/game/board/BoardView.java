@@ -27,6 +27,7 @@ import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
+import com.wallissoftware.chessanarchy.client.game.board.piece.PiecePresenter;
 import com.wallissoftware.chessanarchy.client.game.board.piece.images.PieceSprites;
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.client.user.User;
@@ -70,6 +71,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	private final List<Widget> fileLabels = new ArrayList<Widget>();
 
 	private final Set<GhostAnimation> ghostAnimations = new HashSet<GhostAnimation>();
+	private final Set<GhostAnimation> animations = new HashSet<GhostAnimation>();
 
 	private SimplePanel[][] squares = new SimplePanel[8][8];
 
@@ -128,6 +130,15 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 			}
 		}
 
+		final Iterator<GhostAnimation> it1 = animations.iterator();
+		while (it1.hasNext()) {
+			final GhostAnimation animation = it1.next();
+			dropSurface.setWidgetPosition(animation.getWidget(), animation.getX(milli), animation.getY(milli));
+			if (animation.isMovementComplete(milli)) {
+				it1.remove();
+			}
+		}
+
 	}
 
 	private void drawSquares() {
@@ -176,36 +187,27 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	}
 
 	@Override
-	public void setPieceInSquare(final IsWidget piece, final Square square, final Square animateFrom) {
+	public void setPieceInSquare(final IsWidget piece, final Square square, final Move lastMove) {
 		int x = square.getRank() * 50;
 		int y = 350 - (square.getFile() * 50);
 		if (getOrientation() == Color.BLACK) {
 			x = 350 - x;
 			y = 350 - y;
 		}
-		if (animateFrom == null || dropSurface.getWidgetIndex(piece) == -1) {
+		if (!animations.isEmpty() || lastMove == null || !lastMove.getEnd().equals(square) || dropSurface.getWidgetIndex(piece) == -1) {
 			dropSurface.add(piece, x, y);
 			dragController.makeDraggable(piece.asWidget());
 		} else {
-
-			int startX = animateFrom.getRank() * 50;
-			int startY = 350 - (animateFrom.getFile() * 50);
+			final Square start = lastMove.getStart();
+			int startX = start.getRank() * 50;
+			int startY = 350 - (start.getFile() * 50);
 			if (getOrientation() == Color.BLACK) {
 				startX = 350 - startX;
 				startY = 350 - startY;
 			}
 
-			final GhostAnimation animation = new GhostAnimation(System.currentTimeMillis(), piece.asWidget(), startX, startY, x, y);
-			Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
-
-				@Override
-				public boolean execute() {
-					final long time = System.currentTimeMillis();
-					dropSurface.setWidgetPosition(piece.asWidget(), animation.getX(time), animation.getY(time));
-					return !animation.isMovementComplete(time);
-				}
-			}, 50);
-
+			final GhostAnimation animation = new GhostAnimation(true, SyncedTime.get(), piece.asWidget(), startX, startY, x, y);
+			animations.add(animation);
 		}
 
 	}
@@ -273,8 +275,19 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	}
 
 	@Override
-	public void capture(final IsWidget piece) {
-		piece.asWidget().removeFromParent();
+	public void capture(final PiecePresenter piece, final Move lastMove) {
+		if (lastMove == null || !lastMove.getEnd().equals(piece.getPiece().getPosition())) {
+			piece.asWidget().removeFromParent();
+		} else if (dropSurface.getWidgetIndex(piece) != -1) {
+			final Square square = lastMove.getEnd();
+			int x = square.getRank() * 50;
+			int y = 350 - (square.getFile() * 50);
+			if (getOrientation() == Color.BLACK) {
+				x = 350 - x;
+				y = 350 - y;
+			}
+			ghostAnimations.add(new GhostAnimation(true, SyncedTime.get(), piece.asWidget(), x, y, x, y));
+		}
 
 	}
 

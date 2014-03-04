@@ -5,13 +5,10 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
-import com.wallissoftware.chessanarchy.shared.game.Square;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Piece;
 
 public class PiecePresenter extends PresenterWidget<PiecePresenter.MyView> implements PieceUiHandlers {
 	public interface MyView extends View, HasUiHandlers<PieceUiHandlers> {
-
-		Square getPosition();
 
 		void setPiece(final Piece piece);
 	}
@@ -29,9 +26,8 @@ public class PiecePresenter extends PresenterWidget<PiecePresenter.MyView> imple
 		getView().setPiece(piece);
 	}
 
-	@Override
-	public Square getPosition() {
-		return piece.getPosition();
+	public Piece getPiece() {
+		return piece;
 	}
 
 }

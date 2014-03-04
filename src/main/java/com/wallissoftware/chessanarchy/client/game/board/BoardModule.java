@@ -10,6 +10,6 @@ public class BoardModule extends AbstractPresenterModule {
 	protected void configure() {
 		install(new PieceModule());
 		bind(Board.class).in(Singleton.class);
-		bindPresenterWidget(BoardPresenter.class, BoardPresenter.MyView.class, BoardView.class);
+		bindSingletonPresenterWidget(BoardPresenter.class, BoardPresenter.MyView.class, BoardView.class);
 	}
 }

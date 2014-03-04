@@ -14,17 +14,20 @@ public class GhostAnimation {
 	private final int startY;
 	private final int endX;
 	private final int endY;
+	private final boolean fast;
 
 	public GhostAnimation(final double startTime, final Widget widget, final int startX, final int startY, final int endX, final int endY) {
-		super();
+		this(false, startTime, widget, startX, startY, endX, endY);
+	}
+
+	public GhostAnimation(final boolean fast, final double startTime, final Widget widget, final int startX, final int startY, final int endX, final int endY) {
+		this.fast = fast;
 		this.widget = widget;
 		this.startTime = startTime;
 		this.startX = startX;
 		this.startY = startY;
 		this.endX = endX;
 		this.endY = endY;
-
-		//widget.getElement().getStyle().setOpacity(0.5);
 	}
 
 	public Widget getWidget() {
@@ -43,7 +46,7 @@ public class GhostAnimation {
 
 	private double getMovePercent(final double milli) {
 		final double delta = milli - startTime;
-		return Math.max(0, Math.min(delta / MOVE_DURATION, 1));
+		return Math.max(0, Math.min(delta / getMoveDuration(), 1));
 	}
 
 	public boolean isMovementComplete(final double milli) {
@@ -55,13 +58,17 @@ public class GhostAnimation {
 			return 0.5;
 		}
 
-		final double delta = (milli - startTime) - MOVE_DURATION;
+		final double delta = (milli - startTime) - getMoveDuration();
 		final double percent = Math.min(delta / FADE_DURATION, 1);
 		return 0.5 - (percent / 2.0);
 	}
 
 	public boolean isFinished(final double milli) {
 		return getOpacity(milli) == 0;
+	}
+
+	private double getMoveDuration() {
+		return fast ? MOVE_DURATION / 2 : MOVE_DURATION;
 	}
 
 }

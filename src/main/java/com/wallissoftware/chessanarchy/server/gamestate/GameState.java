@@ -180,7 +180,7 @@ public class GameState {
 	}
 
 	public Set<Map<String, String>> getLast10Messages() {
-		final HashSet<Map<String, String>> result = new HashSet<Map<String, String>>(messages.subList(Math.max(0, messages.size() - 10), messages.size() - 1));
+		final HashSet<Map<String, String>> result = new HashSet<Map<String, String>>(messages.subList(Math.max(0, messages.size() - 10), messages.size()));
 		if (getId() != null && result.size() < 10) {
 			result.add(getMessage("Start" + getId(), creationTime, "STARTING GAME: " + getId() + (swapColors() ? "T" : "F"), null));
 		}

@@ -40,6 +40,8 @@ public class Board {
 
 	private final static Logger logger = Logger.getLogger(Board.class.getName());
 
+	private PieceCreationHandler pieceCreationHandler;
+
 	public Board(final List<String> moveList) throws IllegalMoveException {
 		//reset(true);
 		resetFromMoveList(moveList);
@@ -47,10 +49,13 @@ public class Board {
 
 	public void resetFromMoveList(final List<String> moveList) throws IllegalMoveException {
 		if (!moveList.equals(this.moveList)) {
-
-			reset(true);
-			for (final String pgn : moveList) {
-				doMove(pgn);
+			if (moveList.subList(0, moveList.size() - 1).equals(this.moveList)) {
+				doMove(moveList.get(moveList.size() - 1));
+			} else {
+				reset(true);
+				for (final String pgn : moveList) {
+					doMove(pgn);
+				}
 			}
 
 		}
@@ -117,11 +122,15 @@ public class Board {
 				}
 
 				if (!rankIsUnique) {
+
 					pgn = start.toString().charAt(1) + pgn;
+
 				}
 
 				if (!fileIsUnique || (capture != null && movedPiece instanceof Pawn)) {
+
 					pgn = start.toString().charAt(0) + pgn;
+
 				}
 
 			}
@@ -154,9 +163,6 @@ public class Board {
 				pgn = pgn + "=" + move.getPromote();
 				movingPiece = createPiece(end, move.getPromote(), movedPiece.getColor(), true);
 				movedPiece.setPromotedTo(movingPiece);
-				if (recordMove) {
-					movedPiece.notfiyHandlersOfPosition();
-				}
 			} else {
 				movingPiece = movedPiece;
 			}
@@ -245,7 +251,7 @@ public class Board {
 	}
 
 	private boolean isCheckMate() {
-		return isCheck() && calculateLegalMoves().isEmpty();
+		return isCheck() && calculateLegalMoves(false, false).isEmpty();
 	}
 
 	private List<Piece> getOtherPiecesOfSameTypeThatCanMoveToSquare(final Piece piece, final Square square) {
@@ -354,8 +360,18 @@ public class Board {
 		}
 		setPieceAtSquare(newPiece, square, redraw);
 		pieces.add(newPiece);
+		if (pieceCreationHandler != null) {
+			pieceCreationHandler.onPieceCreated(newPiece);
+		}
 		return newPiece;
 
+	}
+
+	public void setPieceCreationHandler(final PieceCreationHandler handler) {
+		this.pieceCreationHandler = handler;
+		for (final Piece piece : getPieces()) {
+			pieceCreationHandler.onPieceCreated(piece);
+		}
 	}
 
 	private void setPieceAtSquare(final Piece piece, final Square square, final boolean fireEvents) {
@@ -365,10 +381,10 @@ public class Board {
 	}
 
 	private Set<Move> calculateLegalMoves() {
-		return calculateLegalMoves(false);
+		return calculateLegalMoves(false, true);
 	}
 
-	private Set<Move> calculateLegalMoves(final boolean ignoreCheck) {
+	private Set<Move> calculateLegalMoves(final boolean ignoreCheck, final boolean saveResults) {
 		final Set<Move> legalMoves = new HashSet<Move>();
 
 		for (int rank = 0; rank < 8; rank++) {
@@ -386,7 +402,9 @@ public class Board {
 					it.remove();
 				}
 			}
-			lastCalculatedLegalMoves = legalMoves;
+			if (saveResults) {
+				lastCalculatedLegalMoves = legalMoves;
+			}
 		}
 
 		return legalMoves;
@@ -415,7 +433,7 @@ public class Board {
 		doMove(move, false, false);
 		final King currentKing = getCurrentPlayer() != Color.WHITE ? whiteKing : blackKing;
 		protectedSquares.add(currentKing.getPosition());
-		for (final Move opponentMove : calculateLegalMoves(true)) {
+		for (final Move opponentMove : calculateLegalMoves(true, false)) {
 			for (final Square pSquare : protectedSquares) {
 				if (opponentMove.getEnd().equals(pSquare)) {
 					undoLastMove();

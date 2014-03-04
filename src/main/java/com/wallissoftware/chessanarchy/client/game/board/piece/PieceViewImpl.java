@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
 import com.wallissoftware.chessanarchy.client.game.board.piece.images.PieceSprites;
 import com.wallissoftware.chessanarchy.shared.game.Color;
-import com.wallissoftware.chessanarchy.shared.game.Square;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Bishop;
 import com.wallissoftware.chessanarchy.shared.game.pieces.King;
 import com.wallissoftware.chessanarchy.shared.game.pieces.Knight;
@@ -28,11 +27,6 @@ public class PieceViewImpl extends ViewWithUiHandlers<PieceUiHandlers> implement
 	PieceViewImpl(final Binder binder, final PieceSprites sprites) {
 		initWidget(binder.createAndBindUi(this));
 		this.sprites = sprites;
-	}
-
-	@Override
-	public Square getPosition() {
-		return getUiHandlers().getPosition();
 	}
 
 	@Override

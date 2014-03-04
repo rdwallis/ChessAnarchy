@@ -42,6 +42,8 @@ public class Board {
 
 	private PieceCreationHandler pieceCreationHandler;
 
+	private List<Move> moveListAtTimeOfLastCalculation;
+
 	public Board(final List<String> moveList) throws IllegalMoveException {
 		//reset(true);
 		resetFromMoveList(moveList);
@@ -49,7 +51,7 @@ public class Board {
 
 	public void resetFromMoveList(final List<String> moveList) throws IllegalMoveException {
 		if (!moveList.equals(this.moveList)) {
-			if (moveList.subList(0, moveList.size() - 1).equals(this.moveList)) {
+			if (!moveList.isEmpty() && moveList.subList(0, moveList.size() - 1).equals(this.moveList)) {
 				doMove(moveList.get(moveList.size() - 1));
 			} else {
 				reset(true);
@@ -62,11 +64,11 @@ public class Board {
 	}
 
 	private void doMove(final String pgn) throws IllegalMoveException {
-		final Map<String, Move> notationMap = getLegalMovesWithNotation();
-		if (notationMap.containsKey(pgn)) {
-			doMove(notationMap.get(pgn), true, false);
+		final Move move = pgnToMove(pgn);
+		if (move != null) {
+			doMove(move, true, false);
 		} else {
-			logger.info(pgn + " is not contained in legal move list: " + notationMap.keySet());
+			logger.info(pgn + " is not contained in legal move list: " + getAllLegalMovesWithNotation().keySet());
 			throw new IllegalMoveException();
 		}
 
@@ -385,6 +387,9 @@ public class Board {
 	}
 
 	private Set<Move> calculateLegalMoves(final boolean ignoreCheck, final boolean saveResults) {
+		if (!ignoreCheck && moveListAtTimeOfLastCalculation != null && moveListAtTimeOfLastCalculation.equals(this.moveList)) {
+			return lastCalculatedLegalMoves;
+		}
 		final Set<Move> legalMoves = new HashSet<Move>();
 
 		for (int rank = 0; rank < 8; rank++) {
@@ -404,6 +409,7 @@ public class Board {
 			}
 			if (saveResults) {
 				lastCalculatedLegalMoves = legalMoves;
+				moveListAtTimeOfLastCalculation = new ArrayList<Move>(moveList);
 			}
 		}
 
@@ -486,13 +492,16 @@ public class Board {
 		return board;
 	}
 
-	public Map<String, Move> getLegalMovesWithNotation() {
-		final Map<String, Move> result = new HashMap<String, Move>();
+	public Move pgnToMove(final String pgn) {
+
 		for (final Move move : calculateLegalMoves()) {
-			result.put(doMove(move, false, true), move);
+			final String pMove = doMove(move, false, true);
 			undoLastMove();
+			if (pMove.equals(pgn)) {
+				return move;
+			}
 		}
-		return result;
+		return null;
 	}
 
 	public Map<String, String> getAllLegalMovesWithNotation() {
@@ -514,6 +523,16 @@ public class Board {
 
 	public Move getLastMove() {
 		return lastMove;
+	}
+
+	public Map<String, Move> getPgnMoveMap() {
+		final Map<String, Move> result = new HashMap<String, Move>();
+		for (final Move move : calculateLegalMoves()) {
+			final String pgn = doMove(move, false, true);
+			result.put(pgn, move);
+			undoLastMove();
+		}
+		return result;
 	}
 
 }

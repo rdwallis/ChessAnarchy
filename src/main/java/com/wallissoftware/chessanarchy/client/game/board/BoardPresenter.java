@@ -146,7 +146,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	public void onReceivedMessageCache(final ReceivedMessageCacheEvent event) {
 		try {
 			final Board syncedBoard = gameStateProvider.getSyncedBoard();
-			final Map<String, Move> notationMap = syncedBoard.getLegalMovesWithNotation();
+			final Map<String, Move> notationMap = syncedBoard.getPgnMoveMap();
 			for (final JsonMessage msg : event.getMessageCache().getMessages()) {
 				final String message = msg.getText();
 				final long created = msg.getCreated();

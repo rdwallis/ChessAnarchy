@@ -1,0 +1,25 @@
+FIRST TEST PASSED
+Mar 05, 2014 10:42:07 AM com.wallissoftware.chessanarchy.shared.game.MoveNode getChild
+INFO: Could not find child: Nbd2
+Mar 05, 2014 10:42:07 AM com.wallissoftware.chessanarchy.shared.game.MoveNode getChild
+INFO: Available moves: Nf4 Bxa6 a5 c4 Qd2 h3 Ne5 Ng4 Ng1 Nh5 Ra3 b3 Qe2 Ke2 Nf4 Na2 Kf1 Ra2 Ng3 Qd2 c3 Nh4 Bf1 Nh3 e5 h4 Bc4 Nc3 Nf5 Ng4 O-O Kd2 g3 Ne2 Na3 Be2 Nd2 Ke2 Nc1 Nd4 Ng1 Bd4 Qe2 Nh5 g4 Nd2 Ng5 Bb5 Nxf6 
+Mar 05, 2014 10:42:07 AM com.wallissoftware.chessanarchy.shared.game.MoveNode logBoard
+INFO: 
+-----------------
+|r|n|b|q|k|b| |r| 8
+-----------------
+| | | | | |p| |p| 7
+-----------------
+|p| | |p| |p|p| | 6
+-----------------
+| | |p|P| | | | | 5
+-----------------
+|P|p| | |P| | | | 4
+-----------------
+| | | |B| |N| | | 3
+-----------------
+| |P|P| | |P|P|P| 2
+-----------------
+|R|N| |Q|K| | |R| 1
+-----------------
+ a b c d e f g h

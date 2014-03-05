@@ -152,9 +152,9 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 				final long created = msg.getCreated();
 				if (SyncedTime.get() - created < 4000 && syncedBoard.getCurrentPlayer() == msg.getColor()) {
 					if (message.length() == 5 && message.charAt(2) == '-') {
-						final Square startSquare = Square.fromString(message.substring(0, 2));
+						final Square startSquare = Square.get(message.substring(0, 2));
 						if (startSquare != null) {
-							final Square endSquare = Square.fromString(message.substring(3, 5));
+							final Square endSquare = Square.get(message.substring(3, 5));
 							if (endSquare != null) {
 								makeGhostMove(created, new Move(startSquare, endSquare));
 							}

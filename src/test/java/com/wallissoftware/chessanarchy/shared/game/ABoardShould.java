@@ -30,7 +30,7 @@ public class ABoardShould {
 		System.out.println("THIRD TEST PASSED");
 	}
 
-	public void playGame(final String... moves) {
+	/*public void playGame(final String... moves) {
 		final List<String> moveList = new ArrayList<String>();
 		for (int i = 0; i < moves.length; i++) {
 			moveList.add(moves[i]);
@@ -45,6 +45,19 @@ public class ABoardShould {
 			if (board != null) {
 				board.printBoard();
 			}
+			fail();
+		}
+	}*/
+
+	public void playGame(final String... moves) {
+		final List<String> moveList = new ArrayList<String>();
+		for (int i = 0; i < moves.length; i++) {
+			moveList.add(moves[i]);
+		}
+		try {
+			MoveNode.getBoard(moveList);
+
+		} catch (final IllegalMoveException e) {
 			fail();
 		}
 	}

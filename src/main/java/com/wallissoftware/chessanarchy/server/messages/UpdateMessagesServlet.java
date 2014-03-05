@@ -83,7 +83,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 		if (latestGameStateId != null) {
 			final GameState gameState = ofy.load().type(GameState.class).id(LatestGameStateId.get()).getValue();
 			if (gameState != null) {
-				final Map<String, String> moveMap = gameState.getLegalMoves();
+				final Map<String, String> moveMap = gameState.getLegalMoveMap();
 				final Color currentPlayer = gameState.getCurrentPlayer();
 				for (final Map<String, String> message : messageQueue) {
 					if (gameState.swapColors() && message.containsKey("color")) {

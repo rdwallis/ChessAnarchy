@@ -15,8 +15,8 @@ import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.OnSave;
 import com.googlecode.objectify.annotation.Serialize;
-import com.wallissoftware.chessanarchy.shared.game.Board;
 import com.wallissoftware.chessanarchy.shared.game.Color;
+import com.wallissoftware.chessanarchy.shared.game.MoveTree;
 import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 import com.wallissoftware.chessanarchy.shared.governments.MoveRequest;
 import com.wallissoftware.chessanarchy.shared.governments.MoveResult;
@@ -66,13 +66,13 @@ public class GameState {
 		moveList.add(move);
 		moveRequests.clear();
 		try {
-			new Board(moveList);
+			MoveTree.get(moveList);
 			moveTimes.add(System.currentTimeMillis());
 			addMessage("m" + move, getCurrentPlayer().getOpposite());
 
 		} catch (final IllegalMoveException e) {
 			moveList.remove(moveList.size() - 1);
-			addMessage("Illegal MoveException for move: " + move, null);
+			addMessage("IllegalMoveException for move: " + move, null);
 		}
 
 	}
@@ -97,15 +97,14 @@ public class GameState {
 		jsonMap.put("whiteGovernment", whiteGovernment);
 		jsonMap.put("blackGovernment", blackGovernment);
 		jsonMap.put("moveList", moveList);
-		jsonMap.put("legalMoves", getLegalMoves());
+		jsonMap.put("legalMoves", getLegalMoveMap());
 		return new Gson().toJson(jsonMap);
 
 	}
 
-	public Map<String, String> getLegalMoves() {
+	public Map<String, String> getLegalMoveMap() {
 		try {
-			final Board board = new Board(moveList);
-			return board.getAllLegalMovesWithNotation();
+			return MoveTree.get(moveList).getLegalMoveMap();
 
 		} catch (final IllegalMoveException e) {
 			// TODO Auto-generated catch block

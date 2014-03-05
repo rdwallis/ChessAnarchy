@@ -7,7 +7,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.wallissoftware.chessanarchy.client.game.chat.messagelog.MessageLogPresenter;
 import com.wallissoftware.chessanarchy.client.game.gamestate.model.GameState;
-import com.wallissoftware.chessanarchy.shared.game.Board;
+import com.wallissoftware.chessanarchy.shared.game.MoveTree;
 import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
@@ -15,8 +15,6 @@ import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 public class GameStateProvider implements Provider<GameState> {
 
 	private final MessageLogPresenter messageLogPresenter;
-
-	private final Board syncedBoard = new Board();
 
 	private List<MessageWrapper> gameMasterMessages;
 
@@ -39,12 +37,11 @@ public class GameStateProvider implements Provider<GameState> {
 		return gameState;
 	}
 
-	public Board getSyncedBoard() {
+	public MoveTree getSyncedMoveTree() {
 		try {
-			syncedBoard.resetFromMoveList(get().getMoveList());
-			return syncedBoard;
+			return MoveTree.get(get().getMoveList());
 		} catch (final IllegalMoveException e) {
-			return new Board();
+			return MoveTree.getRoot();
 		}
 	}
 

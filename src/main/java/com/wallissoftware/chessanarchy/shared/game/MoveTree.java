@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 
 import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 
-public class MoveNode {
+public class MoveTree {
 
 	private final static char[][] rootBoard = new char[8][8];
 
@@ -26,12 +26,12 @@ public class MoveNode {
 			rootBoard[i][7] = startPos.toLowerCase().charAt(i);
 		}
 	}
-	private final static Logger logger = Logger.getLogger(MoveNode.class.getName());
+	private final static Logger logger = Logger.getLogger(MoveTree.class.getName());
 
-	private final static MoveNode root;
+	private final static MoveTree root;
 	static {
 		try {
-			root = new MoveNode(null, null);
+			root = new MoveTree(null, null);
 		} catch (final IllegalMoveException e) {
 			throw new RuntimeException();
 		}
@@ -39,33 +39,25 @@ public class MoveNode {
 
 	private Boolean isCheck = null, isCheckMate = null;
 
-	public static char[][] getBoard(final List<String> pgnMoves) throws IllegalMoveException {
-		MoveNode node = root;
+	public static MoveTree get(final List<String> pgnMoves) throws IllegalMoveException {
+		MoveTree node = root;
 		for (final String move : pgnMoves) {
 			node = node.getChild(move);
 		}
-		return node.getBoard();
+		return node;
 	}
 
-	private MoveNode getChild(final String pgn) throws IllegalMoveException {
-		for (final MoveNode child : getChildren()) {
-			//logger.info("child: " + child.getPgn());
+	private MoveTree getChild(final String pgn) throws IllegalMoveException {
+		for (final MoveTree child : getChildren()) {
+			
 			if (child.getPgn().equals(pgn)) {
 				return child;
 			}
 		}
-		/*logger.info("Could not find child: " + pgn);
-		final StringBuilder sb = new StringBuilder();
-		sb.append("Available moves: ");
-		for (final MoveNode child : getChildren()) {
-			sb.append(child.getPgn()).append(" ");
-		}
-		logger.info(sb.toString());
-
-		//logBoard();*/
-		throw new IllegalMoveException();
+				throw new IllegalMoveException();
 	}
 
+	@SuppressWarnings("unused")
 	private void logBoard() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append("\n" + getFullPgn() + "\n");
@@ -91,19 +83,19 @@ public class MoveNode {
 		return pgn + (isCheck() ? (isCheckMate() ? "#" : "+") : "");
 	}
 
-	private final MoveNode parent;
+	private final MoveTree parent;
 
 	private final Move move;
 
 	private String pgn;
 
-	private Set<MoveNode> children;
+	private Set<MoveTree> children;
 
 	private final char[][] board;
 
 	private final int depth;
 
-	private MoveNode(final MoveNode parent, final Move move) throws IllegalMoveException {
+	private MoveTree(final MoveTree parent, final Move move) throws IllegalMoveException {
 		this.parent = parent;
 		this.move = move;
 		if (parent == null) {
@@ -126,37 +118,6 @@ public class MoveNode {
 
 		}
 	}
-
-	/*private void checkIfParentIsIllegal() {
-		if (parent.isIllegal()) {
-			return;
-		}
-		final Square end = move.getEnd();
-		final int file = end.getFile();
-		final int rank = end.getRank();
-		if (isMyPiece(file, rank) && isKing(file, rank)) {
-			logger.info(move + " makes parent illegal 1");
-			getParent().markIllegal();
-		}
-		final Move parentsMove = getParent().getMove();
-		if (parentsMove != null) {
-			final Square parentEnd = parentsMove.getEnd();
-			if (parentEnd.getRank() == rank && isKing(parentEnd.getFile(), parentEnd.getRank())) {
-				final Square parentStart = parentsMove.getStart();
-				if (Math.abs(parentStart.getFile() - parentEnd.getFile()) > 1) {
-					if (parentEnd.getFile() == 2 && file < 5 && file > 1) {
-						logger.info(move + " makes parent illegal 2");
-						getParent().markIllegal();
-					}
-					if (parentEnd.getFile() == 6 && file > 5 && file < 7) {
-						getParent().markIllegal();
-						logger.info(move + " makes parent illegal 3");
-					}
-				}
-			}
-		}
-
-	}*/
 
 	private String performMove() {
 		final Square start = move.getStart();
@@ -209,7 +170,7 @@ public class MoveNode {
 		return pgn;
 	}
 
-	public Set<MoveNode> getChildren() {
+	public Set<MoveTree> getChildren() {
 		if (children == null) {
 			calculateChildren();
 			checkAmbiguousChildren();
@@ -219,15 +180,15 @@ public class MoveNode {
 	}
 
 	private void checkAmbiguousChildren() {
-		final Map<String, List<MoveNode>> pgnMap = new HashMap<String, List<MoveNode>>();
-		for (final MoveNode child : children) {
+		final Map<String, List<MoveTree>> pgnMap = new HashMap<String, List<MoveTree>>();
+		for (final MoveTree child : children) {
 			if (!pgnMap.containsKey(child.getPgn())) {
-				pgnMap.put(child.getPgn(), new ArrayList<MoveNode>());
+				pgnMap.put(child.getPgn(), new ArrayList<MoveTree>());
 			}
 			pgnMap.get(child.getPgn()).add(child);
 		}
 
-		for (final List<MoveNode> ambiguousGroup : pgnMap.values()) {
+		for (final List<MoveTree> ambiguousGroup : pgnMap.values()) {
 			if (ambiguousGroup.size() > 1) {
 				for (int i = 0; i < ambiguousGroup.size(); i++) {
 					for (int j = 0; j < ambiguousGroup.size(); j++) {
@@ -241,7 +202,7 @@ public class MoveNode {
 
 	}
 
-	private void refinePgn(final MoveNode other) {
+	private void refinePgn(final MoveTree other) {
 		final Square myStart = getMove().getStart();
 		final Square otherStart = other.getMove().getStart();
 
@@ -375,7 +336,7 @@ public class MoveNode {
 	}
 
 	private void calculateChildren() {
-		children = new HashSet<MoveNode>();
+		children = new HashSet<MoveTree>();
 
 		for (int file = 0; file < 8; file++) {
 			for (int rank = 0; rank < 8; rank++) {
@@ -517,7 +478,7 @@ public class MoveNode {
 
 	private void addChildMove(final Move move) {
 		try {
-			children.add(new MoveNode(this, move));
+			children.add(new MoveTree(this, move));
 		} catch (final IllegalMoveException e) {
 			//ignore
 		}
@@ -566,7 +527,7 @@ public class MoveNode {
 		return board;
 	}
 
-	private MoveNode getParent() {
+	private MoveTree getParent() {
 		return parent;
 	}
 
@@ -600,5 +561,19 @@ public class MoveNode {
 
 	private int getDepth() {
 		return depth;
+	}
+
+	public static MoveTree getRoot() {
+		return root;
+	}
+
+	public Map<String, String> getLegalMoveMap() {
+		final Map<String, String> result = new HashMap<String, String>();
+		for (final MoveTree child : getChildren()) {
+			result.put(child.getPgn(), child.getPgn());
+			result.put(child.getMove().toString(), child.getPgn());
+		}
+		return result;
+
 	}
 }

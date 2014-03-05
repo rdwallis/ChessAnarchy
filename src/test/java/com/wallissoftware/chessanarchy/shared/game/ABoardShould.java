@@ -38,36 +38,12 @@ public class ABoardShould {
 	}
 
 	public void playGame(final String... moves) {
-		long start = System.currentTimeMillis();
-		playGameOnBoard(moves);
-		final long boardTime = System.currentTimeMillis() - start;
-		start = System.currentTimeMillis();
+		final long start = System.currentTimeMillis();
 		playGameOnMoveNode(moves);
 		final long moveNode = System.currentTimeMillis() - start;
-		if (moveNode < boardTime) {
-			System.out.println("MoveNode is " + (boardTime - moveNode) + "ms faster than board");
-		} else {
-			System.out.println("Board is " + (moveNode - boardTime) + "ms faster than MoveNode");
-		}
-	}
 
-	public void playGameOnBoard(final String... moves) {
-		final List<String> moveList = new ArrayList<String>();
-		for (int i = 0; i < moves.length; i++) {
-			moveList.add(moves[i]);
-		}
-		Board board = null;
-		try {
-			board = new Board(moveList.subList(0, moveList.size() - 1));
-			board.resetFromMoveList(moveList);
-			//board.printBoard();
+		System.out.println("MoveNode took " + (moveNode) + "ms to process moves");
 
-		} catch (final IllegalMoveException e) {
-			if (board != null) {
-				board.printBoard();
-			}
-			fail();
-		}
 	}
 
 	public void playGameOnMoveNode(final String... moves) {
@@ -76,7 +52,7 @@ public class ABoardShould {
 			moveList.add(moves[i]);
 		}
 		try {
-			MoveNode.getBoard(moveList);
+			MoveTree.get(moveList);
 
 		} catch (final IllegalMoveException e) {
 			fail();

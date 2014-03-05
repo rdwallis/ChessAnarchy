@@ -1,8 +1,8 @@
-MoveNode is 128ms faster than board
+MoveNode took 48ms to process moves
 FIRST TEST PASSED
-MoveNode is 249ms faster than board
+MoveNode took 160ms to process moves
 SECOND TEST PASSED
-MoveNode is 50ms faster than board
+MoveNode took 58ms to process moves
 THIRD TEST PASSED
-MoveNode is 144ms faster than board
+MoveNode took 100ms to process moves
 FORTH TEST PASSED

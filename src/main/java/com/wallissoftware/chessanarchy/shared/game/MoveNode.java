@@ -27,7 +27,17 @@ public class MoveNode {
 		}
 	}
 	private final static Logger logger = Logger.getLogger(MoveNode.class.getName());
-	private final static MoveNode root = new MoveNode(null, null);
+
+	private final static MoveNode root;
+	static {
+		try {
+			root = new MoveNode(null, null);
+		} catch (final IllegalMoveException e) {
+			throw new RuntimeException();
+		}
+	}
+
+	private Boolean isCheck = null, isCheckMate = null;
 
 	public static char[][] getBoard(final List<String> pgnMoves) throws IllegalMoveException {
 		MoveNode node = root;
@@ -38,37 +48,37 @@ public class MoveNode {
 	}
 
 	private MoveNode getChild(final String pgn) throws IllegalMoveException {
-		for (final MoveNode child : getChildren(0)) {
+		for (final MoveNode child : getChildren()) {
 			//logger.info("child: " + child.getPgn());
 			if (child.getPgn().equals(pgn)) {
 				return child;
 			}
 		}
-		logger.info("Could not find child: " + pgn);
+		/*logger.info("Could not find child: " + pgn);
 		final StringBuilder sb = new StringBuilder();
 		sb.append("Available moves: ");
-		for (final MoveNode child : getChildren(0)) {
+		for (final MoveNode child : getChildren()) {
 			sb.append(child.getPgn()).append(" ");
 		}
 		logger.info(sb.toString());
 
-		logBoard();
+		//logBoard();*/
 		throw new IllegalMoveException();
 	}
 
 	private void logBoard() {
 		final StringBuilder sb = new StringBuilder();
-
-		sb.append("\n");
+		sb.append("\n" + getFullPgn() + "\n");
+		sb.append("\n" + toString() + "\n");
 		final String line = "-----------------\n";
 		sb.append(line);
-		for (int file = 7; file >= 0; file--) {
+		for (int rank = 7; rank >= 0; rank--) {
 			sb.append("|");
-			for (int rank = 0; rank < 8; rank++) {
-				sb.append((board[rank][file] == 'x' ? ' ' : board[rank][file]) + "|");
+			for (int file = 0; file < 8; file++) {
+				sb.append((board[file][rank] == 'x' ? ' ' : board[file][rank]) + "|");
 
 			}
-			sb.append(" " + (file + 1) + "\n");
+			sb.append(" " + (rank + 1) + "\n");
 			sb.append(line);
 		}
 
@@ -78,7 +88,7 @@ public class MoveNode {
 	}
 
 	private String getPgn() {
-		return pgn;
+		return pgn + (isCheck() ? (isCheckMate() ? "#" : "+") : "");
 	}
 
 	private final MoveNode parent;
@@ -93,9 +103,7 @@ public class MoveNode {
 
 	private final int depth;
 
-	private boolean illegal = false;
-
-	private MoveNode(final MoveNode parent, final Move move) {
+	private MoveNode(final MoveNode parent, final Move move) throws IllegalMoveException {
 		this.parent = parent;
 		this.move = move;
 		if (parent == null) {
@@ -105,124 +113,42 @@ public class MoveNode {
 		} else {
 			depth = parent.getDepth() + 1;
 			board = new char[8][8];
-			for (int rank = 0; rank < 8; rank++) {
-				for (int file = 0; file < 8; file++) {
-					board[rank][file] = parent.getBoard()[rank][file];
-				}
-			}
-			checkIfParentIsIllegal();
-			if (!parent.isIllegal()) {
-				pgn = performMove();
-				/*if (isCheck()) {
-					if (isCheckMate()) {
-						pgn = pgn + "#";
-					} else {
-						pgn = pgn + "+";
-					}
-				}*/
-			}
-		}
-	}
-
-	private boolean isCheckMate() {
-		return pgn.endsWith("#") || getChildren(0).isEmpty();
-	}
-
-	private boolean isCheck() {
-		if (pgn.endsWith("+") || pgn.endsWith("#")) {
-			return true;
-		}
-		for (int rank = 0; rank < 8; rank++) {
 			for (int file = 0; file < 8; file++) {
-				if (isOpponentsPiece(rank, file)) {
-					switch (Character.toUpperCase(board[rank][file])) {
-					case 'N':
-						for (int direction = 0; direction < 8; direction++) {
-							int rankOffset = direction < 4 ? 1 : 2;
-							int fileOffset = direction < 4 ? 2 : 1;
-							rankOffset *= direction % 2 == 0 ? 1 : -1;
-							fileOffset *= (direction / 2) % 2 == 0 ? 1 : -1;
-
-							final int endRank = rank + rankOffset;
-							final int endFile = file + fileOffset;
-							if (isMyPiece(endRank, endFile) && isKing(endRank, endFile)) {
-								return true;
-							}
-						}
-					case 'Q':
-					case 'R':
-						for (int direction = 0; direction < 4; direction++) {
-							for (int offset = 1;; offset++) {
-								final int endRank = rank + (direction % 2 == 0 ? offset : 0);
-								final int endFile = file + (direction < 2 ? offset : 0);
-								if (isMyPiece(endRank, endFile)) {
-									return true;
-								}
-								if (!isEmptySquare(endRank, endFile) && isKing(endRank, endFile)) {
-									break;
-								}
-
-							}
-						}
-						if (Character.toUpperCase(board[rank][file]) == 'R') {
-							break;
-						}
-					case 'B':
-						for (int direction = 0; direction < 4; direction++) {
-							for (int offset = 1;; offset++) {
-								final int endRank = rank + (direction % 2 == 0 ? offset : -offset);
-								final int endFile = file + (direction < 2 ? offset : -offset);
-								if (isMyPiece(endRank, endFile)) {
-									return true;
-								}
-								if (!isEmptySquare(endRank, endFile) && isKing(endRank, endFile)) {
-									break;
-								}
-
-							}
-						}
-					case 'P':
-						final int fileOffset = isWhitePiece(rank, file) ? 1 : -1;
-						final int endFile = file + fileOffset;
-						if (isMyPiece(rank - 1, endFile) && isKing(rank - 1, endFile)) {
-							return true;
-						}
-
-						if (isMyPiece(rank + 1, endFile) && isKing(rank + 1, endFile)) {
-							return true;
-						}
-
-						break;
-					}
+				for (int rank = 0; rank < 8; rank++) {
+					board[file][rank] = parent.getBoard()[file][rank];
 				}
 			}
+
+			pgn = performMove();
+			if (calculateIsCheck(true)) {
+				throw new IllegalMoveException();
+			}
+
 		}
-		return false;
 	}
 
-	private boolean isIllegal() {
-		return illegal;
-	}
-
-	private void checkIfParentIsIllegal() {
+	/*private void checkIfParentIsIllegal() {
+		if (parent.isIllegal()) {
+			return;
+		}
 		final Square end = move.getEnd();
-		final int rank = end.getRank();
 		final int file = end.getFile();
-		if (isOpponentsPiece(rank, file) && isKing(rank, file)) {
+		final int rank = end.getRank();
+		if (isMyPiece(file, rank) && isKing(file, rank)) {
 			logger.info(move + " makes parent illegal 1");
 			getParent().markIllegal();
 		}
 		final Move parentsMove = getParent().getMove();
 		if (parentsMove != null) {
 			final Square parentEnd = parentsMove.getEnd();
-			if (parentEnd.getFile() == file && isKing(parentEnd.getRank(), parentEnd.getFile())) {
+			if (parentEnd.getRank() == rank && isKing(parentEnd.getFile(), parentEnd.getRank())) {
 				final Square parentStart = parentsMove.getStart();
-				if (Math.abs(parentStart.getRank() - parentEnd.getRank()) > 1) {
-					if (parentEnd.getRank() == 2 && rank < 5 && rank > 1) {
+				if (Math.abs(parentStart.getFile() - parentEnd.getFile()) > 1) {
+					if (parentEnd.getFile() == 2 && file < 5 && file > 1) {
 						logger.info(move + " makes parent illegal 2");
 						getParent().markIllegal();
 					}
-					if (parentEnd.getRank() == 6 && rank > 5 && rank < 7) {
+					if (parentEnd.getFile() == 6 && file > 5 && file < 7) {
 						getParent().markIllegal();
 						logger.info(move + " makes parent illegal 3");
 					}
@@ -230,26 +156,7 @@ public class MoveNode {
 			}
 		}
 
-	}
-
-	private void markIllegal() {
-		logger.info("Move " + pgn + " is illegal.");
-		this.illegal = true;
-		getParent().getChildren(0).remove(this);
-
-	}
-
-	private boolean isKing(final int rank, final int file) {
-		return isValidSquare(rank, file) && Character.toUpperCase(board[rank][file]) == 'K';
-	}
-
-	private boolean isPawn(final int rank, final int file) {
-		return isValidSquare(rank, file) && Character.toUpperCase(board[rank][file]) == 'P';
-	}
-
-	private int getDepth() {
-		return depth;
-	}
+	}*/
 
 	private String performMove() {
 		final Square start = move.getStart();
@@ -257,14 +164,14 @@ public class MoveNode {
 
 		String pgn = end.toString();
 
-		char capture = board[end.getRank()][end.getFile()];
-		board[end.getRank()][end.getFile()] = move.getPromote() == 'x' ? board[start.getRank()][start.getFile()] : move.getPromote();
-		final char movedPiece = Character.toUpperCase(board[start.getRank()][start.getFile()]);
+		char capture = board[end.getFile()][end.getRank()];
+		board[end.getFile()][end.getRank()] = move.getPromote() == 'x' ? board[start.getFile()][start.getRank()] : move.getPromote();
+		final char movedPiece = Character.toUpperCase(board[start.getFile()][start.getRank()]);
 
-		if (capture == 'x' && start.getRank() != end.getRank() && movedPiece == 'P') {
+		if (capture == 'x' && start.getFile() != end.getFile() && movedPiece == 'P') {
 			//en passant
-			capture = board[end.getRank()][start.getFile()];
-			board[end.getRank()][start.getFile()] = 'x';
+			capture = board[end.getFile()][start.getRank()];
+			board[end.getFile()][start.getRank()] = 'x';
 
 		}
 
@@ -278,18 +185,18 @@ public class MoveNode {
 			pgn = movedPiece + pgn;
 		}
 
-		if (Math.abs(end.getRank() - start.getRank()) > 1 && movedPiece == 'K') {
+		if (Math.abs(end.getFile() - start.getFile()) > 1 && movedPiece == 'K') {
 			//castling
-			if (end.getRank() == 2) {
+			if (end.getFile() == 2) {
 				//queenside
 				pgn = "O-O-O";
-				board[3][start.getFile()] = start.getFile() == 0 ? 'R' : 'r';
-				board[0][start.getFile()] = 'x';
-			} else if (end.getRank() == 6) {
+				board[3][start.getRank()] = start.getRank() == 0 ? 'R' : 'r';
+				board[0][start.getRank()] = 'x';
+			} else if (end.getFile() == 6) {
 				//king side
 				pgn = "O-O";
-				board[5][start.getFile()] = start.getFile() == 0 ? 'R' : 'r';
-				board[7][start.getFile()] = 'x';
+				board[5][start.getRank()] = start.getRank() == 0 ? 'R' : 'r';
+				board[7][start.getRank()] = 'x';
 			}
 
 		}
@@ -297,43 +204,61 @@ public class MoveNode {
 		if (move.getPromote() != 'x') {
 			pgn = pgn + "=" + move.getPromote();
 		}
-		board[start.getRank()][start.getFile()] = 'x';
+		board[start.getFile()][start.getRank()] = 'x';
 
 		return pgn;
 	}
 
-	public Set<MoveNode> getChildren(final int depth) {
+	public Set<MoveNode> getChildren() {
 		if (children == null) {
-			children = calculateChildren();
+			calculateChildren();
 			checkAmbiguousChildren();
 		}
-		if (depth > 0) {
-			for (final MoveNode child : children) {
-				child.getChildren(depth - 1);
-			}
-		}
+
 		return children;
 	}
 
 	private void checkAmbiguousChildren() {
 		final Map<String, List<MoveNode>> pgnMap = new HashMap<String, List<MoveNode>>();
-		for (final MoveNode child: children) {
+		for (final MoveNode child : children) {
 			if (!pgnMap.containsKey(child.getPgn())) {
 				pgnMap.put(child.getPgn(), new ArrayList<MoveNode>());
-			} 
+			}
 			pgnMap.get(child.getPgn()).add(child);
 		}
-		
+
 		for (final List<MoveNode> ambiguousGroup : pgnMap.values()) {
 			if (ambiguousGroup.size() > 1) {
 				for (int i = 0; i < ambiguousGroup.size(); i++) {
 					for (int j = 0; j < ambiguousGroup.size(); j++) {
-						ambiguousGroup.refine
+						if (j != i) {
+							ambiguousGroup.get(i).refinePgn(ambiguousGroup.get(j));
+						}
 					}
 				}
 			}
 		}
-		
+
+	}
+
+	private void refinePgn(final MoveNode other) {
+		final Square myStart = getMove().getStart();
+		final Square otherStart = other.getMove().getStart();
+
+		if (myStart.getFile() != otherStart.getFile()) {
+			if (Character.isUpperCase(pgn.charAt(0))) {
+				pgn = pgn.substring(0, 1) + myStart.toString().charAt(0) + pgn.substring(1);
+			} else {
+				pgn = pgn + myStart.toString().charAt(0);
+			}
+		} else if (myStart.getRank() != otherStart.getRank()) {
+			if (Character.isUpperCase(pgn.charAt(0))) {
+				pgn = pgn.substring(0, 1) + myStart.toString().charAt(1) + pgn.substring(1);
+			} else {
+				pgn = pgn + myStart.toString().charAt(1);
+			}
+		}
+
 	}
 
 	@Override
@@ -341,129 +266,240 @@ public class MoveNode {
 		return "MoveNode [move=" + move + ", pgn=" + pgn + ", depth=" + depth + "]";
 	}
 
-	private Set<MoveNode> calculateChildren() {
-		final Set<MoveNode> result = new HashSet<MoveNode>();
-		for (int rank = 0; rank < 8; rank++) {
-			for (int file = 0; file < 8; file++) {
-				if (this.illegal) {
-					result.clear();
-					return result;
-				}
-				if (isMyPiece(rank, file)) {
-					switch (Character.toUpperCase(board[rank][file])) {
-					case 'N':
-						for (int direction = 0; direction < 8; direction++) {
-							int rankOffset = direction < 4 ? 1 : 2;
-							int fileOffset = direction < 4 ? 2 : 1;
-							rankOffset *= direction % 2 == 0 ? 1 : -1;
-							fileOffset *= (direction / 2) % 2 == 0 ? 1 : -1;
+	private String getFullPgn() {
+		if (getMove() != null) {
+			return getParent().getFullPgn() + (!isWhitesTurn() ? ((getDepth() / 2) + 1) + ". " : "") + pgn + " ";
+		}
+		return "";
+	}
 
-							final int endRank = rank + rankOffset;
+	private boolean isCheckMate() {
+		if (!isCheck()) {
+			return false;
+		}
+		if (isCheckMate != null) {
+			return isCheckMate;
+		}
+		isCheckMate = calculateIsCheckMate();
+		return isCheckMate;
+
+	}
+
+	private boolean calculateIsCheckMate() {
+		return getChildren().isEmpty();
+
+	}
+
+	private boolean isCheck() {
+		if (isCheck != null) {
+			return isCheck;
+		}
+		isCheck = calculateIsCheck(false);
+		return isCheck;
+	}
+
+	private boolean calculateIsCheck(final boolean swapSides) {
+		for (int file = 0; file < 8; file++) {
+			for (int rank = 0; rank < 8; rank++) {
+				if (isKing(file, rank) && (swapSides ^ isMyPiece(file, rank))) {
+
+					//check for knights
+					for (int direction = 0; direction < 8; direction++) {
+						int fileOffset = direction < 4 ? 1 : 2;
+						int rankOffset = direction < 4 ? 2 : 1;
+						fileOffset *= direction % 2 == 0 ? 1 : -1;
+						rankOffset *= (direction / 2) % 2 == 0 ? 1 : -1;
+
+						final int endFile = file + fileOffset;
+						final int endRank = rank + rankOffset;
+
+						if (isKnight(endFile, endRank) && (swapSides ^ isOpponentsPiece(endFile, endRank))) {
+
+							return true;
+						}
+					}
+
+					//check for pawns
+					final int rankOffset = isWhitesTurn() ^ swapSides ? 1 : -1;
+					if (isPawn(file - 1, rank + rankOffset) && (swapSides ^ isOpponentsPiece(file - 1, rank + rankOffset))) {
+
+						return true;
+					}
+					if (isPawn(file + 1, rank + rankOffset) && (swapSides ^ isOpponentsPiece(file + 1, rank + rankOffset))) {
+
+						return true;
+					}
+
+					for (int direction = 0; direction < 4; direction++) {
+						for (int offset = 1;; offset++) {
+							final int endFile = file + (direction < 2 ? 0 : direction % 2 == 0 ? offset : -offset);
+							final int endRank = rank + (direction < 2 ? direction % 2 == 0 ? offset : -offset : 0);
+
+							if (isQueen(endFile, endRank) || isRook(endFile, endRank) || (offset == 1 && isKing(endFile, endRank))) {
+								if (swapSides ^ isOpponentsPiece(endFile, endRank)) {
+
+									return true;
+								}
+							}
+
+							if (!isEmptySquare(endFile, endRank)) {
+								break;
+							}
+
+						}
+					}
+
+					for (int direction = 0; direction < 4; direction++) {
+						for (int offset = 1;; offset++) {
+							final int endFile = file + (direction % 2 == 0 ? offset : -offset);
+							final int endRank = rank + (direction < 2 ? offset : -offset);
+							if (isQueen(endFile, endRank) || isBishop(endFile, endRank) || (offset == 1 && isKing(endFile, endRank))) {
+								if (swapSides ^ isOpponentsPiece(endFile, endRank)) {
+									return true;
+								}
+							}
+							if (!isEmptySquare(endFile, endRank)) {
+								break;
+							}
+
+						}
+
+					}
+					return false;
+				}
+			}
+
+		}
+		throw new RuntimeException("Could not find king");
+
+	}
+
+	private void calculateChildren() {
+		children = new HashSet<MoveNode>();
+
+		for (int file = 0; file < 8; file++) {
+			for (int rank = 0; rank < 8; rank++) {
+
+				if (isMyPiece(file, rank)) {
+					switch (Character.toUpperCase(board[file][rank])) {
+					case 'N':
+
+						for (int direction = 0; direction < 8; direction++) {
+							int fileOffset = direction < 4 ? 1 : 2;
+							int rankOffset = direction < 4 ? 2 : 1;
+							fileOffset *= direction % 2 == 0 ? 1 : -1;
+							rankOffset *= (direction / 2) % 2 == 0 ? 1 : -1;
+
 							final int endFile = file + fileOffset;
-							if (isValidSquare(endRank, endFile) && !isMyPiece(endRank, endFile)) {
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(endRank, endFile))));
+							final int endRank = rank + rankOffset;
+
+							if (isValidSquare(endFile, endRank) && !isMyPiece(endFile, endRank)) {
+								addChildMove(new Move(Square.get(file, rank), Square.get(endFile, endRank)));
 							}
 						}
+						break;
 					case 'K':
-						if (hasNeverMoved(rank, file)) {
-							if (isEmptySquare(1, file) && isEmptySquare(2, file) && isEmptySquare(3, file) && hasNeverMoved(0, file)) {
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(2, file))));
+						if (hasNeverMoved(file, rank)) {
+							if (isEmptySquare(1, rank) && isEmptySquare(2, rank) && isEmptySquare(3, rank) && hasNeverMoved(0, rank)) {
+								addChildMove(new Move(Square.get(file, rank), Square.get(2, rank)));
 							}
-							if (isEmptySquare(5, file) && isEmptySquare(6, file) && hasNeverMoved(7, file)) {
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(6, file))));
+							if (isEmptySquare(5, rank) && isEmptySquare(6, rank) && hasNeverMoved(7, rank)) {
+								addChildMove(new Move(Square.get(file, rank), Square.get(6, rank)));
 							}
 						}
 					case 'Q':
+
 					case 'R':
 						for (int direction = 0; direction < 4; direction++) {
 							for (int offset = 1;; offset++) {
-								final int endRank = rank + (direction % 2 == 0 ? offset : 0);
-								final int endFile = file + (direction < 2 ? offset : 0);
-								if (isValidSquare(endRank, endFile) && !isMyPiece(endRank, endFile)) {
-									result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(endRank, endFile))));
+								final int endFile = file + (direction < 2 ? 0 : direction % 2 == 0 ? offset : -offset);
+								final int endRank = rank + (direction < 2 ? direction % 2 == 0 ? offset : -offset : 0);
+								if (isValidSquare(endFile, endRank) && !isMyPiece(endFile, endRank)) {
+									addChildMove(new Move(Square.get(file, rank), Square.get(endFile, endRank)));
 								}
-								if (!isEmptySquare(endRank, endFile) || Character.toUpperCase(board[rank][file]) == 'K') {
+								if (!isEmptySquare(endFile, endRank) || isKing(file, rank)) {
 									break;
 								}
 
 							}
 						}
-						if (Character.toUpperCase(board[rank][file]) == 'R') {
+						if (Character.toUpperCase(board[file][rank]) == 'R') {
 							break;
 						}
 					case 'B':
 						for (int direction = 0; direction < 4; direction++) {
 							for (int offset = 1;; offset++) {
-								final int endRank = rank + (direction % 2 == 0 ? offset : -offset);
-								final int endFile = file + (direction < 2 ? offset : -offset);
-								if (isValidSquare(endRank, endFile) && !isMyPiece(endRank, endFile)) {
-									result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(endRank, endFile))));
+								final int endFile = file + (direction % 2 == 0 ? offset : -offset);
+								final int endRank = rank + (direction < 2 ? offset : -offset);
+								if (isValidSquare(endFile, endRank) && !isMyPiece(endFile, endRank)) {
+									addChildMove(new Move(Square.get(file, rank), Square.get(endFile, endRank)));
 								}
-								if (!isEmptySquare(endRank, endFile) || Character.toUpperCase(board[rank][file]) == 'K') {
+								if (!isEmptySquare(endFile, endRank) || isKing(file, rank)) {
 									break;
 								}
 
 							}
 						}
+						break;
 					case 'P':
-						final int fileOffset = isWhitePiece(rank, file) ? 1 : -1;
-						final int endFile = file + fileOffset;
-						if (isOpponentsPiece(rank - 1, endFile)) {
-							if (endFile == 0 || endFile == 7) {
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank - 1, endFile), isWhitesTurn() ? 'Q' : 'q')));
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank - 1, endFile), isWhitesTurn() ? 'R' : 'r')));
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank - 1, endFile), isWhitesTurn() ? 'B' : 'b')));
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank - 1, endFile), isWhitesTurn() ? 'N' : 'n')));
+						final int rankOffset = isWhitePiece(file, rank) ? 1 : -1;
+						final int endRank = rank + rankOffset;
+						if (isOpponentsPiece(file - 1, endRank)) {
+							if (endRank == 0 || endRank == 7) {
+								addChildMove(new Move(Square.get(file, rank), Square.get(file - 1, endRank), isWhitesTurn() ? 'Q' : 'q'));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file - 1, endRank), isWhitesTurn() ? 'R' : 'r'));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file - 1, endRank), isWhitesTurn() ? 'B' : 'b'));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file - 1, endRank), isWhitesTurn() ? 'N' : 'n'));
 							} else {
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank - 1, endFile))));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file - 1, endRank)));
 							}
 						}
 
-						if (isOpponentsPiece(rank + 1, endFile)) {
+						if (isOpponentsPiece(file + 1, endRank)) {
 
-							if (endFile == 0 || endFile == 7) {
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank + 1, endFile), isWhitesTurn() ? 'Q' : 'q')));
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank + 1, endFile), isWhitesTurn() ? 'R' : 'r')));
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank + 1, endFile), isWhitesTurn() ? 'B' : 'b')));
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank + 1, endFile), isWhitesTurn() ? 'N' : 'n')));
+							if (endRank == 0 || endRank == 7) {
+								addChildMove(new Move(Square.get(file, rank), Square.get(file + 1, endRank), isWhitesTurn() ? 'Q' : 'q'));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file + 1, endRank), isWhitesTurn() ? 'R' : 'r'));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file + 1, endRank), isWhitesTurn() ? 'B' : 'b'));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file + 1, endRank), isWhitesTurn() ? 'N' : 'n'));
 							} else {
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank + 1, endFile))));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file + 1, endRank)));
 							}
 						}
 
-						if (isEmptySquare(rank, endFile)) {
-							if (endFile == 0 || endFile == 7) {
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank, endFile), isWhitesTurn() ? 'Q' : 'q')));
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank, endFile), isWhitesTurn() ? 'R' : 'r')));
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank, endFile), isWhitesTurn() ? 'B' : 'b')));
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank, endFile), isWhitesTurn() ? 'N' : 'n')));
+						if (isEmptySquare(file, endRank)) {
+							if (endRank == 0 || endRank == 7) {
+								addChildMove(new Move(Square.get(file, rank), Square.get(file, endRank), isWhitesTurn() ? 'Q' : 'q'));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file, endRank), isWhitesTurn() ? 'R' : 'r'));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file, endRank), isWhitesTurn() ? 'B' : 'b'));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file, endRank), isWhitesTurn() ? 'N' : 'n'));
 							} else {
-								result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank, endFile))));
-								if ((isWhitesTurn() && file == 1) || (!isWhitesTurn() && file == 6)) {
-									if (isEmptySquare(rank, endFile + fileOffset)) {
-										result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank, endFile + fileOffset))));
+								addChildMove(new Move(Square.get(file, rank), Square.get(file, endRank)));
+								if ((isWhitesTurn() && rank == 1) || (!isWhitesTurn() && rank == 6)) {
+									if (isEmptySquare(file, endRank + rankOffset)) {
+										addChildMove(new Move(Square.get(file, rank), Square.get(file, endRank + rankOffset)));
 									}
 								}
 							}
 						}
 
 						//en passant
-						if ((isWhitesTurn() && file == 4) || (!isWhitesTurn() && file == 3)) {
+						if ((isWhitesTurn() && rank == 4) || (!isWhitesTurn() && rank == 3)) {
 
-							if (rank - 1 >= 0) {
-								if (isOpponentsPiece(rank - 1, file) && isPawn(rank - 1, file)) {
+							if (file - 1 >= 0) {
+								if (isOpponentsPiece(file - 1, rank) && isPawn(file - 1, rank)) {
 
-									if (getMove().getEnd() == Square.get(rank - 1, file) && Math.abs(getMove().getStart().getFile() - getMove().getEnd().getFile()) == 2) {
-										result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank - 1, endFile))));
+									if (getMove().getEnd() == Square.get(file - 1, rank) && Math.abs(getMove().getStart().getRank() - getMove().getEnd().getRank()) == 2) {
+										addChildMove(new Move(Square.get(file, rank), Square.get(file - 1, endRank)));
 
 									}
 								}
 							}
-							if (rank + 1 <= 7) {
-								if (isOpponentsPiece(rank + 1, file) && isPawn(rank + 1, file)) {
+							if (file + 1 <= 7) {
+								if (isOpponentsPiece(file + 1, rank) && isPawn(file + 1, rank)) {
 
-									if (getMove().getEnd() == Square.get(rank + 1, file) && Math.abs(getMove().getStart().getFile() - getMove().getEnd().getFile()) == 2) {
-										result.add(new MoveNode(this, new Move(Square.get(rank, file), Square.get(rank + 1, endFile))));
+									if (getMove().getEnd() == Square.get(file + 1, rank) && Math.abs(getMove().getStart().getRank() - getMove().getEnd().getRank()) == 2) {
+										addChildMove(new Move(Square.get(file, rank), Square.get(file + 1, endRank)));
 
 									}
 								}
@@ -476,41 +512,50 @@ public class MoveNode {
 				}
 			}
 		}
-		return result;
+
 	}
 
-	private boolean hasNeverMoved(final int rank, final int file) {
-		return hasNeverMoved(rank, file, true);
+	private void addChildMove(final Move move) {
+		try {
+			children.add(new MoveNode(this, move));
+		} catch (final IllegalMoveException e) {
+			//ignore
+		}
+
 	}
 
-	private boolean hasNeverMoved(final int rank, final int file, final boolean checkRootBoard) {
+	private boolean hasNeverMoved(final int file, final int rank) {
+		return hasNeverMoved(file, rank, true);
+	}
+
+	private boolean hasNeverMoved(final int file, final int rank, final boolean checkRootBoard) {
 		if (getParent() == null) {
 			return true;
 		}
-		if (checkRootBoard && rootBoard[rank][file] != getBoard()[rank][file]) {
+		if (checkRootBoard && rootBoard[file][rank] != getBoard()[file][rank]) {
 			return false;
 		}
-		return getBoard()[rank][file] == getParent().getBoard()[rank][file] && getParent().hasNeverMoved(rank, file, false);
+		return getBoard()[file][rank] == getParent().getBoard()[file][rank] && getParent().hasNeverMoved(file, rank, false);
 	}
 
-	private boolean isMyPiece(final int rank, final int file) {
-		return isValidSquare(rank, file) && !isEmptySquare(rank, file) && (isWhitesTurn() ^ !isWhitePiece(rank, file));
+	private boolean isMyPiece(final int file, final int rank) {
+		return isValidSquare(file, rank) && !isEmptySquare(file, rank) && (isWhitesTurn() ^ !isWhitePiece(file, rank));
 	}
 
-	private boolean isEmptySquare(final int rank, final int file) {
-		return isValidSquare(rank, file) && board[rank][file] == 'x';
+	private boolean isEmptySquare(final int file, final int rank) {
+		return isValidSquare(file, rank) && board[file][rank] == 'x';
 	}
 
-	private boolean isValidSquare(final int rank, final int file) {
-		return rank >= 0 && rank < 8 && file >= 0 && file < 8;
+	private boolean isValidSquare(final int file, final int rank) {
+		return file >= 0 && file < 8 && rank >= 0 && rank < 8;
 	}
 
-	private boolean isOpponentsPiece(final int rank, final int file) {
-		return isValidSquare(rank, file) && !isEmptySquare(rank, file) && (isWhitesTurn() ^ isWhitePiece(rank, file));
+	private boolean isOpponentsPiece(final int file, final int rank) {
+		return isValidSquare(file, rank) && !isEmptySquare(file, rank) && (isWhitesTurn() ^ isWhitePiece(file, rank));
 	}
 
-	private boolean isWhitePiece(final int rank, final int file) {
-		return isValidSquare(rank, file) && Character.isUpperCase(board[rank][file]);
+	private boolean isWhitePiece(final int file, final int rank) {
+		return isValidSquare(file, rank) && Character.isUpperCase(board[file][rank]);
 	}
 
 	private boolean isWhitesTurn() {
@@ -529,4 +574,31 @@ public class MoveNode {
 		return move;
 	}
 
+	private boolean isKnight(final int file, final int rank) {
+		return isValidSquare(file, rank) && Character.toUpperCase(board[file][rank]) == 'N';
+	}
+
+	private boolean isKing(final int file, final int rank) {
+		return isValidSquare(file, rank) && Character.toUpperCase(board[file][rank]) == 'K';
+	}
+
+	private boolean isPawn(final int file, final int rank) {
+		return isValidSquare(file, rank) && Character.toUpperCase(board[file][rank]) == 'P';
+	}
+
+	private boolean isRook(final int file, final int rank) {
+		return isValidSquare(file, rank) && Character.toUpperCase(board[file][rank]) == 'R';
+	}
+
+	private boolean isQueen(final int file, final int rank) {
+		return isValidSquare(file, rank) && Character.toUpperCase(board[file][rank]) == 'Q';
+	}
+
+	private boolean isBishop(final int file, final int rank) {
+		return isValidSquare(file, rank) && Character.toUpperCase(board[file][rank]) == 'B';
+	}
+
+	private int getDepth() {
+		return depth;
+	}
 }

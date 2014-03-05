@@ -24,46 +24,46 @@ public class Pawn extends Piece {
 		final Set<Move> legalMoves = new HashSet<Move>();
 		final Square pos = getPosition();
 
-		final int fileOffset = getColor() == Color.WHITE ? 1 : -1;
-		final int file = pos.getFile() + fileOffset;
-		if ((0 > file) || (file > 7)) {
+		final int rankOffset = getColor() == Color.WHITE ? 1 : -1;
+		final int rank = pos.getRank() + rankOffset;
+		if ((0 > rank) || (rank > 7)) {
 			return legalMoves;
 		}
-		if (pos.getRank() - 1 >= 0 && board[pos.getRank() - 1][file] != null && board[pos.getRank() - 1][file].getColor() != getColor()) {
-			if (file == 0 || file == 7) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - 1, file), 'Q'));
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - 1, file), 'R'));
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - 1, file), 'B'));
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - 1, file), 'N'));
+		if (pos.getFile() - 1 >= 0 && board[pos.getFile() - 1][rank] != null && board[pos.getFile() - 1][rank].getColor() != getColor()) {
+			if (rank == 0 || rank == 7) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - 1, rank), 'Q'));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - 1, rank), 'R'));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - 1, rank), 'B'));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - 1, rank), 'N'));
 			} else {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - 1, file)));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - 1, rank)));
 			}
 		}
 
-		if (pos.getRank() + 1 < 8 && board[pos.getRank() + 1][file] != null && board[pos.getRank() + 1][file].getColor() != getColor()) {
+		if (pos.getFile() + 1 < 8 && board[pos.getFile() + 1][rank] != null && board[pos.getFile() + 1][rank].getColor() != getColor()) {
 
-			if (file == 0 || file == 7) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + 1, file), 'Q'));
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + 1, file), 'R'));
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + 1, file), 'B'));
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + 1, file), 'N'));
+			if (rank == 0 || rank == 7) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + 1, rank), 'Q'));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + 1, rank), 'R'));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + 1, rank), 'B'));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + 1, rank), 'N'));
 			} else {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + 1, file)));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + 1, rank)));
 			}
 		}
 
-		if (board[pos.getRank()][file] == null) {
-			if (file == 0 || file == 7) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file), 'Q'));
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file), 'R'));
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file), 'B'));
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file), 'N'));
+		if (board[pos.getFile()][rank] == null) {
+			if (rank == 0 || rank == 7) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank), 'Q'));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank), 'R'));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank), 'B'));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank), 'N'));
 			} else {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank)));
 				if (getMoveCount() == 0) {
-					if (0 <= file + fileOffset && file + fileOffset <= 7) {
-						if (board[pos.getRank()][file + fileOffset] == null) {
-							legalMoves.add(new Move(pos, Square.get(pos.getRank(), file + fileOffset)));
+					if (0 <= rank + rankOffset && rank + rankOffset <= 7) {
+						if (board[pos.getFile()][rank + rankOffset] == null) {
+							legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank + rankOffset)));
 						}
 					}
 
@@ -72,17 +72,17 @@ public class Pawn extends Piece {
 		}
 
 		//en passant
-		if ((getColor() == Color.WHITE && pos.getFile() == 4) || (getColor() == Color.BLACK && pos.getFile() == 3)) {
-			if (pos.getRank() - 1 >= 0) {
-				final Piece other = board[pos.getRank() - 1][pos.getFile()];
+		if ((getColor() == Color.WHITE && pos.getRank() == 4) || (getColor() == Color.BLACK && pos.getRank() == 3)) {
+			if (pos.getFile() - 1 >= 0) {
+				final Piece other = board[pos.getFile() - 1][pos.getRank()];
 				if (other != null && other.justMoved() && other.getColor() != getColor() && other.getMoveCount() == 1 && other instanceof Pawn) {
-					legalMoves.add(new Move(pos, Square.get(pos.getRank() - 1, file)));
+					legalMoves.add(new Move(pos, Square.get(pos.getFile() - 1, rank)));
 				}
 			}
-			if (pos.getRank() + 1 <= 7) {
-				final Piece other = board[pos.getRank() + 1][pos.getFile()];
+			if (pos.getFile() + 1 <= 7) {
+				final Piece other = board[pos.getFile() + 1][pos.getRank()];
 				if (other != null && other.justMoved() && other.getColor() != getColor() && other.getMoveCount() == 1 && other instanceof Pawn) {
-					legalMoves.add(new Move(pos, Square.get(pos.getRank() + 1, file)));
+					legalMoves.add(new Move(pos, Square.get(pos.getFile() + 1, rank)));
 				}
 			}
 

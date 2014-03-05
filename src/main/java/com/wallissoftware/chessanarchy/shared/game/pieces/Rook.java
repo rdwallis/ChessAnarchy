@@ -27,23 +27,23 @@ public class Rook extends Piece {
 		final Set<Move> legalMoves = new HashSet<Move>();
 		final Square pos = getPosition();
 		//right
-		for (int rank = pos.getRank() + 1; rank < 8; rank++) {
+		for (int file = pos.getFile() + 1; file < 8; file++) {
 
-			if (board[rank][pos.getFile()] == null) {
-				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
-			} else if (board[rank][pos.getFile()].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
+			if (board[file][pos.getRank()] == null) {
+				legalMoves.add(new Move(pos, Square.get(file, pos.getRank())));
+			} else if (board[file][pos.getRank()].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(file, pos.getRank())));
 				break;
 			} else {
 				break;
 			}
 		}
 		//left
-		for (int rank = pos.getRank() - 1; rank >= 0; rank--) {
-			if (board[rank][pos.getFile()] == null) {
-				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
-			} else if (board[rank][pos.getFile()].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
+		for (int file = pos.getFile() - 1; file >= 0; file--) {
+			if (board[file][pos.getRank()] == null) {
+				legalMoves.add(new Move(pos, Square.get(file, pos.getRank())));
+			} else if (board[file][pos.getRank()].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(file, pos.getRank())));
 				break;
 			} else {
 				break;
@@ -51,11 +51,11 @@ public class Rook extends Piece {
 		}
 
 		//up
-		for (int file = pos.getFile() - 1; file >= 0; file--) {
-			if (board[pos.getRank()][file] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
-			} else if (board[pos.getRank()][file].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
+		for (int rank = pos.getRank() - 1; rank >= 0; rank--) {
+			if (board[pos.getFile()][rank] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank)));
+			} else if (board[pos.getFile()][rank].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank)));
 				break;
 			} else {
 				break;
@@ -63,11 +63,11 @@ public class Rook extends Piece {
 		}
 
 		//down
-		for (int file = pos.getFile() + 1; file < 8; file++) {
-			if (board[pos.getRank()][file] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
-			} else if (board[pos.getRank()][file].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
+		for (int rank = pos.getRank() + 1; rank < 8; rank++) {
+			if (board[pos.getFile()][rank] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank)));
+			} else if (board[pos.getFile()][rank].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank)));
 				break;
 			} else {
 				break;

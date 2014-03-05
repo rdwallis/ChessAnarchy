@@ -70,18 +70,18 @@ public class Knight extends Piece {
 		return legalMoves;
 	}
 
-	private Move getRelativePositionMove(final Piece[][] board, final int rankOffset, final int fileOffset) {
-		final int rank = getPosition().getRank() + rankOffset;
+	private Move getRelativePositionMove(final Piece[][] board, final int fileOffset, final int rankOffset) {
 		final int file = getPosition().getFile() + fileOffset;
-		if (0 > rank || rank > 7) {
-			return null;
-		}
+		final int rank = getPosition().getRank() + rankOffset;
 		if (0 > file || file > 7) {
 			return null;
 		}
+		if (0 > rank || rank > 7) {
+			return null;
+		}
 
-		if (board[rank][file] == null || board[rank][file].getColor() != getColor()) {
-			return new Move(getPosition(), Square.get(rank, file));
+		if (board[file][rank] == null || board[file][rank].getColor() != getColor()) {
+			return new Move(getPosition(), Square.get(file, rank));
 		} else {
 			return null;
 		}

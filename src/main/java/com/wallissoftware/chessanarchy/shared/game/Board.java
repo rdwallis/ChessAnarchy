@@ -88,13 +88,13 @@ public class Board {
 
 			String pgn = end.toString();
 
-			Piece capture = board[end.getRank()][end.getFile()];
-			final Piece movedPiece = board[start.getRank()][start.getFile()];
+			Piece capture = board[end.getFile()][end.getRank()];
+			final Piece movedPiece = board[start.getFile()][start.getRank()];
 
-			if (capture == null && start.getRank() != end.getRank() && movedPiece instanceof Pawn) {
+			if (capture == null && start.getFile() != end.getFile() && movedPiece instanceof Pawn) {
 				//en passant
-				capture = board[end.getRank()][start.getFile()];
-				board[end.getRank()][start.getFile()] = null;
+				capture = board[end.getFile()][start.getRank()];
+				board[end.getFile()][start.getRank()] = null;
 
 			}
 
@@ -107,29 +107,29 @@ public class Board {
 
 				final List<Piece> otherPiecesOfSameType = getOtherPiecesOfSameTypeThatCanMoveToSquare(movedPiece, end);
 
-				boolean fileIsUnique = true;
 				boolean rankIsUnique = true;
+				boolean fileIsUnique = true;
 
 				for (final Piece piece : otherPiecesOfSameType) {
 					final Square otherPosition = piece.getPosition();
 					if (!otherPosition.equals(start)) {
-						if (otherPosition.getRank() == start.getRank()) {
-							rankIsUnique = false;
+						if (otherPosition.getFile() == start.getFile()) {
+							fileIsUnique = false;
 						} else {
 
-							fileIsUnique = false;
+							rankIsUnique = false;
 						}
 
 					}
 				}
 
-				if (!rankIsUnique) {
+				if (!fileIsUnique) {
 
 					pgn = start.toString().charAt(1) + pgn;
 
 				}
 
-				if (!fileIsUnique || (capture != null && movedPiece instanceof Pawn)) {
+				if (!rankIsUnique || (capture != null && movedPiece instanceof Pawn)) {
 
 					pgn = start.toString().charAt(0) + pgn;
 
@@ -140,22 +140,22 @@ public class Board {
 				pgn = movedPiece.getPgnAbbreviation() + pgn;
 			}
 
-			if (Math.abs(end.getRank() - start.getRank()) > 1 && movedPiece instanceof King) {
+			if (Math.abs(end.getFile() - start.getFile()) > 1 && movedPiece instanceof King) {
 				//castling
-				if (end.getRank() == 2) {
+				if (end.getFile() == 2) {
 					//queenside
 					pgn = "O-O-O";
-					final Piece castle = board[0][start.getFile()];
-					board[3][start.getFile()] = castle;
-					castle.setPosition(Square.get(3, start.getFile()), recordMove, false);
-					board[0][start.getFile()] = null;
-				} else if (end.getRank() == 6) {
+					final Piece castle = board[0][start.getRank()];
+					board[3][start.getRank()] = castle;
+					castle.setPosition(Square.get(3, start.getRank()), recordMove, false);
+					board[0][start.getRank()] = null;
+				} else if (end.getFile() == 6) {
 					//king side
 					pgn = "O-O";
-					final Piece castle = board[7][start.getFile()];
-					board[5][start.getFile()] = castle;
-					castle.setPosition(Square.get(5, start.getFile()), recordMove, false);
-					board[7][start.getFile()] = null;
+					final Piece castle = board[7][start.getRank()];
+					board[5][start.getRank()] = castle;
+					castle.setPosition(Square.get(5, start.getRank()), recordMove, false);
+					board[7][start.getRank()] = null;
 				}
 
 			}
@@ -171,9 +171,9 @@ public class Board {
 
 			setLastMovedPiece(movingPiece);
 
-			board[start.getRank()][start.getFile()] = null;
+			board[start.getFile()][start.getRank()] = null;
 
-			board[end.getRank()][end.getFile()] = movingPiece;
+			board[end.getFile()][end.getRank()] = movingPiece;
 			movingPiece.setPosition(end, recordMove);
 			moveList.add(move);
 			if (capture != null) {
@@ -213,11 +213,11 @@ public class Board {
 		sb.append("\n");
 		final String line = "---------------------------------\n";
 		sb.append(line);
-		for (int file = 7; file >= 0; file--) {
-			for (int rank = 0; rank < 8; rank++) {
-				final Square square = Square.get(rank, file);
+		for (int rank = 7; rank >= 0; rank--) {
+			for (int file = 0; file < 8; file++) {
+				final Square square = Square.get(file, rank);
 				sb.append(square.equals(highlightSquare) ? "[" : "|");
-				final Piece p = board[rank][file];
+				final Piece p = board[file][rank];
 				if (p == null) {
 					sb.append("  ");
 				} else {
@@ -227,7 +227,7 @@ public class Board {
 				sb.append(square.equals(highlightSquare) ? "]" : "|");
 
 			}
-			sb.append(" ").append(file + 1);
+			sb.append(" ").append(rank + 1);
 			sb.append("\n");
 			sb.append(line);
 		}
@@ -237,10 +237,10 @@ public class Board {
 
 	private boolean isCheck() {
 		final King king = getCurrentPlayer() == Color.WHITE ? whiteKing : blackKing;
-		for (int rank = 0; rank < 8; rank++) {
-			for (int file = 0; file < 8; file++) {
-				if (board[rank][file] != null && board[rank][file].getColor() != getCurrentPlayer()) {
-					for (final Move move : board[rank][file].getLegalMoves(board)) {
+		for (int file = 0; file < 8; file++) {
+			for (int rank = 0; rank < 8; rank++) {
+				if (board[file][rank] != null && board[file][rank].getColor() != getCurrentPlayer()) {
+					for (final Move move : board[file][rank].getLegalMoves(board)) {
 						if (move.getEnd().equals(king.getPosition())) {
 							return true;
 						}
@@ -289,19 +289,19 @@ public class Board {
 			final Square start = move.getStart();
 			final Square end = move.getEnd();
 
-			board[start.getRank()][start.getFile()] = lastMoved;
-			board[end.getRank()][end.getFile()] = null;
+			board[start.getFile()][start.getRank()] = lastMoved;
+			board[end.getFile()][end.getRank()] = null;
 
-			if (Math.abs(end.getRank() - start.getRank()) > 1 && lastMoved instanceof King) {
+			if (Math.abs(end.getFile() - start.getFile()) > 1 && lastMoved instanceof King) {
 				//castling
-				if (end.getRank() == 1) {
-					final Piece castle = board[2][start.getFile()];
-					board[0][start.getFile()] = castle;
-					castle.setPosition(Square.get(0, start.getFile()), false, false);
-				} else if (end.getRank() == 6) {
-					final Piece castle = board[5][start.getFile()];
-					board[7][start.getFile()] = castle;
-					castle.setPosition(Square.get(7, start.getFile()), false, false);
+				if (end.getFile() == 1) {
+					final Piece castle = board[2][start.getRank()];
+					board[0][start.getRank()] = castle;
+					castle.setPosition(Square.get(0, start.getRank()), false, false);
+				} else if (end.getFile() == 6) {
+					final Piece castle = board[5][start.getRank()];
+					board[7][start.getRank()] = castle;
+					castle.setPosition(Square.get(7, start.getRank()), false, false);
 				}
 			}
 
@@ -377,7 +377,7 @@ public class Board {
 	}
 
 	private void setPieceAtSquare(final Piece piece, final Square square, final boolean fireEvents) {
-		board[square.getRank()][square.getFile()] = piece;
+		board[square.getFile()][square.getRank()] = piece;
 		piece.setPosition(square, fireEvents);
 
 	}
@@ -392,10 +392,10 @@ public class Board {
 		}
 		final Set<Move> legalMoves = new HashSet<Move>();
 
-		for (int rank = 0; rank < 8; rank++) {
-			for (int file = 0; file < 8; file++) {
-				if (board[rank][file] != null && board[rank][file].getColor() == getCurrentPlayer()) {
-					legalMoves.addAll(board[rank][file].getLegalMoves(board));
+		for (int file = 0; file < 8; file++) {
+			for (int rank = 0; rank < 8; rank++) {
+				if (board[file][rank] != null && board[file][rank].getColor() == getCurrentPlayer()) {
+					legalMoves.addAll(board[file][rank].getLegalMoves(board));
 				}
 			}
 		}
@@ -423,15 +423,15 @@ public class Board {
 	private boolean moveWillLeaveCurrentPlacyerInCheck(final Move move) {
 		final Set<Square> protectedSquares = new HashSet<Square>();
 		if (getPieceAt(move.getStart()) instanceof King) {
-			if (Math.abs(move.getEnd().getRank() - move.getStart().getRank()) > 1) {
+			if (Math.abs(move.getEnd().getFile() - move.getStart().getFile()) > 1) {
 				//castling
-				final int file = move.getStart().getFile();
-				if (move.getEnd().getRank() == 2) {
+				final int rank = move.getStart().getRank();
+				if (move.getEnd().getFile() == 2) {
 					protectedSquares.add(move.getStart());
-					protectedSquares.add(Square.get(3, file));
-					protectedSquares.add(Square.get(4, file));
-				} else if (move.getEnd().getRank() == 6) {
-					protectedSquares.add(Square.get(5, file));
+					protectedSquares.add(Square.get(3, rank));
+					protectedSquares.add(Square.get(4, rank));
+				} else if (move.getEnd().getFile() == 6) {
+					protectedSquares.add(Square.get(5, rank));
 					protectedSquares.add(move.getStart());
 				}
 			}
@@ -485,7 +485,7 @@ public class Board {
 	}
 
 	public Piece getPieceAt(final Square square) {
-		return board[square.getRank()][square.getFile()];
+		return board[square.getFile()][square.getRank()];
 	}
 
 	public Piece[][] getBoardArray() {

@@ -27,22 +27,22 @@ public class Bishop extends Piece {
 		final Set<Move> legalMoves = new HashSet<Move>();
 		final Square pos = getPosition();
 		//rightdown
-		for (int offset = 1; pos.getRank() + offset < 8 && pos.getFile() + offset < 8; offset++) {
-			if (board[pos.getRank() + offset][pos.getFile() + offset] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + offset, pos.getFile() + offset)));
-			} else if (board[pos.getRank() + offset][pos.getFile() + offset].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + offset, pos.getFile() + offset)));
+		for (int offset = 1; pos.getFile() + offset < 8 && pos.getRank() + offset < 8; offset++) {
+			if (board[pos.getFile() + offset][pos.getRank() + offset] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + offset, pos.getRank() + offset)));
+			} else if (board[pos.getFile() + offset][pos.getRank() + offset].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + offset, pos.getRank() + offset)));
 				break;
 			} else {
 				break;
 			}
 		}
 		//rightup
-		for (int offset = 1; pos.getRank() + offset < 8 && pos.getFile() - offset >= 0; offset++) {
-			if (board[pos.getRank() + offset][pos.getFile() - offset] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + offset, pos.getFile() - offset)));
-			} else if (board[pos.getRank() + offset][pos.getFile() - offset].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + offset, pos.getFile() - offset)));
+		for (int offset = 1; pos.getFile() + offset < 8 && pos.getRank() - offset >= 0; offset++) {
+			if (board[pos.getFile() + offset][pos.getRank() - offset] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + offset, pos.getRank() - offset)));
+			} else if (board[pos.getFile() + offset][pos.getRank() - offset].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + offset, pos.getRank() - offset)));
 				break;
 			} else {
 				break;
@@ -50,22 +50,22 @@ public class Bishop extends Piece {
 		}
 
 		//leftup
-		for (int offset = 1; pos.getRank() - offset >= 0 && pos.getFile() - offset >= 0; offset++) {
-			if (board[pos.getRank() - offset][pos.getFile() - offset] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - offset, pos.getFile() - offset)));
-			} else if (board[pos.getRank() - offset][pos.getFile() - offset].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - offset, pos.getFile() - offset)));
+		for (int offset = 1; pos.getFile() - offset >= 0 && pos.getRank() - offset >= 0; offset++) {
+			if (board[pos.getFile() - offset][pos.getRank() - offset] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - offset, pos.getRank() - offset)));
+			} else if (board[pos.getFile() - offset][pos.getRank() - offset].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - offset, pos.getRank() - offset)));
 				break;
 			} else {
 				break;
 			}
 		}
 		//leftdown
-		for (int offset = 1; pos.getRank() - offset >= 0 && pos.getFile() + offset < 8; offset++) {
-			if (board[pos.getRank() - offset][pos.getFile() + offset] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - offset, pos.getFile() + offset)));
-			} else if (board[pos.getRank() - offset][pos.getFile() + offset].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - offset, pos.getFile() + offset)));
+		for (int offset = 1; pos.getFile() - offset >= 0 && pos.getRank() + offset < 8; offset++) {
+			if (board[pos.getFile() - offset][pos.getRank() + offset] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - offset, pos.getRank() + offset)));
+			} else if (board[pos.getFile() - offset][pos.getRank() + offset].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - offset, pos.getRank() + offset)));
 				break;
 			} else {
 				break;

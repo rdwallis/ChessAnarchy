@@ -28,22 +28,22 @@ public class Queen extends Piece {
 		final Set<Move> legalMoves = new HashSet<Move>();
 		final Square pos = getPosition();
 		//rightdown
-		for (int offset = 1; pos.getRank() + offset < 8 && pos.getFile() + offset < 8; offset++) {
-			if (board[pos.getRank() + offset][pos.getFile() + offset] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + offset, pos.getFile() + offset)));
-			} else if (board[pos.getRank() + offset][pos.getFile() + offset].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + offset, pos.getFile() + offset)));
+		for (int offset = 1; pos.getFile() + offset < 8 && pos.getRank() + offset < 8; offset++) {
+			if (board[pos.getFile() + offset][pos.getRank() + offset] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + offset, pos.getRank() + offset)));
+			} else if (board[pos.getFile() + offset][pos.getRank() + offset].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + offset, pos.getRank() + offset)));
 				break;
 			} else {
 				break;
 			}
 		}
 		//rightup
-		for (int offset = 1; pos.getRank() + offset < 8 && pos.getFile() - offset >= 0; offset++) {
-			if (board[pos.getRank() + offset][pos.getFile() - offset] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + offset, pos.getFile() - offset)));
-			} else if (board[pos.getRank() + offset][pos.getFile() - offset].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() + offset, pos.getFile() - offset)));
+		for (int offset = 1; pos.getFile() + offset < 8 && pos.getRank() - offset >= 0; offset++) {
+			if (board[pos.getFile() + offset][pos.getRank() - offset] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + offset, pos.getRank() - offset)));
+			} else if (board[pos.getFile() + offset][pos.getRank() - offset].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() + offset, pos.getRank() - offset)));
 				break;
 			} else {
 				break;
@@ -51,22 +51,22 @@ public class Queen extends Piece {
 		}
 
 		//leftup
-		for (int offset = 1; pos.getRank() - offset >= 0 && pos.getFile() - offset >= 0; offset++) {
-			if (board[pos.getRank() - offset][pos.getFile() - offset] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - offset, pos.getFile() - offset)));
-			} else if (board[pos.getRank() - offset][pos.getFile() - offset].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - offset, pos.getFile() - offset)));
+		for (int offset = 1; pos.getFile() - offset >= 0 && pos.getRank() - offset >= 0; offset++) {
+			if (board[pos.getFile() - offset][pos.getRank() - offset] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - offset, pos.getRank() - offset)));
+			} else if (board[pos.getFile() - offset][pos.getRank() - offset].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - offset, pos.getRank() - offset)));
 				break;
 			} else {
 				break;
 			}
 		}
 		//leftdown
-		for (int offset = 1; pos.getRank() - offset >= 0 && pos.getFile() + offset < 8; offset++) {
-			if (board[pos.getRank() - offset][pos.getFile() + offset] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - offset, pos.getFile() + offset)));
-			} else if (board[pos.getRank() - offset][pos.getFile() + offset].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank() - offset, pos.getFile() + offset)));
+		for (int offset = 1; pos.getFile() - offset >= 0 && pos.getRank() + offset < 8; offset++) {
+			if (board[pos.getFile() - offset][pos.getRank() + offset] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - offset, pos.getRank() + offset)));
+			} else if (board[pos.getFile() - offset][pos.getRank() + offset].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile() - offset, pos.getRank() + offset)));
 				break;
 			} else {
 				break;
@@ -74,23 +74,23 @@ public class Queen extends Piece {
 		}
 
 		//right
-		for (int rank = pos.getRank() + 1; rank < 8; rank++) {
+		for (int file = pos.getFile() + 1; file < 8; file++) {
 
-			if (board[rank][pos.getFile()] == null) {
-				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
-			} else if (board[rank][pos.getFile()].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
+			if (board[file][pos.getRank()] == null) {
+				legalMoves.add(new Move(pos, Square.get(file, pos.getRank())));
+			} else if (board[file][pos.getRank()].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(file, pos.getRank())));
 				break;
 			} else {
 				break;
 			}
 		}
 		//left
-		for (int rank = pos.getRank() - 1; rank >= 0; rank--) {
-			if (board[rank][pos.getFile()] == null) {
-				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
-			} else if (board[rank][pos.getFile()].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(rank, pos.getFile())));
+		for (int file = pos.getFile() - 1; file >= 0; file--) {
+			if (board[file][pos.getRank()] == null) {
+				legalMoves.add(new Move(pos, Square.get(file, pos.getRank())));
+			} else if (board[file][pos.getRank()].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(file, pos.getRank())));
 				break;
 			} else {
 				break;
@@ -98,11 +98,11 @@ public class Queen extends Piece {
 		}
 
 		//up
-		for (int file = pos.getFile() - 1; file >= 0; file--) {
-			if (board[pos.getRank()][file] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
-			} else if (board[pos.getRank()][file].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
+		for (int rank = pos.getRank() - 1; rank >= 0; rank--) {
+			if (board[pos.getFile()][rank] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank)));
+			} else if (board[pos.getFile()][rank].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank)));
 				break;
 			} else {
 				break;
@@ -110,11 +110,11 @@ public class Queen extends Piece {
 		}
 
 		//down
-		for (int file = pos.getFile() + 1; file < 8; file++) {
-			if (board[pos.getRank()][file] == null) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
-			} else if (board[pos.getRank()][file].getColor() != getColor()) {
-				legalMoves.add(new Move(pos, Square.get(pos.getRank(), file)));
+		for (int rank = pos.getRank() + 1; rank < 8; rank++) {
+			if (board[pos.getFile()][rank] == null) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank)));
+			} else if (board[pos.getFile()][rank].getColor() != getColor()) {
+				legalMoves.add(new Move(pos, Square.get(pos.getFile(), rank)));
 				break;
 			} else {
 				break;

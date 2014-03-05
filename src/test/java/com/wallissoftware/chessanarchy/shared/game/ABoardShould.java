@@ -28,9 +28,30 @@ public class ABoardShould {
 				"Qxe6", "Nf5", "Nc8", "Kb1", "f6", "h5", "fxe5", "Bd3", "Qd5", "dxe5", "Bc5", "e6", "a5", "Qg4", "Qe5", "Rhe1");
 
 		System.out.println("THIRD TEST PASSED");
+
+		playGame("c4", "Nf6", "Nc3", "e6", "Nf3", "c5", "e3", "Be7", "d4", "a6", "Bd3", "d5", "O-O", "O-O", "b3", "Nc6", "Bb2", "dxc4", "bxc4", "Nb4", "Be2", "Bd7", "a3", "cxd4", "exd4", "Nc6", "d5", "Qc7", "dxc6", "Bxc6", "Qc1", "Bd6", "g3", "Rad8", "Nd4", "Rfe8", "Qg5", "Be7",
+				"Rfd1", "Bd7", "Rab1", "h6", "Qe3", "e5", "Nb3", "Bf5", "Rbc1", "Qb8", "Na4", "Ne4", "Qf3", "Bg6", "c5", "Qc7", "Nb6", "Rxd1+", "Rxd1", "Bxc5", "Nxc5", "Nxc5", "Nc4", "b5", "Nd6", "Qxd6", "Rxd6", "Nd3", "Rxd3", "Re6", "Bxe5", "Bxd3", "Bxd3", "Re8", "Qf5", "Re6",
+				"Qh7+", "Kf8", "Qh8+", "Ke7", "Bxg7", "Kd6", "Qf8+", "Kc6", "Qc8+", "Kd5", "Bf8", "Re1+", "Kg2", "Kd4", "Bc2", "Re5", "Bb4", "a5", "Qg4+", "Kd5", "Qd7+", "Kc4", "Qd3#");
+
+		System.out.println("FORTH TEST PASSED");
+
 	}
 
-	/*public void playGame(final String... moves) {
+	public void playGame(final String... moves) {
+		long start = System.currentTimeMillis();
+		playGameOnBoard(moves);
+		final long boardTime = System.currentTimeMillis() - start;
+		start = System.currentTimeMillis();
+		playGameOnMoveNode(moves);
+		final long moveNode = System.currentTimeMillis() - start;
+		if (moveNode < boardTime) {
+			System.out.println("MoveNode is " + (boardTime - moveNode) + "ms faster than board");
+		} else {
+			System.out.println("Board is " + (moveNode - boardTime) + "ms faster than MoveNode");
+		}
+	}
+
+	public void playGameOnBoard(final String... moves) {
 		final List<String> moveList = new ArrayList<String>();
 		for (int i = 0; i < moves.length; i++) {
 			moveList.add(moves[i]);
@@ -39,7 +60,7 @@ public class ABoardShould {
 		try {
 			board = new Board(moveList.subList(0, moveList.size() - 1));
 			board.resetFromMoveList(moveList);
-			board.printBoard();
+			//board.printBoard();
 
 		} catch (final IllegalMoveException e) {
 			if (board != null) {
@@ -47,9 +68,9 @@ public class ABoardShould {
 			}
 			fail();
 		}
-	}*/
+	}
 
-	public void playGame(final String... moves) {
+	public void playGameOnMoveNode(final String... moves) {
 		final List<String> moveList = new ArrayList<String>();
 		for (int i = 0; i < moves.length; i++) {
 			moveList.add(moves[i]);

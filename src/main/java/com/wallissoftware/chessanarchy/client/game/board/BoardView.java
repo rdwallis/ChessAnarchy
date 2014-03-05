@@ -67,8 +67,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	private final GridConstrainedDropController dropController;
 	private final PickupDragController dragController;
 
-	private final List<Widget> rankLabels = new ArrayList<Widget>();
 	private final List<Widget> fileLabels = new ArrayList<Widget>();
+	private final List<Widget> rankLabels = new ArrayList<Widget>();
 
 	private final Set<GhostAnimation> ghostAnimations = new HashSet<GhostAnimation>();
 	private final Set<GhostAnimation> animations = new HashSet<GhostAnimation>();
@@ -142,15 +142,15 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	}
 
 	private void drawSquares() {
-		for (int rank = 0; rank < 8; rank++) {
-			for (int file = 0; file < 8; file++) {
-				final boolean dark = ((rank + file) % 2 == 1);
+		for (int file = 0; file < 8; file++) {
+			for (int rank = 0; rank < 8; rank++) {
+				final boolean dark = ((file + rank) % 2 == 1);
 				final SimplePanel square = new SimplePanel();
-				squares[rank][file] = square;
+				squares[file][rank] = square;
 				square.addStyleName(dark ? style.darkSquare() : style.lightSquare());
 				boardBackground.insert(square, 0);
-				boardBackground.setWidgetLeftWidth(square, rank * 50, Unit.PX, 50, Unit.PX);
-				boardBackground.setWidgetTopHeight(square, file * 50, Unit.PX, 50, Unit.PX);
+				boardBackground.setWidgetLeftWidth(square, file * 50, Unit.PX, 50, Unit.PX);
+				boardBackground.setWidgetTopHeight(square, rank * 50, Unit.PX, 50, Unit.PX);
 			}
 		}
 
@@ -160,27 +160,27 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	public void resetGridLabels() {
 		if (lastDrawOrientation != getOrientation()) {
 			this.lastDrawOrientation = getOrientation();
-			if (rankLabels.isEmpty()) {
+			if (fileLabels.isEmpty()) {
 				for (int i = 0; i < 8; i++) {
-					final Label rankLabel = new Label("" + ((char) (i + 97)));
-					rankLabel.addStyleName(style.gridLabel());
-					rankLabels.add(rankLabel);
-					layoutPanel.insert(rankLabel, 0);
-					layoutPanel.setWidgetBottomHeight(rankLabel, 5, Unit.PX, 26, Unit.PX);
-
-					final Label fileLabel = new Label("" + (i + 1));
+					final Label fileLabel = new Label("" + ((char) (i + 97)));
 					fileLabel.addStyleName(style.gridLabel());
 					fileLabels.add(fileLabel);
 					layoutPanel.insert(fileLabel, 0);
-					layoutPanel.setWidgetRightWidth(fileLabel, 10, Unit.PX, 16, Unit.PX);
+					layoutPanel.setWidgetBottomHeight(fileLabel, 5, Unit.PX, 26, Unit.PX);
+
+					final Label rankLabel = new Label("" + (i + 1));
+					rankLabel.addStyleName(style.gridLabel());
+					rankLabels.add(rankLabel);
+					layoutPanel.insert(rankLabel, 0);
+					layoutPanel.setWidgetRightWidth(rankLabel, 10, Unit.PX, 16, Unit.PX);
 				}
 			}
 
 			for (int i = 0; i < 8; i++) {
-				final Widget rankLabel = getOrientation() == Color.WHITE ? rankLabels.get(i) : rankLabels.get(7 - i);
-				final Widget fileLabel = getOrientation() == Color.WHITE ? fileLabels.get(7 - i) : fileLabels.get(i);
-				layoutPanel.setWidgetLeftWidth(rankLabel, (i * 50) + 30, Unit.PX, 16, Unit.PX);
-				layoutPanel.setWidgetTopHeight(fileLabel, (i * 50) + 26, Unit.PX, 16, Unit.PX);
+				final Widget fileLabel = getOrientation() == Color.WHITE ? fileLabels.get(i) : fileLabels.get(7 - i);
+				final Widget rankLabel = getOrientation() == Color.WHITE ? rankLabels.get(7 - i) : rankLabels.get(i);
+				layoutPanel.setWidgetLeftWidth(fileLabel, (i * 50) + 30, Unit.PX, 16, Unit.PX);
+				layoutPanel.setWidgetTopHeight(rankLabel, (i * 50) + 26, Unit.PX, 16, Unit.PX);
 			}
 		}
 
@@ -188,8 +188,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	@Override
 	public void setPieceInSquare(final IsWidget piece, final Square square, final Move lastMove) {
-		int x = square.getRank() * 50;
-		int y = 350 - (square.getFile() * 50);
+		int x = square.getFile() * 50;
+		int y = 350 - (square.getRank() * 50);
 		if (getOrientation() == Color.BLACK) {
 			x = 350 - x;
 			y = 350 - y;
@@ -199,8 +199,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 			dragController.makeDraggable(piece.asWidget());
 		} else {
 			final Square start = lastMove.getStart();
-			int startX = start.getRank() * 50;
-			int startY = 350 - (start.getFile() * 50);
+			int startX = start.getFile() * 50;
+			int startY = 350 - (start.getRank() * 50);
 			if (getOrientation() == Color.BLACK) {
 				startX = 350 - startX;
 				startY = 350 - startY;
@@ -260,17 +260,17 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		final int relativeX = mouseX - dropSurface.getAbsoluteLeft();
 		final int relativeY = mouseY - dropSurface.getAbsoluteTop();
 
-		int rank = relativeX / 50;
-		int file = 7 - relativeY / 50;
+		int file = relativeX / 50;
+		int rank = 7 - relativeY / 50;
 
-		rank = Math.max(0, Math.min(7, rank));
 		file = Math.max(0, Math.min(7, file));
+		rank = Math.max(0, Math.min(7, rank));
 
 		if (getOrientation() == Color.BLACK) {
-			rank = 7 - rank;
 			file = 7 - file;
+			rank = 7 - rank;
 		}
-		return Square.get(rank, file);
+		return Square.get(file, rank);
 
 	}
 
@@ -280,8 +280,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 			piece.asWidget().removeFromParent();
 		} else if (dropSurface.getWidgetIndex(piece) != -1) {
 			final Square square = lastMove.getEnd();
-			int x = square.getRank() * 50;
-			int y = 350 - (square.getFile() * 50);
+			int x = square.getFile() * 50;
+			int y = 350 - (square.getRank() * 50);
 			if (getOrientation() == Color.BLACK) {
 				x = 350 - x;
 				y = 350 - y;
@@ -342,15 +342,15 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		}
 
 		final Square start = piece.getPosition();
-		int x = start.getRank() * 50;
-		int y = 350 - (start.getFile() * 50);
+		int x = start.getFile() * 50;
+		int y = 350 - (start.getRank() * 50);
 		if (getOrientation() == Color.BLACK) {
 			x = 350 - x;
 			y = 350 - y;
 		}
 
-		int x1 = end.getRank() * 50;
-		int y1 = 350 - (end.getFile() * 50);
+		int x1 = end.getFile() * 50;
+		int y1 = 350 - (end.getRank() * 50);
 		if (getOrientation() == Color.BLACK) {
 			x1 = 350 - x1;
 			y1 = 350 - y1;
@@ -375,15 +375,15 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	}
 
 	private void highlightSquare(final Square square) {
-		int rank = square.getRank();
 		int file = square.getFile();
+		int rank = square.getRank();
 		if (getOrientation() == Color.WHITE) {
-			file = 7 - file;
-		} else {
 			rank = 7 - rank;
+		} else {
+			file = 7 - file;
 		}
-		squares[rank][file].addStyleName(style.highlight());
-		highlightedSquares.add(squares[rank][file]);
+		squares[file][rank].addStyleName(style.highlight());
+		highlightedSquares.add(squares[file][rank]);
 
 	}
 

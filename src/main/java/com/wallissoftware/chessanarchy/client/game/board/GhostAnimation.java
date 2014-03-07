@@ -8,7 +8,7 @@ public class GhostAnimation {
 	private final static double FADE_DURATION = 1000;
 
 	private final Widget widget;
-	private final double startTime;
+	private double startTime;
 
 	private final int startX;
 	private final int startY;
@@ -69,6 +69,11 @@ public class GhostAnimation {
 
 	private double getMoveDuration() {
 		return fast ? MOVE_DURATION / 2 : MOVE_DURATION;
+	}
+
+	public void end() {
+		startTime = 0;
+
 	}
 
 }

@@ -3,7 +3,6 @@ package com.wallissoftware.chessanarchy.client.game.gamestate;
 import java.util.List;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.wallissoftware.chessanarchy.client.game.chat.messagelog.MessageLogPresenter;
 import com.wallissoftware.chessanarchy.client.game.gamestate.model.GameState;
@@ -12,7 +11,7 @@ import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveExcepti
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
 @Singleton
-public class GameStateProvider implements Provider<GameState> {
+public class GameStateProvider {
 
 	private final MessageLogPresenter messageLogPresenter;
 
@@ -27,8 +26,7 @@ public class GameStateProvider implements Provider<GameState> {
 
 	}
 
-	@Override
-	public GameState get() {
+	public GameState getGameState() {
 		final List<MessageWrapper> currentGameMasterMessages = messageLogPresenter.getCurrentGameMasterMessages();
 		if (gameMasterMessages == null || gameMasterMessages.size() != currentGameMasterMessages.size()) {
 			gameMasterMessages = currentGameMasterMessages;
@@ -37,11 +35,19 @@ public class GameStateProvider implements Provider<GameState> {
 		return gameState;
 	}
 
-	public MoveTree getSyncedMoveTree() {
+	public MoveTree getMoveTree() {
 		try {
-			return MoveTree.get(get().getMoveList());
+			return MoveTree.get(getGameState().getMoveList());
 		} catch (final IllegalMoveException e) {
 			return MoveTree.getRoot();
+		}
+	}
+
+	public MoveTree getParentMoveTree() {
+		if (getMoveTree().isRootNode()) {
+			return getMoveTree();
+		} else {
+			return getMoveTree().getParent();
 		}
 	}
 

@@ -22,11 +22,11 @@ public class PromotionView extends PopupViewWithUiHandlers<PromotionUiHandlers> 
 	@UiField PushButton queenButton, rookButton, knightButton, bishopButton;
 
 	@Inject
-	PromotionView(final Binder uiBinder, final EventBus eventBus, final PieceSprites sprites) {
+	PromotionView(final Binder uiBinder, final EventBus eventBus) {
 		super(eventBus);
 
 		initWidget(uiBinder.createAndBindUi(this));
-		this.sprites = sprites;
+		this.sprites = PieceSprites.INSTANCE;
 	}
 
 	@Override

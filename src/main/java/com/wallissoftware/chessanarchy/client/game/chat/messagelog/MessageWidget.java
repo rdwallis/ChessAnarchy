@@ -55,7 +55,11 @@ public class MessageWidget extends Composite {
 				this.message.addStyleName(style.command());
 			}
 		} else {
-			name.getElement().getStyle().setColor(intToColor(getHash(message.getUserId())));
+			try {
+				name.getElement().getStyle().setColor(intToColor(getHash(message.getUserId())));
+			} catch (final Exception e) {
+
+			}
 		}
 		if (message.getColor() != null) {
 			this.color.addStyleName(message.getColor() == Color.WHITE ? style.white() : style.black());

@@ -19,28 +19,17 @@ import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.AbsolutePanel;
-import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.LayoutPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
-import com.wallissoftware.chessanarchy.client.game.board.piece.PiecePresenter;
-import com.wallissoftware.chessanarchy.client.game.board.piece.images.PieceSprites;
+import com.wallissoftware.chessanarchy.client.game.board.piece.PieceWidget;
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Move;
-import com.wallissoftware.chessanarchy.shared.game.Square;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Bishop;
-import com.wallissoftware.chessanarchy.shared.game.pieces.King;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Knight;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Pawn;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Piece;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Queen;
-import com.wallissoftware.chessanarchy.shared.game.pieces.Rook;
 
 public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements BoardPresenter.MyView, DragHandler {
 	public interface Binder extends UiBinder<Widget, BoardView> {
@@ -56,8 +45,6 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		String highlight();
 
 	}
-
-	private final PieceSprites sprites;
 
 	@UiField AbsolutePanel dropSurface;
 
@@ -77,13 +64,14 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	private Set<SimplePanel> highlightedSquares = new HashSet<SimplePanel>();
 
-	private Square startDragSquare;
+	private int startDragFile, startDragRank, endDragFile, endDragRank;
 
 	private Color lastDrawOrientation;
 
+	private PieceWidget[][] board = new PieceWidget[8][8];
+
 	@Inject
-	BoardView(final Binder binder, final PieceSprites sprites) {
-		this.sprites = sprites;
+	BoardView(final Binder binder) {
 		initWidget(binder.createAndBindUi(this));
 		dropController = new GridConstrainedDropController(dropSurface, 50, 50);
 
@@ -92,7 +80,6 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		dragController.setBehaviorMultipleSelection(false);
 		dragController.registerDropController(dropController);
 		dragController.addDragHandler(this);
-
 	}
 
 	@Override
@@ -101,6 +88,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		drawSquares();
 		resetGridLabels();
 		startGhostAnimations();
+
 	}
 
 	private void startGhostAnimations() {
@@ -112,7 +100,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 				return true;
 			}
 
-		}, 20);
+		}, 100);
 
 	}
 
@@ -156,8 +144,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	}
 
-	@Override
-	public void resetGridLabels() {
+	private void resetGridLabels() {
 		if (lastDrawOrientation != getOrientation()) {
 			this.lastDrawOrientation = getOrientation();
 			if (fileLabels.isEmpty()) {
@@ -182,39 +169,96 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 				layoutPanel.setWidgetLeftWidth(fileLabel, (i * 50) + 30, Unit.PX, 16, Unit.PX);
 				layoutPanel.setWidgetTopHeight(rankLabel, (i * 50) + 26, Unit.PX, 16, Unit.PX);
 			}
+
+			for (int rank = 0; rank < 8; rank++) {
+				for (int file = 0; file < 8; file++) {
+					if (board[file][rank] != null) {
+						movePieceTo(board[file][rank], file, rank);
+					}
+				}
+			}
 		}
 
 	}
 
-	@Override
-	public void setPieceInSquare(final IsWidget piece, final Square square, final Move lastMove) {
-		int x = square.getFile() * 50;
-		int y = 350 - (square.getRank() * 50);
+	private void movePieceTo(final PieceWidget pieceWidget, final int file, final int rank) {
+		int x = file * 50;
+		int y = 350 - (rank * 50);
 		if (getOrientation() == Color.BLACK) {
 			x = 350 - x;
 			y = 350 - y;
 		}
-		if (!animations.isEmpty() || lastMove == null || !lastMove.getEnd().equals(square) || dropSurface.getWidgetIndex(piece) == -1) {
-			dropSurface.add(piece, x, y);
-			dragController.makeDraggable(piece.asWidget());
+
+		dropSurface.setWidgetPosition(pieceWidget, x, y);
+
+	}
+
+	@Override
+	public void drawBoard(final char[][] board, final Move move) {
+		resetGridLabels();
+		highlightMove(move);
+		for (int rank = 0; rank < 8; rank++) {
+			for (int file = 0; file < 8; file++) {
+				setPieceInSquare(board[file][rank], file, rank);
+
+			}
+		}
+		animateMove(move);
+
+	}
+
+	private void animateMove(final Move move) {
+		if (move == null) {
+			return;
+		}
+		for (final GhostAnimation animation : animations) {
+			animation.end();
+		}
+		final PieceWidget piece = board[move.getStartFile()][move.getStartRank()];
+		if (piece != null) {
+			createAnimation(false, SyncedTime.get(), piece, move);
+
+		}
+
+	}
+
+	private void setPieceInSquare(final char kind, final int file, final int rank) {
+		final PieceWidget existingPiece = board[file][rank];
+		if (kind == 'x') {
+			if (existingPiece != null) {
+				dragController.makeNotDraggable(existingPiece);
+				dropSurface.remove(existingPiece);
+				board[file][rank] = null;
+			}
 		} else {
-			final Square start = lastMove.getStart();
-			int startX = start.getFile() * 50;
-			int startY = 350 - (start.getRank() * 50);
-			if (getOrientation() == Color.BLACK) {
-				startX = 350 - startX;
-				startY = 350 - startY;
+
+			if (existingPiece != null && existingPiece.getKind() != kind) {
+				dragController.makeNotDraggable(existingPiece);
+				dropSurface.remove(existingPiece);
+
 			}
 
-			final GhostAnimation animation = new GhostAnimation(true, SyncedTime.get(), piece.asWidget(), startX, startY, x, y);
-			animations.add(animation);
+			if (existingPiece == null || existingPiece.getKind() != kind) {
+				int x = file * 50;
+				int y = 350 - (rank * 50);
+				if (getOrientation() == Color.BLACK) {
+					x = 350 - x;
+					y = 350 - y;
+				}
+				final PieceWidget pieceWidget = new PieceWidget(kind);
+
+				dropSurface.add(pieceWidget, x, y);
+				dragController.makeDraggable(pieceWidget);
+				board[file][rank] = pieceWidget;
+			}
+
 		}
 
 	}
 
 	private Color getOrientation() {
 		try {
-			return User.get().getColor(true) == null ? null : getUiHandlers().swapBoard() ? User.get().getColor(true).getOpposite() : User.get().getColor(true);
+			return getUiHandlers().swapBoard() ? User.get().getColor(true).getOpposite() : User.get().getColor(true);
 		} catch (final NullPointerException e) {
 			return Color.WHITE;
 		}
@@ -225,22 +269,24 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	public void onDragEnd(final DragEndEvent event) {
 		getUiHandlers().allowRedraw();
 		if (event.getContext().vetoException == null) {
-			final Square endSquare = getSquareAtMouseCoordinate(event.getContext().mouseX, event.getContext().mouseY);
-			getUiHandlers().makeMove(startDragSquare, endSquare);
+
+			getUiHandlers().makeMove(new Move(startDragFile, startDragRank, endDragFile, endDragRank));
 		}
 
 	}
 
 	@Override
 	public void onDragStart(final DragStartEvent event) {
-		this.startDragSquare = getSquareAtMouseCoordinate(event.getContext().mouseX, event.getContext().mouseY);
+		this.startDragFile = getFileOfMouseCoordinate(event.getContext().mouseX);
+		this.startDragRank = getRankOfMouseCoordinate(event.getContext().mouseY);
 
 	}
 
 	@Override
 	public void onPreviewDragEnd(final DragEndEvent event) throws VetoDragException {
-		final Square endSquare = getSquareAtMouseCoordinate(event.getContext().mouseX, event.getContext().mouseY);
-		if (!getUiHandlers().isMoveLegal(startDragSquare, endSquare)) {
+		this.endDragFile = getFileOfMouseCoordinate(event.getContext().mouseX);
+		this.endDragRank = getRankOfMouseCoordinate(event.getContext().mouseY);
+		if (!getUiHandlers().isMoveLegal(new Move(startDragFile, startDragRank, endDragFile, endDragRank))) {
 			throw new VetoDragException();
 		}
 
@@ -248,7 +294,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	@Override
 	public void onPreviewDragStart(final DragStartEvent event) throws VetoDragException {
-		if (!getUiHandlers().canMove(getSquareAtMouseCoordinate(event.getContext().mouseX, event.getContext().mouseY))) {
+		if (!getUiHandlers().canMove(getFileOfMouseCoordinate(event.getContext().mouseX), getRankOfMouseCoordinate(event.getContext().mouseY))) {
 			throw new VetoDragException();
 		} else {
 			getUiHandlers().preventRedraw();
@@ -256,127 +302,75 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	}
 
-	private Square getSquareAtMouseCoordinate(final int mouseX, final int mouseY) {
+	private int getFileOfMouseCoordinate(final int mouseX) {
 		final int relativeX = mouseX - dropSurface.getAbsoluteLeft();
-		final int relativeY = mouseY - dropSurface.getAbsoluteTop();
-
 		int file = relativeX / 50;
-		int rank = 7 - relativeY / 50;
-
 		file = Math.max(0, Math.min(7, file));
-		rank = Math.max(0, Math.min(7, rank));
-
 		if (getOrientation() == Color.BLACK) {
 			file = 7 - file;
+		}
+		return file;
+	}
+
+	private int getRankOfMouseCoordinate(final int mouseY) {
+		final int relativeY = mouseY - dropSurface.getAbsoluteTop();
+		int rank = 7 - relativeY / 50;
+		rank = Math.max(0, Math.min(7, rank));
+		if (getOrientation() == Color.BLACK) {
 			rank = 7 - rank;
 		}
-		return Square.get(file, rank);
-
+		return rank;
 	}
 
 	@Override
-	public void capture(final PiecePresenter piece, final Move lastMove) {
-		if (lastMove == null || !lastMove.getEnd().equals(piece.getPiece().getPosition())) {
-			piece.asWidget().removeFromParent();
-		} else if (dropSurface.getWidgetIndex(piece) != -1) {
-			final Square square = lastMove.getEnd();
-			int x = square.getFile() * 50;
-			int y = 350 - (square.getRank() * 50);
-			if (getOrientation() == Color.BLACK) {
-				x = 350 - x;
-				y = 350 - y;
-			}
-			ghostAnimations.add(new GhostAnimation(true, SyncedTime.get(), piece.asWidget(), x, y, x, y));
-		}
-
-	}
-
-	@Override
-	public void removeFromBoard(final IsWidget piece) {
-		piece.asWidget().removeFromParent();
-
-	}
-
-	@Override
-	public void makeGhostMove(final double startTime, final Piece piece, final Square end) {
-		if (ghostAnimations.size() > 40 || piece == null) {
+	public void makeGhostMove(final long startTime, final char[][] board, final Move move) {
+		if (ghostAnimations.size() > 40 || move == null) {
 			return;
 		}
-		final Image image = new Image();
-		if (piece instanceof Pawn) {
-			if (piece.getColor() == Color.WHITE) {
-				image.setResource(sprites.whitePawn());
-			} else {
-				image.setResource(sprites.blackPawn());
-			}
-		} else if (piece instanceof Rook) {
-			if (piece.getColor() == Color.WHITE) {
-				image.setResource(sprites.whiteRook());
-			} else {
-				image.setResource(sprites.blackRook());
-			}
-		} else if (piece instanceof Knight) {
-			if (piece.getColor() == Color.WHITE) {
-				image.setResource(sprites.whiteKnight());
-			} else {
-				image.setResource(sprites.blackKnight());
-			}
-		} else if (piece instanceof Bishop) {
-			if (piece.getColor() == Color.WHITE) {
-				image.setResource(sprites.whiteBishop());
-			} else {
-				image.setResource(sprites.blackBishop());
-			}
-		} else if (piece instanceof King) {
-			if (piece.getColor() == Color.WHITE) {
-				image.setResource(sprites.whiteKing());
-			} else {
-				image.setResource(sprites.blackKing());
-			}
-		} else if (piece instanceof Queen) {
-			if (piece.getColor() == Color.WHITE) {
-				image.setResource(sprites.whiteQueen());
-			} else {
-				image.setResource(sprites.blackQueen());
-			}
+
+		final char kind = board[move.getStartFile()][move.getStartRank()];
+		if (kind != 'x') {
+			createAnimation(true, startTime, new PieceWidget(kind), move);
 		}
 
-		final Square start = piece.getPosition();
-		int x = start.getFile() * 50;
-		int y = 350 - (start.getRank() * 50);
+	}
+
+	private void createAnimation(final boolean ghost, final long startTime, final PieceWidget piece, final Move move) {
+		int x = move.getStartFile() * 50;
+		int y = 350 - (move.getStartRank() * 50);
 		if (getOrientation() == Color.BLACK) {
 			x = 350 - x;
 			y = 350 - y;
 		}
 
-		int x1 = end.getFile() * 50;
-		int y1 = 350 - (end.getRank() * 50);
+		int x1 = move.getEndFile() * 50;
+		int y1 = 350 - (move.getEndRank() * 50);
 		if (getOrientation() == Color.BLACK) {
 			x1 = 350 - x1;
 			y1 = 350 - y1;
 		}
-
-		dropSurface.add(image, x, y);
-		ghostAnimations.add(new GhostAnimation(startTime + 3000, image, x, y, x1, y1));
+		if (ghost) {
+			dropSurface.add(piece, x, y);
+			ghostAnimations.add(new GhostAnimation(startTime + 3000, piece, x, y, x1, y1));
+		} else {
+			animations.add(new GhostAnimation(true, startTime, piece, x, y, x1, y1));
+		}
 
 	}
 
-	@Override
-	public void highlightMove(final Move move) {
+	private void highlightMove(final Move move) {
 		for (final SimplePanel square : highlightedSquares) {
 			square.removeStyleName(style.highlight());
 		}
 		highlightedSquares.clear();
 		if (move != null) {
-			highlightSquare(move.getStart());
-			highlightSquare(move.getEnd());
+			highlightSquare(move.getStartFile(), move.getStartRank());
+			highlightSquare(move.getEndFile(), move.getEndRank());
 		}
 
 	}
 
-	private void highlightSquare(final Square square) {
-		int file = square.getFile();
-		int rank = square.getRank();
+	private void highlightSquare(int file, int rank) {
 		if (getOrientation() == Color.WHITE) {
 			rank = 7 - rank;
 		} else {

@@ -1,26 +1,23 @@
 package com.wallissoftware.chessanarchy.client.game.board.piece;
 
 import com.google.gwt.resources.client.ImageResource;
-import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Image;
 import com.wallissoftware.chessanarchy.client.game.board.piece.images.PieceSprites;
 
-public class PieceWidget extends Composite {
+public class PieceWidget extends Image {
 
-	private final Image image;
 	private final char kind;
 
 	public PieceWidget(final char kind) {
+		super(getImageResource(kind));
 		this.kind = kind;
-		image = new Image(getImageResource(kind));
-		initWidget(image);
 	}
 
 	public char getKind() {
 		return kind;
 	}
 
-	private ImageResource getImageResource(final char c) {
+	private static ImageResource getImageResource(final char c) {
 		switch (c) {
 		case 'k':
 			return PieceSprites.INSTANCE.blackKing();

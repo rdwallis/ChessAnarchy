@@ -12,20 +12,20 @@ public final class User extends JavaScriptObject {
 	};
 
 	public final native String getName() /*-{
-		return this.name;
-	}-*/;
+											return this.name;
+											}-*/;
 
 	public final native String getUserId() /*-{
-		return this.userId;
-	}-*/;
+											return this.userId;
+											}-*/;
 
 	private final native String getNativeBlackJoinTime() /*-{
-		return this.black;
-	}-*/;
+															return this.black;
+															}-*/;
 
 	private final native String getNativeWhiteJoinTime() /*-{
-		return this.white;
-	}-*/;
+															return this.white;
+															}-*/;
 
 	private Long getBlackJoinTime() {
 		final String joinTime = getNativeBlackJoinTime();
@@ -48,12 +48,12 @@ public final class User extends JavaScriptObject {
 	}
 
 	public native static User get() /*-{
-		return $wnd.user;
-	}-*/;
+									return $wnd.user;
+									}-*/;
 
 	private static native void setUser(JavaScriptObject usr) /*-{
-		$wnd.user = usr;
-	}-*/;
+																$wnd.user = usr;
+																}-*/;
 
 	public static void update(final EventBus eventBus, final JavaScriptObject user) {
 		setUser(user);
@@ -84,7 +84,7 @@ public final class User extends JavaScriptObject {
 		if (getBlackJoinTime() != null && SyncedTime.get() - getBlackJoinTime() > teamWaitTime) {
 			return Color.BLACK;
 		}
-		return null;
+		return Color.WHITE;
 	}
 
 	public void joinTeam(final EventBus eventBus, final Color color) {
@@ -98,11 +98,11 @@ public final class User extends JavaScriptObject {
 	}
 
 	private native void setWhiteColorJoinTime(String joinTime) /*-{
-		this.white = joinTime;
+																this.white = joinTime;
 
-	}-*/;
+																}-*/;
 
 	private native void setBlackColorJoinTime(String joinTime) /*-{
-		this.black = joinTime;
-	}-*/;
+																this.black = joinTime;
+																}-*/;
 }

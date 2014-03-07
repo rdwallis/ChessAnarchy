@@ -63,7 +63,7 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
 			return null;
 		}
 		try {
-			if (gameStateProvider.get().swapColors()) {
+			if (gameStateProvider.getGameState().swapColors()) {
 				return color.getOpposite();
 			} else {
 				return color;
@@ -75,7 +75,7 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
 
 	private void update() {
 		try {
-			final SystemOfGovernment government = getColor() == Color.WHITE ? gameStateProvider.get().getWhiteGovernment() : gameStateProvider.get().getBlackGovernment();
+			final SystemOfGovernment government = getColor() == Color.WHITE ? gameStateProvider.getGameState().getWhiteGovernment() : gameStateProvider.getGameState().getBlackGovernment();
 
 			getView().setIsUsingText(government.getUsingMessage());
 			getView().setJoinButtonText(government.getJoinMessage());

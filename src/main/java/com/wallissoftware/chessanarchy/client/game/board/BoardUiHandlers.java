@@ -1,15 +1,15 @@
 package com.wallissoftware.chessanarchy.client.game.board;
 
 import com.gwtplatform.mvp.client.UiHandlers;
-import com.wallissoftware.chessanarchy.shared.game.Square;
+import com.wallissoftware.chessanarchy.shared.game.Move;
 
 public interface BoardUiHandlers extends UiHandlers {
 
-	boolean isMoveLegal(Square start, Square end);
+	boolean isMoveLegal(Move move);
 
-	void makeMove(Square startDragSquare, Square endSquare);
+	void makeMove(Move move);
 
-	boolean canMove(Square square);
+	boolean canMove(int startFile, int startRank);
 
 	boolean swapBoard();
 

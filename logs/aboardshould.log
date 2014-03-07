@@ -1,8 +1,8 @@
-MoveNode took 48ms to process moves
+MoveNode took 24ms to process moves
 FIRST TEST PASSED
-MoveNode took 160ms to process moves
+MoveNode took 68ms to process moves
 SECOND TEST PASSED
-MoveNode took 58ms to process moves
+MoveNode took 20ms to process moves
 THIRD TEST PASSED
-MoveNode took 100ms to process moves
+MoveNode took 33ms to process moves
 FORTH TEST PASSED

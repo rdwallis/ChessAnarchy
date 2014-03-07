@@ -49,12 +49,12 @@ public class MoveTree {
 
 	private MoveTree getChild(final String pgn) throws IllegalMoveException {
 		for (final MoveTree child : getChildren()) {
-			
-			if (child.getPgn().equals(pgn)) {
+
+			if (child.matchesPgn(pgn)) {
 				return child;
 			}
 		}
-				throw new IllegalMoveException();
+		throw new IllegalMoveException();
 	}
 
 	@SuppressWarnings("unused")
@@ -79,7 +79,16 @@ public class MoveTree {
 
 	}
 
-	private String getPgn() {
+	private boolean matchesPgn(final String pgn) {
+		if (pgn.startsWith(this.pgn)) {
+			return getPgn().equals(pgn);
+		} else {
+			return false;
+		}
+
+	}
+
+	public String getPgn() {
 		return pgn + (isCheck() ? (isCheckMate() ? "#" : "+") : "");
 	}
 
@@ -182,10 +191,10 @@ public class MoveTree {
 	private void checkAmbiguousChildren() {
 		final Map<String, List<MoveTree>> pgnMap = new HashMap<String, List<MoveTree>>();
 		for (final MoveTree child : children) {
-			if (!pgnMap.containsKey(child.getPgn())) {
-				pgnMap.put(child.getPgn(), new ArrayList<MoveTree>());
+			if (!pgnMap.containsKey(child.pgn)) {
+				pgnMap.put(child.pgn, new ArrayList<MoveTree>());
 			}
-			pgnMap.get(child.getPgn()).add(child);
+			pgnMap.get(child.pgn).add(child);
 		}
 
 		for (final List<MoveTree> ambiguousGroup : pgnMap.values()) {
@@ -575,5 +584,35 @@ public class MoveTree {
 		}
 		return result;
 
+	}
+
+	public int getMovesUntilDraw() {
+		return 50 - getTimeSinceLastPawnMoveOrCapture();
+	}
+
+	private int getTimeSinceLastPawnMoveOrCapture() {
+		if (move == null || isPawnMoveOrCapture()) {
+			return 0;
+		} else {
+			return getParent().getTimeSinceLastPawnMoveOrCapture() + 1;
+		}
+	}
+
+	private boolean isPawnMoveOrCapture() {
+		return pgn.contains("x") || Character.isLowerCase(pgn.charAt(0));
+	}
+
+	public Color getCurrentPlayer() {
+		return isWhitesTurn() ? Color.WHITE : Color.BLACK;
+	}
+
+	public MoveTree getChild(final Move move) throws IllegalMoveException {
+		for (final MoveTree child : getChildren()) {
+
+			if (child.getMove().equals(move)) {
+				return child;
+			}
+		}
+		throw new IllegalMoveException();
 	}
 }

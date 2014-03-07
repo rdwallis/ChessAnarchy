@@ -11,6 +11,12 @@ import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveExcepti
 
 public class ABoardShould {
 
+	public static void main(final String[] args) {
+		for (int i = 0; i < 1000; i++) {
+			new ABoardShould().playTheseGameWithoutIssue();
+		}
+	}
+
 	@Test
 	public void playTheseGameWithoutIssue() {
 		//test en passant, promtion + castling

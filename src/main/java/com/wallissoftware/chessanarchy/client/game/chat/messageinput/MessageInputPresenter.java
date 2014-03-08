@@ -22,9 +22,11 @@ import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
 import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent;
+import com.wallissoftware.chessanarchy.client.game.chat.events.RemoveMessageEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent.SendMessageHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessage;
+import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.shared.message.Message;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
@@ -34,13 +36,16 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 
 	}
 
-	private Map<Long, Message> waitingMessages = new HashMap<Long, Message>();
+	private final Map<Long, Message> waitingMessages = new HashMap<Long, Message>();
 
 	private final Logger logger = Logger.getLogger(MessageInputPresenter.class.getName());
 
+	private final GameStateProvider gameStateProvider;
+
 	@Inject
-	MessageInputPresenter(final EventBus eventBus, final MyView view) {
+	MessageInputPresenter(final EventBus eventBus, final MyView view, final GameStateProvider gameStateProvider) {
 		super(eventBus, view);
+		this.gameStateProvider = gameStateProvider;
 		getView().setUiHandlers(this);
 		Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
 
@@ -58,6 +63,7 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 		while (it.hasNext()) {
 			final Entry<Long, Message> next = it.next();
 			if (System.currentTimeMillis() - next.getKey() > 5000) {
+				fireEvent(new RemoveMessageEvent(next.getValue().getId()));
 				sendMessage(next.getValue().getText());
 				logger.info("Resending message: " + next.getValue().getText());
 				it.remove();
@@ -99,6 +105,9 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 							}
 							if (result.containsKey("message")) {
 								final MessageWrapper msg = new MessageWrapper(JsonMessage.wrap(result.get("message").isObject().getJavaScriptObject()));
+								if (gameStateProvider.getGameState().swapColors()) {
+									msg.swapColor();
+								}
 								addToMessagesCheckQueue(msg);
 
 							}

@@ -3,6 +3,8 @@ package com.wallissoftware.chessanarchy.client.game.board;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
@@ -22,6 +24,7 @@ import com.wallissoftware.chessanarchy.client.user.UserChangedEvent;
 import com.wallissoftware.chessanarchy.client.user.UserChangedEvent.UserChangedHandler;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Move;
+import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 
 public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler, GameStateUpdatedHandler, UserChangedHandler {
 	public interface MyView extends View, HasUiHandlers<BoardUiHandlers> {
@@ -29,6 +32,8 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 		void makeGhostMove(long startTime, char[][] board, Move move);
 
 		void drawBoard(char[][] board, Move move);
+
+		void animateCapture(Move move);
 
 	}
 
@@ -39,11 +44,14 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	int piecePresenterCount = 0;
 
+	private Color lastUserColor = null;
+
 	@Inject
 	BoardPresenter(final EventBus eventBus, final MyView view, final PromotionPresenter promotionPresenter, final GameStateProvider gameStateProvider) {
 		super(eventBus, view);
 		this.gameStateProvider = gameStateProvider;
 		this.promotionPresenter = promotionPresenter;
+		promotionPresenter.setBoardPresenter(this);
 		getView().setUiHandlers(this);
 
 	}
@@ -57,7 +65,19 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	}
 
 	private void updateBoard() {
-		getView().drawBoard(gameStateProvider.getParentMoveTree().getBoard(), gameStateProvider.getMoveTree().getMove());
+		if (!preventRedraw) {
+			getView().drawBoard(gameStateProvider.getParentMoveTree().getBoard(), gameStateProvider.getMoveTree().getMove());
+		} else {
+			Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+
+				@Override
+				public boolean execute() {
+					updateBoard();
+					return false;
+				}
+
+			}, 100);
+		}
 
 	}
 
@@ -76,7 +96,8 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	@Override
 	public void makeMove(final Move move) {
-		if (gameStateProvider.getMoveTree().isMovePromotion(move)) {
+		getView().animateCapture(move);
+		if (!move.isPromotion() && gameStateProvider.getMoveTree().isMovePromotion(move)) {
 			promotionPresenter.setPartialMove(move);
 			addToPopupSlot(promotionPresenter);
 		} else {
@@ -95,6 +116,12 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 				if (SyncedTime.get() - created < 4000) {
 					if (pgnMoveMap.containsKey(message)) {
 						makeGhostMove(created, pgnMoveMap.get(message));
+					} else if (message.length() == 4) {
+						try {
+							makeGhostMove(created, Move.fromString(message));
+						} catch (final IllegalMoveException e) {
+							logger.info("Couldn't make move from string");
+						}
 					}
 
 				}
@@ -118,7 +145,10 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	@Override
 	public void onUserChanged(final UserChangedEvent event) {
-		updateBoard();
+		if (User.get().getColor(true) != lastUserColor) {
+			lastUserColor = User.get().getColor(true);
+			updateBoard();
+		}
 	}
 
 	@Override

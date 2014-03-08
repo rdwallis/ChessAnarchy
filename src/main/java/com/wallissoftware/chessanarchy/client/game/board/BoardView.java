@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import com.allen_sauer.gwt.dnd.client.DragEndEvent;
 import com.allen_sauer.gwt.dnd.client.DragHandler;
@@ -46,6 +47,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	}
 
+	private final static Logger logger = Logger.getLogger(BoardView.class.getName());
+
 	@UiField AbsolutePanel dropSurface;
 
 	@UiField MyStyle style;
@@ -70,6 +73,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	private PieceWidget[][] board = new PieceWidget[8][8];
 
+	private Move lastMove;
+
 	@Inject
 	BoardView(final Binder binder) {
 		initWidget(binder.createAndBindUi(this));
@@ -86,7 +91,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	public void setUiHandlers(final BoardUiHandlers uiHandlers) {
 		super.setUiHandlers(uiHandlers);
 		drawSquares();
-		resetGridLabels();
+		resetOrientation();
 		startGhostAnimations();
 
 	}
@@ -113,7 +118,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 				it.remove();
 				dropSurface.remove(ghostAnimation.getWidget());
 			} else {
-				ghostAnimation.getWidget().getElement().getStyle().setOpacity(ghostAnimation.getOpacity(milli));
+				ghostAnimation.updateOpacity(milli);
 				dropSurface.setWidgetPosition(ghostAnimation.getWidget(), ghostAnimation.getX(milli), ghostAnimation.getY(milli));
 			}
 		}
@@ -121,9 +126,24 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		final Iterator<GhostAnimation> it1 = animations.iterator();
 		while (it1.hasNext()) {
 			final GhostAnimation animation = it1.next();
-			dropSurface.setWidgetPosition(animation.getWidget(), animation.getX(milli), animation.getY(milli));
-			if (animation.isMovementComplete(milli)) {
-				it1.remove();
+			if (animation.isCapture()) {
+				if (animation.isMovementComplete(milli)) {
+					animation.updateOpacity(milli);
+					if (animation.isFinished(milli)) {
+						dropSurface.remove(animation.getWidget());
+						it1.remove();
+					}
+				}
+
+			} else {
+				dropSurface.setWidgetPosition(animation.getWidget(), animation.getX(milli), animation.getY(milli));
+				if (animation.isMovementComplete(milli)) {
+					if (animation.isPromotion()) {
+						dropSurface.remove(animation.getWidget());
+						dropSurface.add(animation.getPromotion(), animation.getX(milli), animation.getY(milli));
+					}
+					it1.remove();
+				}
 			}
 		}
 
@@ -144,8 +164,9 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	}
 
-	private void resetGridLabels() {
+	private void resetOrientation() {
 		if (lastDrawOrientation != getOrientation()) {
+
 			this.lastDrawOrientation = getOrientation();
 			if (fileLabels.isEmpty()) {
 				for (int i = 0; i < 8; i++) {
@@ -195,8 +216,14 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 	@Override
 	public void drawBoard(final char[][] board, final Move move) {
-		resetGridLabels();
+		resetOrientation();
 		highlightMove(move);
+		if (move != null && move.equals(lastMove)) {
+			return;
+
+		}
+		lastMove = move;
+
 		for (int rank = 0; rank < 8; rank++) {
 			for (int file = 0; file < 8; file++) {
 				setPieceInSquare(board[file][rank], file, rank);
@@ -208,16 +235,72 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	}
 
 	private void animateMove(final Move move) {
-		if (move == null) {
-			return;
-		}
 		for (final GhostAnimation animation : animations) {
 			animation.end();
 		}
-		final PieceWidget piece = board[move.getStartFile()][move.getStartRank()];
-		if (piece != null) {
-			createAnimation(false, SyncedTime.get(), piece, move);
+		animateCapture(move);
+		if (move == null) {
+			return;
+		}
 
+		final PieceWidget piece = board[move.getStartFile()][move.getStartRank()];
+
+		if (piece != null) {
+			board[move.getStartFile()][move.getStartRank()] = null;
+			board[move.getEndFile()][move.getEndRank()] = piece;
+			createAnimation(false, false, SyncedTime.get(), piece, move);
+			logger.info("Animating move: " + move);
+			if (piece.isKing()) {
+				logger.info("Is King");
+				logger.info("File delta: " + move.getFileDelta());
+				logger.info("Rank delta: " + move.getRankDelta());
+				logger.info("Start Rank: " + move.getStartRank());
+				logger.info("Start File: " + move.getStartFile());
+			}
+			if (piece.isKing() && move.getFileDelta() == 2 && move.getRankDelta() == 0 && (move.getStartRank() == 7 || move.getStartRank() == 0) && (move.getStartFile() == 4)) {
+				logger.info("Castling detected");
+				//castling
+				if (move.getEndFile() == 2) {
+					logger.info("Left side");
+					final PieceWidget rook = board[0][move.getEndRank()];
+					if (rook != null) {
+						createAnimation(false, false, SyncedTime.get(), rook, new Move(0, move.getEndRank(), 3, move.getEndRank()));
+					}
+				}
+				if (move.getEndFile() == 6) {
+					logger.info("Right side");
+					final PieceWidget rook = board[7][move.getEndRank()];
+					if (rook != null) {
+						createAnimation(false, false, SyncedTime.get(), rook, new Move(7, move.getEndRank(), 5, move.getEndRank()));
+					}
+				}
+
+			}
+
+		}
+
+	}
+
+	@Override
+	public void animateCapture(final Move move) {
+		if (move == null) {
+			return;
+		}
+
+		final PieceWidget piece = board[move.getStartFile()][move.getStartRank()];
+
+		if (piece != null) {
+			PieceWidget capturedPiece = board[move.getEndFile()][move.getEndRank()];
+			if (capturedPiece == null && piece.isPawn() && move.getFileDelta() > 0) {
+				capturedPiece = board[move.getEndFile()][move.getStartRank()];
+				board[move.getEndFile()][move.getStartRank()] = null;
+				createAnimation(true, false, SyncedTime.get(), capturedPiece, new Move(move.getEndFile(), move.getStartRank(), move.getEndFile(), move.getStartRank()));
+			} else if (capturedPiece != null) {
+				createAnimation(true, false, SyncedTime.get(), capturedPiece, new Move(move.getStartFile(), move.getStartRank(), move.getStartFile(), move.getStartRank()));
+			}
+			if (move.isPromotion()) {
+				piece.setKind(move.getPromotion());
+			}
 		}
 
 	}
@@ -235,7 +318,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 			if (existingPiece != null && existingPiece.getKind() != kind) {
 				dragController.makeNotDraggable(existingPiece);
 				dropSurface.remove(existingPiece);
-
+				board[file][rank] = null;
 			}
 
 			if (existingPiece == null || existingPiece.getKind() != kind) {
@@ -330,12 +413,35 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
 		final char kind = board[move.getStartFile()][move.getStartRank()];
 		if (kind != 'x') {
-			createAnimation(true, startTime, new PieceWidget(kind), move);
+			final PieceWidget piece = new PieceWidget(kind);
+			createAnimation(false, true, startTime, piece, move);
+			if (piece.isKing() && move.getFileDelta() == 2 && move.getRankDelta() == 0 && (move.getStartRank() == 7 || move.getStartRank() == 0) && (move.getStartFile() == 4)) {
+				//castling
+				if (move.getEndFile() == 2) {
+					if (board[0][move.getEndRank()] != 'x') {
+						final PieceWidget rook = new PieceWidget(board[0][move.getEndRank()]);
+						if (rook != null) {
+							createAnimation(false, true, startTime, rook, new Move(0, move.getEndRank(), 3, move.getEndRank()));
+						}
+					}
+
+				}
+				if (move.getEndFile() == 6) {
+					if (board[7][move.getEndRank()] != 'x') {
+						final PieceWidget rook = new PieceWidget(board[7][move.getEndRank()]);
+						if (rook != null) {
+							createAnimation(false, true, startTime, rook, new Move(7, move.getEndRank(), 5, move.getEndRank()));
+						}
+					}
+				}
+
+			}
+
 		}
 
 	}
 
-	private void createAnimation(final boolean ghost, final long startTime, final PieceWidget piece, final Move move) {
+	private void createAnimation(final boolean capture, final boolean ghost, final long startTime, final PieceWidget piece, final Move move) {
 		int x = move.getStartFile() * 50;
 		int y = 350 - (move.getStartRank() * 50);
 		if (getOrientation() == Color.BLACK) {
@@ -351,9 +457,9 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		}
 		if (ghost) {
 			dropSurface.add(piece, x, y);
-			ghostAnimations.add(new GhostAnimation(startTime + 3000, piece, x, y, x1, y1));
+			ghostAnimations.add(new GhostAnimation(startTime + 3000, piece, x, y, x1, y1, move.isPromotion() ? new PieceWidget(move.getPromotion()) : null));
 		} else {
-			animations.add(new GhostAnimation(true, startTime, piece, x, y, x1, y1));
+			animations.add(new GhostAnimation(capture, true, startTime, piece, x, y, x1, y1, move.isPromotion() ? new PieceWidget(move.getPromotion()) : null));
 		}
 
 	}

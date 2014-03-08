@@ -29,7 +29,7 @@ public class GameView extends ViewImpl implements GamePresenter.MyView {
 	public interface Binder extends UiBinder<Widget, GameView> {
 	}
 
-	@UiField HasOneWidget boardPanel, chatPanel, topTeamPanel, bottomTeamPanel;
+	@UiField HasOneWidget boardPanel, chatPanel, topTeamPanel, bottomTeamPanel, pgnPanel;
 
 	@Inject
 	GameView(final Binder uiBinder) {
@@ -44,6 +44,8 @@ public class GameView extends ViewImpl implements GamePresenter.MyView {
 			bottomTeamPanel.setWidget(content);
 		} else if (slot == GamePresenter.BOARD_SLOT) {
 			boardPanel.setWidget(content);
+		} else if (slot == GamePresenter.PGN_SLOT) {
+			pgnPanel.setWidget(content);
 		} else if (slot == GamePresenter.CHAT_SLOT) {
 			chatPanel.setWidget(content);
 		} else {

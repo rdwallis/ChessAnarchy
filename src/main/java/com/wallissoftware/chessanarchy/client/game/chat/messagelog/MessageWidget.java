@@ -12,6 +12,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
@@ -30,6 +31,8 @@ public class MessageWidget extends Composite {
 		String black();
 
 		String white();
+
+		String ownMessage();
 	}
 
 	@UiField MyStyle style;
@@ -63,6 +66,9 @@ public class MessageWidget extends Composite {
 		}
 		if (message.getColor() != null) {
 			this.color.addStyleName(message.getColor() == Color.WHITE ? style.white() : style.black());
+		}
+		if (message.getUserId().equals(User.get().getUserId())) {
+			this.addStyleName(style.ownMessage());
 		}
 	}
 

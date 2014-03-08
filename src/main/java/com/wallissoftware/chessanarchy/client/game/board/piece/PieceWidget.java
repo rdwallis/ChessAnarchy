@@ -6,7 +6,7 @@ import com.wallissoftware.chessanarchy.client.game.board.piece.images.PieceSprit
 
 public class PieceWidget extends Image {
 
-	private final char kind;
+	private char kind;
 
 	public PieceWidget(final char kind) {
 		super(getImageResource(kind));
@@ -47,6 +47,19 @@ public class PieceWidget extends Image {
 
 		}
 		throw new RuntimeException(c + " is not a valid piece");
+	}
+
+	public void setKind(final char kind) {
+		this.kind = kind;
+		this.setResource(getImageResource(kind));
+	}
+
+	public boolean isKing() {
+		return Character.toUpperCase(getKind()) == 'K';
+	}
+
+	public boolean isPawn() {
+		return Character.toUpperCase(getKind()) == 'P';
 	}
 
 }

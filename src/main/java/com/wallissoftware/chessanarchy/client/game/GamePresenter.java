@@ -30,6 +30,7 @@ import com.wallissoftware.chessanarchy.client.game.board.BoardPresenter;
 import com.wallissoftware.chessanarchy.client.game.chat.ChatPresenter;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent.GameStateUpdatedHandler;
+import com.wallissoftware.chessanarchy.client.game.pgn.PgnPresenter;
 import com.wallissoftware.chessanarchy.client.game.team.TeamPresenter;
 import com.wallissoftware.chessanarchy.client.place.NameTokens;
 import com.wallissoftware.chessanarchy.client.user.User;
@@ -40,7 +41,7 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 	public interface MyView extends View {
 	}
 
-	public static final Object BOARD_SLOT = new Object(), CHAT_SLOT = new Object(), TOP_TEAM_SLOT = new Object(), BOTTOM_TEAM_SLOT = new Object();
+	public static final Object BOARD_SLOT = new Object(), CHAT_SLOT = new Object(), TOP_TEAM_SLOT = new Object(), BOTTOM_TEAM_SLOT = new Object(), PGN_SLOT = new Object();
 
 	@ProxyStandard
 	@NameToken(NameTokens.game)
@@ -51,14 +52,16 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 	private final ChatPresenter chatPresenter;
 	private final TeamPresenter topTeamPresenter;
 	private final TeamPresenter bottomTeamPresenter;
+	private final PgnPresenter pgnPresenter;
 
 	@Inject
-	GamePresenter(final EventBus eventBus, final MyView view, final MyProxy proxy, final BoardPresenter boardPresenter, final ChatPresenter chatPresenter, final Provider<TeamPresenter> teamPresenterProvider) {
+	GamePresenter(final EventBus eventBus, final MyView view, final MyProxy proxy, final BoardPresenter boardPresenter, final ChatPresenter chatPresenter, final Provider<TeamPresenter> teamPresenterProvider, final PgnPresenter pgnPresenter) {
 		super(eventBus, view, proxy, RevealType.Root);
 		this.boardPresenter = boardPresenter;
 		this.chatPresenter = chatPresenter;
 		this.topTeamPresenter = teamPresenterProvider.get();
 		this.bottomTeamPresenter = teamPresenterProvider.get();
+		this.pgnPresenter = pgnPresenter;
 		update();
 
 	}
@@ -70,6 +73,7 @@ public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter
 		setInSlot(CHAT_SLOT, chatPresenter);
 		setInSlot(BOTTOM_TEAM_SLOT, bottomTeamPresenter);
 		setInSlot(TOP_TEAM_SLOT, topTeamPresenter);
+		setInSlot(PGN_SLOT, pgnPresenter);
 		addRegisteredHandler(UserChangedEvent.getType(), this);
 		addRegisteredHandler(GameStateUpdatedEvent.getType(), this);
 	}

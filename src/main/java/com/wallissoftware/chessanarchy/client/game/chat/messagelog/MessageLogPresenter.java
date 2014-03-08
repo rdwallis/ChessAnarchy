@@ -23,20 +23,25 @@ import com.gwtplatform.mvp.client.View;
 import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent.MessageInLimboHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
+import com.wallissoftware.chessanarchy.client.game.chat.events.RemoveMessageEvent;
+import com.wallissoftware.chessanarchy.client.game.chat.events.RemoveMessageEvent.RemoveMessageHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.messageinput.MessageInputPresenter;
 import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessage;
 import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessageCache;
+import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.shared.message.Message;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
-public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyView> implements MessageLogUiHandlers, MessageInLimboHandler {
+public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyView> implements MessageLogUiHandlers, MessageInLimboHandler, RemoveMessageHandler {
 	public interface MyView extends View, HasUiHandlers<MessageLogUiHandlers> {
 
-		void addMessage(MessageWrapper message);
-
 		boolean isScrollBarShowing();
+
+		void addMessage(MessageWrapper message, boolean immediately);
+
+		void removeLimboMessage(String messageId);
 	}
 
 	private List<MessageWrapper> messages = new ArrayList<MessageWrapper>();
@@ -48,16 +53,18 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	private final MessageInputPresenter messageInputPresenter;
 
 	@Inject
-	MessageLogPresenter(final EventBus eventBus, final MyView view, final MessageInputPresenter messageInputPresenter) {
+	MessageLogPresenter(final EventBus eventBus, final MyView view, final MessageInputPresenter messageInputPresenter, final GameStateProvider gameStateProvider) {
 		super(eventBus, view);
 		getView().setUiHandlers(this);
 		this.messageInputPresenter = messageInputPresenter;
+		gameStateProvider.setMessageLogPresenter(this);
 	}
 
 	@Override
 	protected void onBind() {
 		super.onBind();
 		addRegisteredHandler(MessageInLimboEvent.getType(), this);
+		addRegisteredHandler(RemoveMessageEvent.getType(), this);
 		fetchGameStateMessages();
 		fetchLatestMessage();
 		Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
@@ -109,7 +116,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 			messageInputPresenter.markMessageArrived(message);
 		}
 		if (loadedMessageIds.add(message.getId())) {
-			getView().addMessage(message);
+			getView().addMessage(message, inLimbo);
 			messages.add(message);
 			if (message.isFromGameMaster()) {
 				gameMasterMessages.add(message);
@@ -251,6 +258,12 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public void onRemoveMessage(final RemoveMessageEvent event) {
+		getView().removeLimboMessage(event.getMessageId());
+
 	}
 
 }

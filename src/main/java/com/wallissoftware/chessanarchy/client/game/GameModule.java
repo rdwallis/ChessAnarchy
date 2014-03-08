@@ -20,11 +20,13 @@ import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
 import com.wallissoftware.chessanarchy.client.game.board.BoardModule;
 import com.wallissoftware.chessanarchy.client.game.chat.ChatModule;
 import com.wallissoftware.chessanarchy.client.game.team.TeamModule;
+import com.wallissoftware.chessanarchy.client.game.pgn.PgnModule;
 
 public class GameModule extends AbstractPresenterModule {
 	@Override
 	protected void configure() {
 
+		install(new PgnModule());
 		install(new TeamModule());
 		install(new ChatModule());
 		install(new BoardModule());

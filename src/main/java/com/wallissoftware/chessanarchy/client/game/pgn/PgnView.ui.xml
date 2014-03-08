@@ -1,0 +1,16 @@
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+	xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+	<ui:style>
+	.pgn {
+		padding: 10px;
+		background-color: whitesmoke;
+		margin-right: 10px;
+		margin-left: 10px;
+	}
+	</ui:style>
+	<g:HTMLPanel addStyleNames="{style.pgn}">
+		<g:FlexTable ui:field="flexTable" cellSpacing="10">
+		</g:FlexTable>
+	</g:HTMLPanel>
+
+</ui:UiBinder>

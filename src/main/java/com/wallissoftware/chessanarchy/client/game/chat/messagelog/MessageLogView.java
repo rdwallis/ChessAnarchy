@@ -1,8 +1,11 @@
 package com.wallissoftware.chessanarchy.client.game.chat.messagelog;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
@@ -25,7 +28,9 @@ public class MessageLogView extends ViewWithUiHandlers<MessageLogUiHandlers> imp
 	@UiField ScrollPanel scrollPanel;
 	@UiField VerticalPanel messageLog;
 
-	private static long TIME_DELAY = 4000;
+	private static long TIME_DELAY = 2000;
+
+	private final Map<String, MessageWidget> limboMessages = new HashMap<String, MessageWidget>();
 
 	private final List<MessageWrapper> messageQueue = new ArrayList<MessageWrapper>();
 
@@ -40,7 +45,7 @@ public class MessageLogView extends ViewWithUiHandlers<MessageLogUiHandlers> imp
 				processMessageQueue();
 				return true;
 			}
-		}, 1000);
+		}, 100);
 	}
 
 	private void processMessageQueue() {
@@ -53,18 +58,24 @@ public class MessageLogView extends ViewWithUiHandlers<MessageLogUiHandlers> imp
 			}
 		}
 
+		final Iterator<Entry<String, MessageWidget>> lmIt = limboMessages.entrySet().iterator();
+		while (lmIt.hasNext()) {
+			if (SyncedTime.get() - lmIt.next().getValue().getCreated() > 10000) {
+				lmIt.remove();
+			}
+		}
+
 	}
 
 	@Override
-	public void addMessage(final MessageWrapper message) {
-		addMessage(message, false);
-	}
-
-	private void addMessage(final MessageWrapper message, final boolean force) {
+	public void addMessage(final MessageWrapper message, final boolean force) {
 		if (force || SyncedTime.get() - message.getCreated() > TIME_DELAY) {
 			final boolean isOnBottom = scrollPanel.getMaximumVerticalScrollPosition() - scrollPanel.getVerticalScrollPosition() < 50;
 
 			final MessageWidget messageWidget = new MessageWidget(message);
+			if (SyncedTime.get() - message.getCreated() < TIME_DELAY) {
+				limboMessages.put(message.getId(), messageWidget);
+			}
 			final int widgetCount = messageLog.getWidgetCount();
 			if (widgetCount == 0) {
 				messageLog.add(messageWidget);
@@ -110,5 +121,13 @@ public class MessageLogView extends ViewWithUiHandlers<MessageLogUiHandlers> imp
 		if (scrollPanel.getVerticalScrollPosition() < 10) {
 			getUiHandlers().prependEarlierMessages();
 		}
+	}
+
+	@Override
+	public void removeLimboMessage(final String messageId) {
+		if (limboMessages.containsKey(messageId)) {
+			messageLog.remove(limboMessages.get(messageId));
+		}
+
 	}
 }

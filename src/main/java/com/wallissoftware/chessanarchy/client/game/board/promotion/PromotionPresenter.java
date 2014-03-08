@@ -5,11 +5,10 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PopupView;
 import com.gwtplatform.mvp.client.PresenterWidget;
-import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
+import com.wallissoftware.chessanarchy.client.game.board.BoardPresenter;
 import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Move;
-import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 
 public class PromotionPresenter extends PresenterWidget<PromotionPresenter.MyView> implements PromotionUiHandlers {
 	public interface MyView extends PopupView, HasUiHandlers<PromotionUiHandlers> {
@@ -17,15 +16,21 @@ public class PromotionPresenter extends PresenterWidget<PromotionPresenter.MyVie
 		void setColor(Color color);
 	}
 
-	private GameStateProvider gameStateProvider;
+	private final GameStateProvider gameStateProvider;
 	private Move partialMove;
+	private BoardPresenter boardPresenter;
 
 	@Inject
 	PromotionPresenter(final EventBus eventBus, final MyView view, final GameStateProvider gameStateProvider) {
 		super(eventBus, view);
 		this.gameStateProvider = gameStateProvider;
+
 		getView().setUiHandlers(this);
 
+	}
+
+	public void setBoardPresenter(final BoardPresenter boardPresenter) {
+		this.boardPresenter = boardPresenter;
 	}
 
 	public void setPartialMove(final Move move) {
@@ -66,11 +71,7 @@ public class PromotionPresenter extends PresenterWidget<PromotionPresenter.MyVie
 	}
 
 	private void makeMove(final Move move) {
-		try {
-			fireEvent(new SendMessageEvent(gameStateProvider.getMoveTree().getChild(move).getPgn()));
-		} catch (final IllegalMoveException e) {
-			fireEvent(new SendMessageEvent(move.toString()));
-		}
+		boardPresenter.makeMove(move);
 	}
 
 }

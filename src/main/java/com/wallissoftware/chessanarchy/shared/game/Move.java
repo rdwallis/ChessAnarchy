@@ -1,6 +1,9 @@
 package com.wallissoftware.chessanarchy.shared.game;
 
+import java.util.logging.Logger;
+
 import com.wallissoftware.chessanarchy.shared.dto.Dto;
+import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 
 public class Move implements Dto {
 
@@ -8,6 +11,8 @@ public class Move implements Dto {
 
 	private final int startFile, startRank, endFile, endRank;
 	private final char promotion;
+
+	private final static Logger logger = Logger.getLogger(Move.class.getName());
 
 	public Move(final int startFile, final int startRank, final int endFile, final int endRank) {
 		this(startFile, startRank, endFile, endRank, 'x');
@@ -119,6 +124,27 @@ public class Move implements Dto {
 
 	public boolean matchesIgnoringPromotion(final Move other) {
 		return getStartRank() == other.getStartRank() && getStartFile() == other.getStartFile() && getEndRank() == other.getEndRank() && getEndFile() == other.getEndFile();
+	}
+
+	public static Move fromString(final String message) throws IllegalMoveException {
+		logger.info("Interpretting move: " + message);
+		final int startFile = message.charAt(0) - 97;
+		final int startRank = message.charAt(1) - 49;
+		final int endFile = message.charAt(2) - 97;
+		final int endRank = message.charAt(3) - 49;
+		checkValid(startFile, startRank, endFile, endRank);
+		return new Move(startFile, startRank, endFile, endRank);
+
+	}
+
+	private static void checkValid(final int... index) throws IllegalMoveException {
+		for (final int i : index) {
+			if (i < 0 || i > 7) {
+				logger.info("Checking: " + i);
+				throw new IllegalMoveException();
+			}
+		}
+
 	}
 
 }

@@ -5,6 +5,7 @@ import com.wallissoftware.chessanarchy.shared.game.Color;
 public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 
 	private final Message message;
+	private boolean swapColor = false;
 
 	public MessageWrapper(final Message message) {
 		this.message = message;
@@ -27,7 +28,13 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 
 	@Override
 	public Color getColor() {
+		if (swapColor) {
+			if (message.getColor() != null) {
+				return message.getColor().getOpposite();
+			}
+		}
 		return message.getColor();
+
 	}
 
 	public boolean isFromGameMaster() {
@@ -121,6 +128,11 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 	@Override
 	public String getId() {
 		return message.getId();
+	}
+
+	public void swapColor() {
+		this.swapColor = true;
+
 	}
 
 }

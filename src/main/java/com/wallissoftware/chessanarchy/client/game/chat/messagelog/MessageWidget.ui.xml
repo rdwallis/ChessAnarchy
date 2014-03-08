@@ -16,8 +16,12 @@
 			font-weight:bold;
 			color: black;
 		}
+		.color {
+	display:inline-block;
+	
+		}
 		.black, .white {
-			display:inline-block;
+			
 			width: 10px;
 			height:10px;
 			border: 1px solid black;
@@ -27,11 +31,20 @@
 			background-color: black;
 		}
 		
+		.ownMessage {
+			background-color: lightyellow;
+		}
+		
+		.message {
+			border-top: 1px solid white;
+			padding: 2px;
+		}
+		
 	</ui:style>
-	<g:HTMLPanel>
+	<g:HTMLPanel addStyleNames="{style.message}">
 	<g:InlineLabel ui:field="creation" addStyleNames="{style.creation}"/>
 	<g:InlineLabel ui:field="name"/>
-	<g:SimplePanel ui:field="color"/>
+	<g:SimplePanel ui:field="color" addStyleNames="{style.color}"/>
 	<g:InlineLabel ui:field="message"/>
 	</g:HTMLPanel>
 </ui:UiBinder> 

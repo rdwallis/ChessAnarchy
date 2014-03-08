@@ -5,6 +5,7 @@
 		display: inline-block;
 		vertical-align: top;
 	}
+	
 	</ui:style>
 	<g:HTMLPanel>
 		<div class="{style.responsive}">
@@ -12,8 +13,10 @@
 			<g:SimplePanel ui:field="boardPanel" />
 			<g:SimplePanel ui:field="bottomTeamPanel" />
 		</div>
-		<g:SimplePanel ui:field="chatPanel" addStyleNames="{style.responsive}"
-			width="400px" height="600px" />
+		<g:ScrollPanel ui:field="pgnPanel" addStyleNames="{style.responsive}" height="600px"/>
+
+		<g:SimplePanel ui:field="chatPanel" width="400px" height="600px" addStyleNames="{style.responsive}"/>
+		
 
 	</g:HTMLPanel>
 </ui:UiBinder>

@@ -1,6 +1,7 @@
 package com.wallissoftware.chessanarchy.client.game.board;
 
 import com.google.gwt.user.client.ui.Widget;
+import com.wallissoftware.chessanarchy.client.game.board.piece.PieceWidget;
 
 public class GhostAnimation {
 
@@ -15,12 +16,15 @@ public class GhostAnimation {
 	private final int endX;
 	private final int endY;
 	private final boolean fast;
+	private final boolean capture;
+	private PieceWidget promotion;
 
-	public GhostAnimation(final double startTime, final Widget widget, final int startX, final int startY, final int endX, final int endY) {
-		this(false, startTime, widget, startX, startY, endX, endY);
+	public GhostAnimation(final double startTime, final Widget widget, final int startX, final int startY, final int endX, final int endY, final PieceWidget promotion) {
+		this(false, false, startTime, widget, startX, startY, endX, endY, promotion);
 	}
 
-	public GhostAnimation(final boolean fast, final double startTime, final Widget widget, final int startX, final int startY, final int endX, final int endY) {
+	public GhostAnimation(final boolean capture, final boolean fast, final double startTime, final Widget widget, final int startX, final int startY, final int endX, final int endY, final PieceWidget promotion) {
+		this.capture = capture;
 		this.fast = fast;
 		this.widget = widget;
 		this.startTime = startTime;
@@ -28,6 +32,7 @@ public class GhostAnimation {
 		this.startY = startY;
 		this.endX = endX;
 		this.endY = endY;
+		this.promotion = promotion;
 	}
 
 	public Widget getWidget() {
@@ -53,7 +58,7 @@ public class GhostAnimation {
 		return getMovePercent(milli) == 1;
 	}
 
-	public double getOpacity(final double milli) {
+	private double getOpacity(final double milli) {
 		if (!isMovementComplete(milli)) {
 			return 0.5;
 		}
@@ -74,6 +79,23 @@ public class GhostAnimation {
 	public void end() {
 		startTime = 0;
 
+	}
+
+	public boolean isCapture() {
+		return capture;
+	}
+
+	public void updateOpacity(final long milli) {
+		getWidget().getElement().getStyle().setOpacity(getOpacity(milli));
+
+	}
+
+	public PieceWidget getPromotion() {
+		return promotion;
+	}
+
+	public boolean isPromotion() {
+		return promotion != null;
 	}
 
 }

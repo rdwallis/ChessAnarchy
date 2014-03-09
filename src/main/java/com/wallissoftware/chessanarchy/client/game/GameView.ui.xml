@@ -4,19 +4,56 @@
 	.responsive {
 		display: inline-block;
 		vertical-align: top;
+		margin-right: 10px;
 	}
 	
+	.pgn {
+		max-height: 600px;
+		min-width: 150px;
+	}
+	
+	.chat {
+		height: 600px;
+		width: 420px;
+		margin-right: 0px;
+	}
+	
+	.game {
+		border: 2px solid gray;
+		padding: 10px;
+	}
+	
+	.embedBar {
+		position: relative;
+		margin-top: -30px;
+		top: 46px;
+		left: 8px;
+	}
+	.embedButton {
+		cursor: pointer;
+	}
 	</ui:style>
-	<g:HTMLPanel>
-		<div class="{style.responsive}">
-			<g:SimplePanel ui:field="topTeamPanel" />
-			<g:SimplePanel ui:field="boardPanel" />
-			<g:SimplePanel ui:field="bottomTeamPanel" />
-		</div>
-		<g:ScrollPanel ui:field="pgnPanel" addStyleNames="{style.responsive}" height="600px"/>
 
-		<g:SimplePanel ui:field="chatPanel" width="400px" height="600px" addStyleNames="{style.responsive}"/>
-		
+	<g:HTMLPanel>
+		<div>
+			<div class="{style.responsive}">
+				<g:SimplePanel ui:field="topTeamPanel" />
+				<g:SimplePanel ui:field="boardPanel" />
+				<g:SimplePanel ui:field="bottomTeamPanel" />
+			</div>
+			<g:ScrollPanel ui:field="pgnPanel"
+				addStyleNames="{style.responsive} {style.pgn} pgnPanel" />
+
+			<g:SimplePanel ui:field="chatPanel"
+				addStyleNames="{style.responsive} expand {style.chat}" />
+		</div>
+		<g:HorizontalPanel width="100%" horizontalAlignment="RIGHT"
+			addStyleNames="{style.embedBar}">
+			<g:Anchor ui:field="embedButton" addStyleNames="{style.embedButton}">Add Chess Anarchy To Your
+				Website</g:Anchor>
+		</g:HorizontalPanel>
 
 	</g:HTMLPanel>
+
+
 </ui:UiBinder>

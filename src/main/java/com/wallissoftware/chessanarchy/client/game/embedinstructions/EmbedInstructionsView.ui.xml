@@ -1,0 +1,84 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+		.copy {
+			padding:10px;
+			background-color: lightyellow;
+				border:1px solid black;
+			display:block;
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
+		.content {
+		padding:10px;
+		}
+		.list {
+			position:relative;
+			left: -1em;
+		}
+		
+		.list li {
+			margin-bottom: 20px;
+		}
+		.close {
+		cursor:pointer;
+		}
+	</ui:style>
+	<g:DialogBox autoHideOnHistoryEventsEnabled="true"
+		autoHideEnabled="true" text="Add Chess Anarchy To Your Website.">
+		<g:HTMLPanel addStyleNames="{style.content}">
+			<h3>3 steps to add Chess Anarchy to your website.</h3>
+			<ol class="{style.list}">
+			<li>
+			 Paste the following stylesheet in your
+			<code>
+    			<![CDATA[
+    			<head></head>]]></code>:
+			<br />
+			<code class="{style.copy}">
+    		
+    			<![CDATA[
+    				<link rel="stylesheet" type="text/css" href="http://chessanarchy.appspot.com/ChessAnarchy.css">
+    			]]>
+			</code>
+			</li>
+			<li>
+
+			Then paste the following div in your
+			<code>
+    			<![CDATA[
+    			<body></body>
+    			]]>
+			</code>
+			where you want Chess Anarchy to appear:
+			<br />
+			<code class="{style.copy}">
+    			<![CDATA[
+    				<div id="chessAnarchy" />
+    			]]>
+			</code>
+			</li>
+	<li>
+			Finally paste the following scripts just before the closing
+			<code><![CDATA[
+    			</body>
+    			]]></code> tag:
+		<br/>
+			<code class="{style.copy}">
+    			<![CDATA[
+    				<script type="text/javascript" src="http://chessanarchy.appspot.com/init.js"></script>
+   
+    			]]>
+    			<br/>
+    			<![CDATA[
+    			 <script type="text/javascript" src="http://chessanarchy.appspot.com/chessanarchy/chessanarchy.nocache.js"></script>
+    			 ]]>
+			</code>
+		</li></ol>	
+		<g:HorizontalPanel width="100%" horizontalAlignment="CENTER">
+			<g:Anchor ui:field="closeButton" addStyleNames="{style.close}">Close Window</g:Anchor>
+			</g:HorizontalPanel>
+		</g:HTMLPanel>
+	</g:DialogBox>
+</ui:UiBinder>

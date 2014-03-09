@@ -11,7 +11,7 @@ public class MyRootPresenter extends RootPresenter {
 	public static final class MyRootView extends RootView {
 		@Override
 		public void setInSlot(final Object slot, final IsWidget widget) {
-			RootPanel.get("mainContent").add(widget);
+			RootPanel.get("chessAnarchy").add(widget);
 		}
 	}
 

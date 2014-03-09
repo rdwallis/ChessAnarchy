@@ -8,26 +8,23 @@ import java.util.logging.Logger;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
-import com.google.gwt.http.client.RequestException;
-import com.google.gwt.http.client.Response;
 import com.google.gwt.http.client.URL;
-import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONParser;
+import com.google.gwt.jsonp.client.JsonpRequestBuilder;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
+import com.wallissoftware.chessanarchy.client.dispatch.JsessionUrlEncoder;
+import com.wallissoftware.chessanarchy.client.dispatch.SuccessCallback;
 import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.RemoveMessageEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent.SendMessageHandler;
-import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessage;
+import com.wallissoftware.chessanarchy.client.game.chat.model.SendMessageResponse;
 import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.client.user.User;
+import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.message.Message;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
@@ -88,38 +85,25 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 	public void onSendMessage(final SendMessageEvent event) {
 		final String message = event.getMessage();
 		if (!message.isEmpty()) {
-			final RequestBuilder builder = new RequestBuilder(RequestBuilder.PUT, URL.encode("/message"));
+			final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
+			jsonp.requestObject(URL.encode(JsessionUrlEncoder.encode(CAConstants.HOST + "/send?msg=" + message)), new SuccessCallback<SendMessageResponse>() {
 
-			try {
-				builder.sendRequest(message, new RequestCallback() {
-					@Override
-					public void onError(final Request request, final Throwable exception) {
+				@Override
+				public void onSuccess(final SendMessageResponse response) {
+					if (response.getUser() != null) {
+						User.update(getEventBus(), response.getUser());
 					}
-
-					@Override
-					public void onResponseReceived(final Request request, final Response response) {
-						if (200 == response.getStatusCode()) {
-							final JSONObject result = JSONParser.parseStrict(response.getText()).isObject();
-							if (result.containsKey("user")) {
-								User.update(getEventBus(), result.get("user").isObject().getJavaScriptObject());
-							}
-							if (result.containsKey("message")) {
-								final MessageWrapper msg = new MessageWrapper(JsonMessage.wrap(result.get("message").isObject().getJavaScriptObject()));
-								if (gameStateProvider.getGameState().swapColors()) {
-									msg.swapColor();
-								}
-								addToMessagesCheckQueue(msg);
-
-							}
-
-						} else {
+					if (response.getMessage() != null) {
+						final MessageWrapper msg = new MessageWrapper(response.getMessage());
+						if (gameStateProvider.getGameState().swapColors()) {
+							msg.swapColor();
 						}
-
+						addToMessagesCheckQueue(msg);
 					}
-				});
-			} catch (final RequestException e) {
-				// Couldn't connect to server
-			}
+
+				}
+			});
+
 		}
 
 	}

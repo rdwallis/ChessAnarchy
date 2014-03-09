@@ -34,7 +34,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 		LastUpdateTime.markUpdated();
 		final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 		@SuppressWarnings("unchecked")
-		final Set<Map<String, String>> messageQueue = (Set<Map<String, String>>) cache.get(MessageServlet.MESSAGE_QUEUE_KEY);
+		final Set<Map<String, String>> messageQueue = (Set<Map<String, String>>) cache.get(GetMessageServlet.MESSAGE_QUEUE_KEY);
 		if (messageQueue != null) {
 			final Long previousId = LatestMessageId.get();
 			cache.clearAll();

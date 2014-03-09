@@ -16,7 +16,6 @@
 
 package com.wallissoftware.chessanarchy.client.gin;
 
-import com.gwtplatform.dispatch.rpc.client.gin.RpcDispatchAsyncModule;
 import com.gwtplatform.dispatch.shared.SecurityCookie;
 import com.gwtplatform.mvp.client.RootPresenter;
 import com.gwtplatform.mvp.client.annotations.DefaultPlace;
@@ -41,7 +40,6 @@ public class ClientModule extends AbstractPresenterModule {
 		bind(RootPresenter.class).to(MyRootPresenter.class);
 
 		install(new DefaultModule(DefaultPlaceManager.class));
-		install(new RpcDispatchAsyncModule.Builder().build());
 		install(new GameModule());
 
 		// DefaultPlaceManager Places

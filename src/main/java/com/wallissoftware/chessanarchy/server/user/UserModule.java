@@ -6,7 +6,7 @@ public class UserModule extends ServletModule {
 
 	@Override
 	protected void configureServlets() {
-		serve("/user").with(UserServlet.class);
+		serve("/init.js").with(UserServlet.class);
 	}
 
 }

@@ -1,0 +1,26 @@
+#chessAnarchy{
+	min-width: 1045px;
+	min-height: 600px;
+	border: 2px gray solid;
+	padding: 10px;
+}
+
+@media (max-width: 1080px) {
+	.pgnPanel {
+		display:none!important;
+		visibility:hidden!important;
+	}
+	#chessAnarchy {
+		width: 885px;
+		min-width: 0px;
+	}
+}
+
+@media (max-width: 920px) {
+	#chessAnarchy {
+		width: 420px;
+		min-width: 0px;
+		min-height: 1136px;
+	
+	}
+}

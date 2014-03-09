@@ -7,11 +7,9 @@ import java.util.logging.Logger;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
-import com.google.gwt.http.client.RequestException;
-import com.google.gwt.http.client.Response;
+import com.google.gwt.jsonp.client.JsonpRequestBuilder;
+import com.wallissoftware.chessanarchy.client.dispatch.SuccessCallback;
+import com.wallissoftware.chessanarchy.shared.CAConstants;
 
 public class SyncedTime {
 
@@ -30,29 +28,16 @@ public class SyncedTime {
 
 			@Override
 			public boolean execute() {
+				final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
+				jsonp.requestString(CAConstants.HOST + "/time", new SuccessCallback<String>() {
 
-				final RequestBuilder builder = new RequestBuilder(RequestBuilder.GET, "/time");
-				try {
-					builder.sendRequest(null, new RequestCallback() {
+					@Override
+					public void onSuccess(final String result) {
+						setDiff(result);
 
-						@Override
-						public void onResponseReceived(final Request request, final Response response) {
-							if (200 == response.getStatusCode()) {
-								setDiff(response.getText());
-							} else {
-							}
+					}
 
-						}
-
-						@Override
-						public void onError(final Request request, final Throwable exception) {
-							// TODO Auto-generated method stub
-
-						}
-					});
-				} catch (final RequestException e) {
-
-				}
+				});
 				return --count >= 0 && !accurateEnough;
 
 			}

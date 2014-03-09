@@ -9,17 +9,14 @@ import java.util.Set;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
-import com.google.gwt.http.client.RequestException;
-import com.google.gwt.http.client.Response;
 import com.google.gwt.http.client.URL;
+import com.google.gwt.jsonp.client.JsonpRequestBuilder;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
+import com.wallissoftware.chessanarchy.client.dispatch.SuccessCallback;
 import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent.MessageInLimboHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
@@ -31,6 +28,7 @@ import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessageCache;
 import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
+import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.message.Message;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
@@ -78,36 +76,21 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 		}, 2003);
 	}
 
-	private void fetchGameStateMessages() {
-		final RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/gamemessages"));
-		try {
-			requestBuilder.sendRequest(null, new RequestCallback() {
-				@Override
-				public void onError(final Request request, final Throwable exception) {
-				}
+	private final SuccessCallback<JsArray<JsonMessage>> gameStateCallback = new SuccessCallback<JsArray<JsonMessage>>() {
 
-				@Override
-				public void onResponseReceived(final Request request, final Response response) {
-					if (200 == response.getStatusCode()) {
-						processRawMessages(response.getText());
-					} else {
-					}
+		@Override
+		public void onSuccess(final JsArray<JsonMessage> msgAry) {
+			for (int i = 0; i < msgAry.length(); i++) {
+				addMessage(new MessageWrapper(msgAry.get(i)), false);
+			}
+			fireEvent(new GameStateUpdatedEvent());
 
-				}
-
-				private void processRawMessages(final String json) {
-					final JsArray<JsonMessage> msgAry = JsonMessage.aryFromJson(json);
-					for (int i = 0; i < msgAry.length(); i++) {
-						addMessage(new MessageWrapper(msgAry.get(i)), false);
-					}
-					fireEvent(new GameStateUpdatedEvent());
-
-				}
-
-			});
-		} catch (final RequestException e) {
-			// Couldn't connect to server
 		}
+	};
+
+	private void fetchGameStateMessages() {
+		final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
+		jsonp.requestObject(URL.encode(CAConstants.HOST + "/gamemessages"), gameStateCallback);
 
 	}
 
@@ -175,61 +158,38 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 	}
 
 	private void fetchLatestMessage() {
-		fetchMessage(null, 1);
+		fetchMessage(null);
 	}
 
-	private void fetchMessage(final String id, final int messageCount) {
-		final RequestBuilder requestBuilder = new RequestBuilder(RequestBuilder.GET, URL.encode("/message" + (id == null ? "" : "?id=" + id)));
-		try {
-			requestBuilder.sendRequest(null, new RequestCallback() {
-				@Override
-				public void onError(final Request request, final Throwable exception) {
-				}
+	private void fetchMessage(final String id) {
+		final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
+		jsonp.setPredeterminedId("fm");
+		jsonp.requestObject(URL.encode(CAConstants.HOST + "/message" + (id == null ? "" : "?id=" + id)), fetchMessageCallback);
 
-				@Override
-				public void onResponseReceived(final Request request, final Response response) {
-					if (200 == response.getStatusCode()) {
-						processMessages("[" + response.getText() + "]", messageCount);
-					} else {
-					}
+	}
 
-				}
+	final SuccessCallback<JsonMessageCache> fetchMessageCallback = new SuccessCallback<JsonMessageCache>() {
 
-				private void processMessages(final String messagesJson, final int messageCount) {
-					final List<JsonMessageCache> messageCacheList = JsonMessageCache.fromJson(messagesJson);
-					boolean gameStateUpdated = false;
-					for (final JsonMessageCache messageCache : messageCacheList) {
-						if (MessageLink.addMessageLink(messageCache)) {
-							for (final Message message : messageCache.getMessages()) {
-								gameStateUpdated = addMessage(new MessageWrapper(message), false) || gameStateUpdated;
+		@Override
+		public void onSuccess(final JsonMessageCache messageCache) {
 
-							}
-							if (messageCount >= 0) {
-								if (messageCache.getPreviousId() != null) {
-									fetchMessage(messageCache.getPreviousId(), messageCount - 1);
-								}
-							}
-							if (Math.abs(SyncedTime.get() - messageCache.getCreated()) < 10000) {
-								fireEvent(new ReceivedMessageCacheEvent(messageCache));
-							}
-						}
-
-					}
-					if (gameStateUpdated) {
-						fireEvent(new GameStateUpdatedEvent());
-					}
-					if (!getView().isScrollBarShowing()) {
-						prependEarlierMessages();
-					}
+			if (MessageLink.addMessageLink(messageCache)) {
+				boolean gameStateUpdated = false;
+				for (final Message message : messageCache.getMessages()) {
+					gameStateUpdated = addMessage(new MessageWrapper(message), false) || gameStateUpdated;
 
 				}
+				if (Math.abs(SyncedTime.get() - messageCache.getCreated()) < 10000) {
+					fireEvent(new ReceivedMessageCacheEvent(messageCache));
+				}
+				if (gameStateUpdated) {
+					fireEvent(new GameStateUpdatedEvent());
+				}
+			}
+			fireEvent(new GameStateUpdatedEvent());
 
-			});
-		} catch (final RequestException e) {
-			// Couldn't connect to server
 		}
-
-	}
+	};
 
 	@Override
 	public void prependEarlierMessages() {

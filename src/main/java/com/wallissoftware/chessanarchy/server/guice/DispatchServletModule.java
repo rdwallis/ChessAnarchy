@@ -17,12 +17,12 @@
 package com.wallissoftware.chessanarchy.server.guice;
 
 import com.google.inject.servlet.ServletModule;
-import com.gwtplatform.dispatch.rpc.server.guice.DispatchServiceImpl;
-import com.gwtplatform.dispatch.rpc.shared.ActionImpl;
+import com.wallissoftware.chessanarchy.server.jsonp.JsonPFilter;
 
 public class DispatchServletModule extends ServletModule {
 	@Override
 	public void configureServlets() {
-		serve("/" + ActionImpl.DEFAULT_SERVICE_NAME + "*").with(DispatchServiceImpl.class);
+		filter("/*").through(JsonPFilter.class);
+
 	}
 }

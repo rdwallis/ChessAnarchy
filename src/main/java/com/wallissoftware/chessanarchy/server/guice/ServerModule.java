@@ -18,12 +18,11 @@ package com.wallissoftware.chessanarchy.server.guice;
 
 import com.googlecode.objectify.ObjectifyService;
 import com.gwtplatform.dispatch.rpc.server.guice.HandlerModule;
-import com.wallissoftware.chessanarchy.server.dispatch.DispatchHandlersModule;
 import com.wallissoftware.chessanarchy.server.gamestate.GameState;
 import com.wallissoftware.chessanarchy.server.gamestate.GameStateModule;
-import com.wallissoftware.chessanarchy.server.mainpage.MainPageModule;
 import com.wallissoftware.chessanarchy.server.messages.MessageCache;
 import com.wallissoftware.chessanarchy.server.messages.MessageModule;
+import com.wallissoftware.chessanarchy.server.session.SessionModule;
 import com.wallissoftware.chessanarchy.server.time.TimeModule;
 import com.wallissoftware.chessanarchy.server.user.UserModule;
 import com.wallissoftware.chessanarchy.server.wipe.WipeModule;
@@ -32,13 +31,12 @@ public class ServerModule extends HandlerModule {
 	@Override
 	protected void configureHandlers() {
 		registerEntities();
-		install(new DispatchHandlersModule());
 		install(new MessageModule());
-		install(new MainPageModule());
 		install(new GameStateModule());
 		install(new TimeModule());
 		install(new WipeModule());
 		install(new UserModule());
+		install(new SessionModule());
 
 	}
 

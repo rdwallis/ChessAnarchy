@@ -18,8 +18,9 @@ public class UserServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-		resp.setContentType("application/json");
-		resp.getWriter().write(new Gson().toJson(SessionUtils.getUserMap(req.getSession())));
+		resp.setContentType("application/javascript");
+		resp.getWriter().write("var chessAnarchy = {\"user\":" + new Gson().toJson(SessionUtils.getUserMap(req.getSession(), resp)) + "};");
+
 	}
 
 }

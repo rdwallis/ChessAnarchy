@@ -1,4 +1,4 @@
-package com.wallissoftware.chessanarchy.server.mainpage;
+package com.wallissoftware.chessanarchy.server.session;
 
 import java.io.IOException;
 
@@ -7,21 +7,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.gson.Gson;
 import com.google.inject.Singleton;
-import com.wallissoftware.chessanarchy.server.session.SessionUtils;
 
 @Singleton
-public class MainPage extends HttpServlet {
+public class CookiesEnabledServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
 	@Override
 	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-
-		resp.setContentType("text/html");
-		req.setAttribute("userJson", new Gson().toJson(SessionUtils.getUserMap(req.getSession())));
-		req.getRequestDispatcher("/ChessAnarchy.jsp").include(req, resp);
+		resp.getWriter().write((req.getCookies() != null && req.getCookies().length > 0) + "");
 	}
 
 }

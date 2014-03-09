@@ -16,15 +16,19 @@
 
 package com.wallissoftware.chessanarchy.client.dispatch;
 
-import com.google.gwt.user.client.Window;
+import java.util.logging.Logger;
+
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * Global RPC onFailure System
  */
 public abstract class SuccessCallback<T> implements AsyncCallback<T> {
-    @Override
-    public void onFailure(Throwable caught) {
-        Window.alert("Communication to the server has failed.");
-    }
+
+	private final static Logger logger = Logger.getLogger(SuccessCallback.class.getName());
+
+	@Override
+	public void onFailure(final Throwable caught) {
+		logger.warning(caught.getMessage());
+	}
 }

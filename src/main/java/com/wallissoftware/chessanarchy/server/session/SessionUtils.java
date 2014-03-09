@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.wallissoftware.chessanarchy.server.words.Adjectives;
@@ -72,10 +73,13 @@ public class SessionUtils {
 
 	}
 
-	public static Map<String, String> getUserMap(final HttpSession session) {
+	public static Map<String, String> getUserMap(final HttpSession session, final HttpServletResponse resp) {
+
 		final Map<String, String> jsonMap = new HashMap<String, String>();
 		jsonMap.put("name", getName(session));
 		jsonMap.put("userId", getUserId(session));
+		jsonMap.put("sessionId", session.getId());
+
 		getColor(session);
 		if (session.getAttribute("black") != null) {
 			jsonMap.put("black", session.getAttribute("black") + "");

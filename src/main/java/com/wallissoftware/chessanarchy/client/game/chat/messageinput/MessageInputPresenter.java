@@ -61,7 +61,7 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 			final Entry<Long, Message> next = it.next();
 			if (System.currentTimeMillis() - next.getKey() > 5000) {
 				fireEvent(new RemoveMessageEvent(next.getValue().getId()));
-				sendMessage(next.getValue().getText());
+				sendMessage(next.getValue().getText(), false);
 				logger.info("Resending message: " + next.getValue().getText());
 				it.remove();
 
@@ -77,8 +77,8 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 	}
 
 	@Override
-	public void sendMessage(final String message) {
-		fireEvent(new SendMessageEvent(message));
+	public void sendMessage(final String message, final boolean resendOnFail) {
+		fireEvent(new SendMessageEvent(message, resendOnFail));
 	}
 
 	@Override
@@ -98,7 +98,9 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 						if (gameStateProvider.getGameState().swapColors()) {
 							msg.swapColor();
 						}
-						addToMessagesCheckQueue(msg);
+						if (event.resendOnFail()) {
+							addToMessagesCheckQueue(msg);
+						}
 					}
 
 				}

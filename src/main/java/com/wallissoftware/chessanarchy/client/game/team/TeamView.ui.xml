@@ -1,13 +1,31 @@
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
              xmlns:g='urn:import:com.google.gwt.user.client.ui'>
-    <ui:style>
+    <ui:style type="com.wallissoftware.chessanarchy.client.game.team.TeamView.MyStyle">
+    .black {
+		background-color:black;
+	}
+	.white {
+		background-color:white;
+	}
+	 .black .heading{
+		color: white;
+		text-shadow: 2px 2px black;
+	}
+	
+	.white .heading{
+		color: black;
+		text-shadow: 2px 2px white;
+	}
+	
+	.heading {
+		font-size: 16px;
+	}
+	
     </ui:style>
-    <g:HTMLPanel>
-    	<g:InlineLabel ui:field="color">White</g:InlineLabel>
-    	<g:InlineLabel ui:field="isUsing">is living in Anarchy</g:InlineLabel>
-    	
-    	<g:Label ui:field="playerCount">1000 anarchists</g:Label>
-    	<g:Button ui:field="joinTeamButton">Become an Anarchist</g:Button>
-    	<g:Label ui:field="joinTeamCountDown" visible="false"></g:Label>
-    </g:HTMLPanel>
+    <g:VerticalPanel width="440px" ui:field="teamView" horizontalAlignment="CENTER">
+    	<g:Label ui:field="heading" addStyleNames="{style.heading}">White Team</g:Label>
+    	<g:Anchor ui:field="government" addStyleNames="{style.heading}">Government</g:Anchor>
+    	<g:Button ui:field="joinTeamButton">Join the White Team</g:Button>
+    	<g:Label ui:field="joinTeamCountDown" visible="false" addStyleNames="{style.heading}"></g:Label>
+    </g:VerticalPanel>
 </ui:UiBinder>

@@ -10,8 +10,8 @@ public class Anarchy extends SystemOfGovernment {
 	}
 
 	@Override
-	public MoveResult getMove(final String extraInfo, final List<MoveRequest> moveRequest) {
-		return new MoveResult(null, moveRequest.get(0).getMove());
+	public MoveResult getMove(final String extraInfo, final List<MoveRequest> moveRequests) {
+		return new MoveResult(null, moveRequests.get(0).getMove());
 	}
 
 	@Override
@@ -24,14 +24,4 @@ public class Anarchy extends SystemOfGovernment {
 		return "Under Anarchy the first legal move received by the server is played immediately.";
 	}
 
-	@Override
-	public String getJoinMessage() {
-		return "Like fire?  Become an Anarchist";
-	}
-
-	@Override
-	public String getUsingMessage() {
-		return " have burned down their government. Anarchy prevails";
-
-	}
 }

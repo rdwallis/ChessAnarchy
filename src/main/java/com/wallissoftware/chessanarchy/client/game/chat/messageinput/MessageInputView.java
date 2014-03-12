@@ -24,13 +24,13 @@ public class MessageInputView extends ViewWithUiHandlers<MessageInputUiHandlers>
 
 	@UiHandler("sendButton")
 	void onSendButtonClick(final ClickEvent event) {
-		getUiHandlers().sendMessage(messageBox.getText());
+		getUiHandlers().sendMessage(messageBox.getText(), true);
 	}
 
 	@UiHandler("messageBox")
 	void onMessageBoxKeyUp(final KeyUpEvent event) {
 		if (!event.isShiftKeyDown() && event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
-			getUiHandlers().sendMessage(messageBox.getText());
+			getUiHandlers().sendMessage(messageBox.getText(), true);
 			messageBox.setText("");
 		}
 	}

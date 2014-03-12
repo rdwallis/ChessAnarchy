@@ -4,5 +4,5 @@ import com.gwtplatform.mvp.client.UiHandlers;
 
 public interface MessageInputUiHandlers extends UiHandlers {
 
-	void sendMessage(String message);
+	void sendMessage(String message, boolean resendOnFail);
 }

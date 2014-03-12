@@ -1,13 +1,15 @@
 package com.wallissoftware.chessanarchy.client.game.team;
 
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.UIObject;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
@@ -15,13 +17,26 @@ import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 
 public class TeamView extends ViewWithUiHandlers<TeamUiHandlers> implements TeamPresenter.MyView {
-	public interface Binder extends UiBinder<HTMLPanel, TeamView> {
+	public interface Binder extends UiBinder<Widget, TeamView> {
 	}
 
-	@UiField HasText playerCount, color, isUsing;
+	@UiField UIObject teamView;
+
 	@UiField Button joinTeamButton;
 
 	@UiField Label joinTeamCountDown;
+
+	@UiField HasText government, heading;;
+
+	public interface MyStyle extends CssResource {
+		String black();
+
+		String white();
+	}
+
+	@UiField MyStyle style;
+
+	private String governmentDescription;
 
 	@Inject
 	TeamView(final Binder binder) {
@@ -29,26 +44,11 @@ public class TeamView extends ViewWithUiHandlers<TeamUiHandlers> implements Team
 	}
 
 	@Override
-	public void setPlayerCountMessage(final String playerCount) {
-		this.playerCount.setText(playerCount);
-
-	}
-
-	@Override
-	public void setJoinButtonText(final String joinMessage) {
-		this.joinTeamButton.setText(joinMessage);
-
-	}
-
-	@Override
-	public void setIsUsingText(final String usingMessage) {
-		this.isUsing.setText(usingMessage);
-
-	}
-
-	@Override
 	public void setColor(final Color color) {
-		this.color.setText(color.name());
+		teamView.removeStyleName(color == Color.WHITE ? style.black() : style.white());
+		teamView.addStyleName(color == Color.WHITE ? style.white() : style.black());
+		final String teamName = Character.toUpperCase(color.name().charAt(0)) + color.name().substring(1) + " Team";
+		heading.setText(teamName);
 
 	}
 
@@ -59,7 +59,6 @@ public class TeamView extends ViewWithUiHandlers<TeamUiHandlers> implements Team
 
 	@Override
 	public void setJoinCountDown(final Long joinTime) {
-
 		joinTeamButton.setVisible(joinTime == null);
 		if (joinTime != null) {
 
@@ -75,4 +74,22 @@ public class TeamView extends ViewWithUiHandlers<TeamUiHandlers> implements Team
 		}
 
 	}
+
+	@Override
+	public void setGovernmentName(final String name) {
+		government.setText(name);
+
+	}
+
+	@Override
+	public void setGovernmentDescription(final String description) {
+		this.governmentDescription = description;
+
+	}
+
+	@UiHandler("government")
+	void onGovernmentClick(final ClickEvent event) {
+
+	}
+
 }

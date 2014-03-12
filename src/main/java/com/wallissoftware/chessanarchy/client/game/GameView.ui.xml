@@ -9,7 +9,7 @@
 	
 	.pgn {
 		max-height: 600px;
-		min-width: 150px;
+		min-width: 100px;
 	}
 	
 	.chat {

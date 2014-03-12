@@ -22,13 +22,15 @@ public abstract class SystemOfGovernment implements GovernmentInfo {
 
 	static {
 		registerGovernment(new Anarchy());
+		registerGovernment(new Democracy());
+		registerGovernment(new Hipsterism());
 	}
 
 	public boolean isReady(final String extraInfo, final long timeOfLastMove, final List<MoveRequest> moveRequests) {
 		return System.currentTimeMillis() - timeOfLastMove > 30000 && !moveRequests.isEmpty();
 	}
 
-	public abstract MoveResult getMove(final String extraInfo, List<MoveRequest> moveRequest);
+	public abstract MoveResult getMove(final String extraInfo, List<MoveRequest> moveRequests);
 
 	public static SystemOfGovernment get(final String governmentName) {
 		return registeredGovernments.get(governmentName);

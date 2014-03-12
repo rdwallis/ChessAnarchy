@@ -2,82 +2,162 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<ui:style>
-		.copy {
-			padding:10px;
-			background-color: lightyellow;
-				border:1px solid black;
-			display:block;
-			margin-top: 10px;
-			margin-bottom: 10px;
-		}
-		.content {
-		padding:10px;
-		}
-		.list {
-			position:relative;
-			left: -1em;
-		}
-		
-		.list li {
-			margin-bottom: 20px;
-		}
-		.close {
-		cursor:pointer;
-		}
+	.copy {
+		padding: 10px;
+		background-color: lightyellow;
+		border: 1px solid black;
+		display: block;
+		margin-top: 10px;
+		margin-bottom: 10px;
+	}
+	
+	.content {
+		padding: 10px;
+	}
+	
+	.list {
+		position: relative;
+		left: -1em;
+	}
+	
+	.list li {
+		margin-bottom: 20px;
+	}
+	.closeBar{
+		margin-top: 20px;
+	}
+	.close {
+		cursor: pointer;
+	}
+	.scrollPanel {
+		min-height: 400px;
+		max-height: 500px;
+		width: 600px;
+	}
+	
+	.adv {
+		width:500px;
+	}
 	</ui:style>
 	<g:DialogBox autoHideOnHistoryEventsEnabled="true"
 		autoHideEnabled="true" text="Add Chess Anarchy To Your Website.">
 		<g:HTMLPanel addStyleNames="{style.content}">
-			<h3>3 steps to add Chess Anarchy to your website.</h3>
-			<ol class="{style.list}">
-			<li>
-			 Paste the following stylesheet in your
-			<code>
+			<g:ScrollPanel addStyleNames="{style.scrollPanel}">
+				<g:HTMLPanel>
+					<h3>3 steps to add Chess Anarchy to your website.</h3>
+					<ol class="{style.list}">
+						<li>
+							Paste the following stylesheet in your
+							<code>
     			<![CDATA[
-    			<head></head>]]></code>:
-			<br />
-			<code class="{style.copy}">
+    			<head></head>]]></code>
+							:
+							<br />
+							<code class="{style.copy}">
     		
     			<![CDATA[
     				<link rel="stylesheet" type="text/css" href="http://chessanarchy.appspot.com/ChessAnarchy.css">
     			]]>
-			</code>
-			</li>
-			<li>
+							</code>
+						</li>
+						<li>
 
-			Then paste the following div in your
-			<code>
+							Then paste the following div in your
+							<code>
     			<![CDATA[
     			<body></body>
     			]]>
-			</code>
-			where you want Chess Anarchy to appear:
-			<br />
-			<code class="{style.copy}">
+							</code>
+							where you want Chess Anarchy to appear:
+							<br />
+							<code class="{style.copy}">
     			<![CDATA[
-    				<div id="chessAnarchy" />
+    				<div id="chessAnarchy" ></div>
     			]]>
-			</code>
-			</li>
-	<li>
-			Finally paste the following scripts just before the closing
-			<code><![CDATA[
+							</code>
+						</li>
+						<li>
+							Finally paste the following scripts just before the closing
+							<code><![CDATA[
     			</body>
-    			]]></code> tag:
-		<br/>
-			<code class="{style.copy}">
+    			]]></code>
+							tag:
+							<br />
+							<code class="{style.copy}">
     			<![CDATA[
     				<script type="text/javascript" src="http://chessanarchy.appspot.com/init.js"></script>
    
     			]]>
-    			<br/>
+								<br />
     			<![CDATA[
     			 <script type="text/javascript" src="http://chessanarchy.appspot.com/chessanarchy/chessanarchy.nocache.js"></script>
     			 ]]>
-			</code>
-		</li></ol>	
-		<g:HorizontalPanel width="100%" horizontalAlignment="CENTER">
-			<g:Anchor ui:field="closeButton" addStyleNames="{style.close}">Close Window</g:Anchor>
+							</code>
+						</li>
+					</ol>
+
+					<g:DisclosurePanel>
+						<g:header>Advanced Customization</g:header>
+						<g:HTMLPanel>
+							You don't have to add the whole of Chess Anarchy to your website.
+							<p></p>
+							If you only want to add the board, you can replace step 2 with
+							the
+							following div
+							<br />
+							<code class="{style.copy} {style.adv}">
+    			<![CDATA[
+    				<div id="chessAnarchyBoard"></div>
+    			]]>
+							</code>
+							<p></p>
+							Other divs available are:
+							<br />
+							<code class="{style.copy} {style.adv}">
+    			<![CDATA[
+    				<div id="chessAnarchyChat"></div>
+    			]]><br /><br/>
+    			<![CDATA[
+    				<div id="chessAnarchyNotation"></div>
+    			]]><br /><br/>
+    			<![CDATA[
+    				<div id="chessAnarchyMyTeam"></div>
+    			]]><br /><br/>
+    			<![CDATA[
+    				<div id="chessAnarchyOpponentTeam"></div>
+    			]]>
+							</code>
+							<h5>Some Tips</h5>
+							<ul>
+								<li>You don't have to include the ChessAnarchy.css file if
+									you're building a custom version.</li>
+								<li>You can use any combination of divs and leave out the ones
+									you don't need.</li>
+								<li>You're strongly encouraged to add the chessAnarchyMyTeam and
+									chessAnarchyOpponentTeam divs. They allow the user to change
+									team and also see what government their team is using.</li>
+								<li>The chessAnarchyOpponentTeam div should be placed
+									above the board, while the chessAnarchyMyTeam div should go
+									below the board. Visitors to your website will be randomly assigned to
+									the Black or White team and the board will automatically
+									place their team at the bottom.</li>
+								<li>The chessAnarchyChat div will expand to fill the space given
+									to it.  You must give it a width and height to make it appear.</li>
+								<li>You can adjust the heights and widths of all divs except for the board which should always be 444x444 px.</li>
+								<li>You can add your own loading message or a gif to any div and Chess
+									Anarchy will remove it once loaded.</li>
+							</ul>
+
+
+
+						</g:HTMLPanel>
+					</g:DisclosurePanel>
+
+				</g:HTMLPanel>
+			</g:ScrollPanel>
+			<g:HorizontalPanel width="100%"
+				horizontalAlignment="CENTER" addStyleNames="{style.closeBar}">
+				<g:Anchor ui:field="closeButton" addStyleNames="{style.close}">Close Window</g:Anchor>
 			</g:HorizontalPanel>
 		</g:HTMLPanel>
 	</g:DialogBox>

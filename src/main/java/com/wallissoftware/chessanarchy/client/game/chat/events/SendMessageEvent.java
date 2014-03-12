@@ -22,9 +22,15 @@ public class SendMessageEvent extends GwtEvent<SendMessageEvent.SendMessageHandl
 	}
 
 	private final String message;
+	private final boolean resendOnFail;
 
 	public SendMessageEvent(final String message) {
+		this(message, true);
+	}
+
+	public SendMessageEvent(final String message, final boolean resendOnFail) {
 		this.message = message;
+		this.resendOnFail = resendOnFail;
 	}
 
 	@Override
@@ -39,6 +45,10 @@ public class SendMessageEvent extends GwtEvent<SendMessageEvent.SendMessageHandl
 
 	public String getMessage() {
 		return message;
+	}
+
+	public boolean resendOnFail() {
+		return resendOnFail;
 	}
 
 }

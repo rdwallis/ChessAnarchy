@@ -16,6 +16,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
+import com.wallissoftware.chessanarchy.client.dispatch.JsessionUrlEncoder;
 import com.wallissoftware.chessanarchy.client.dispatch.SuccessCallback;
 import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent.MessageInLimboHandler;
@@ -163,7 +164,9 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
 	private void fetchMessage(final String id) {
 		final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
-		jsonp.setPredeterminedId("fm");
+		if (JsessionUrlEncoder.cookiesEnabled()) {
+			jsonp.setPredeterminedId("fm");
+		}
 		jsonp.requestObject(URL.encode(CAConstants.HOST + "/message" + (id == null ? "" : "?id=" + id)), fetchMessageCallback);
 
 	}

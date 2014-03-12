@@ -33,7 +33,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 		void drawBoard(char[][] board, Move move);
 
-		void animateCapture(Move move);
+		void animateCapture(Move move, boolean immediate);
 
 	}
 
@@ -96,7 +96,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
 	@Override
 	public void makeMove(final Move move) {
-		getView().animateCapture(move);
+		getView().animateCapture(move, true);
 		if (!move.isPromotion() && gameStateProvider.getMoveTree().isMovePromotion(move)) {
 			promotionPresenter.setPartialMove(move);
 			addToPopupSlot(promotionPresenter);

@@ -30,7 +30,7 @@ public class JsessionUrlEncoder {
 		return url;
 	}
 
-	private static boolean cookiesEnabled() {
+	public static boolean cookiesEnabled() {
 		return GWT.getHostPageBaseURL().equals(CAConstants.HOST) || checkCookiesEnabled();
 	}
 

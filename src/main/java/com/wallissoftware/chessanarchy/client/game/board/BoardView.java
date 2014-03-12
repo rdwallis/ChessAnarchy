@@ -238,7 +238,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		for (final GhostAnimation animation : animations) {
 			animation.end();
 		}
-		animateCapture(move);
+		animateCapture(move, false);
 		if (move == null) {
 			return;
 		}
@@ -282,7 +282,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 	}
 
 	@Override
-	public void animateCapture(final Move move) {
+	public void animateCapture(final Move move, final boolean immediate) {
 		if (move == null) {
 			return;
 		}
@@ -294,9 +294,9 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 			if (capturedPiece == null && piece.isPawn() && move.getFileDelta() > 0) {
 				capturedPiece = board[move.getEndFile()][move.getStartRank()];
 				board[move.getEndFile()][move.getStartRank()] = null;
-				createAnimation(true, false, SyncedTime.get(), capturedPiece, new Move(move.getEndFile(), move.getStartRank(), move.getEndFile(), move.getStartRank()));
+				createAnimation(true, false, immediate ? 0 : SyncedTime.get(), capturedPiece, new Move(move.getEndFile(), move.getStartRank(), move.getEndFile(), move.getStartRank()));
 			} else if (capturedPiece != null) {
-				createAnimation(true, false, SyncedTime.get(), capturedPiece, new Move(move.getStartFile(), move.getStartRank(), move.getStartFile(), move.getStartRank()));
+				createAnimation(true, false, immediate ? 0 : SyncedTime.get(), capturedPiece, new Move(move.getStartFile(), move.getStartRank(), move.getStartFile(), move.getStartRank()));
 			}
 			if (move.isPromotion()) {
 				piece.setKind(move.getPromotion());

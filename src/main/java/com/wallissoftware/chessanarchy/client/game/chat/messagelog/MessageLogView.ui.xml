@@ -4,8 +4,13 @@
     	.messageLog{
 			border: 1px solid lightgray;
 		}
+		.expand {
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+}
     </ui:style>
-    <g:ScrollPanel  addStyleNames="expand {style.messageLog}" ui:field="scrollPanel">
+    <g:ScrollPanel  addStyleNames="{style.expand} {style.messageLog}" ui:field="scrollPanel">
     	<g:VerticalPanel ui:field="messageLog">
     	</g:VerticalPanel>
     </g:ScrollPanel>

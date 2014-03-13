@@ -32,7 +32,7 @@ public class GameStateMessageServlet extends HttpServlet {
 			final GameState gameState = ofy.load().type(GameState.class).id(id).getValue();
 			if (gameState != null) {
 				resp.setContentType("application/json");
-				final String maxAge = idSupplied && gameState.isComplete() ? "31556926" : "60";
+				final String maxAge = idSupplied && gameState.isFinished() ? "31556926" : "60";
 				resp.setHeader("cache-control", "public, max-age=" + maxAge);
 				resp.getWriter().write(new Gson().toJson(gameState.getAllMessages()));
 				return;

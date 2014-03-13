@@ -3,29 +3,63 @@
     <ui:style type="com.wallissoftware.chessanarchy.client.game.team.TeamView.MyStyle">
     .black {
 		background-color:black;
+		border: 1px solid black;
 	}
 	.white {
 		background-color:white;
+		border: 1px solid black;
 	}
 	 .black .heading{
 		color: white;
-		text-shadow: 2px 2px black;
 	}
 	
 	.white .heading{
 		color: black;
-		text-shadow: 2px 2px white;
 	}
 	
 	.heading {
 		font-size: 16px;
+		font-weight: bold;
 	}
 	
+	.countDown {
+		margin-top: -5px;
+	}
+	.government {
+		cursor: pointer;
+	}
+	.governmentName {
+		margin-right: 5px;
+	}
+	.teamView {
+		position:relative;
+		width: 402px;
+		min-height: 80px;
+	}
+	
+	.governmentImage {
+		position:absolute;
+		top:10px;
+		left:10px;
+		cursor: pointer;
+		margin:0px;
+	}
+	
+	.hide {
+		visibility: hidden;
+		display:none;
+	}
+	.vPanel {
+		margin-bottom:0px;
+	}
     </ui:style>
-    <g:VerticalPanel width="440px" ui:field="teamView" horizontalAlignment="CENTER">
-    	<g:Label ui:field="heading" addStyleNames="{style.heading}">White Team</g:Label>
-    	<g:Anchor ui:field="government" addStyleNames="{style.heading}">Government</g:Anchor>
-    	<g:Button ui:field="joinTeamButton">Join the White Team</g:Button>
-    	<g:Label ui:field="joinTeamCountDown" visible="false" addStyleNames="{style.heading}"></g:Label>
-    </g:VerticalPanel>
+    <g:HTMLPanel ui:field="teamView" addStyleNames="{style.teamView}">
+	    <g:VerticalPanel  horizontalAlignment="CENTER" spacing="5" width="100%" addStyleNames="{style.vPanel}">
+	    	<g:Label ui:field="heading" addStyleNames="{style.heading}">White Team</g:Label>
+	    	<g:FocusPanel ui:field="governmentHelp" addStyleNames="{style.government}"><g:HorizontalPanel><g:Label ui:field="government" addStyleNames="{style.heading} {style.governmentName}"> </g:Label><g:Image ui:field="governmentHelpIcon" addStyleNames="{style.hide}" ></g:Image></g:HorizontalPanel></g:FocusPanel>
+	    	<g:Button ui:field="joinTeamButton" addStyleNames="{style.hide}" >Join the White Team</g:Button>
+	    	<g:Label ui:field="joinTeamCountDown"  addStyleNames="{style.heading} {style.countDown} {style.hide}"></g:Label>
+	    </g:VerticalPanel>
+	    <g:Image addStyleNames="{style.governmentImage}" ui:field="governmentImage" width="60px" height="60px"></g:Image>
+    </g:HTMLPanel>
 </ui:UiBinder>

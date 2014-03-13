@@ -4,18 +4,18 @@
 	.responsive {
 		display: inline-block;
 		vertical-align: top;
-		margin-right: 10px;
+		
 	}
 	
 	.pgn {
 		max-height: 600px;
-		min-width: 100px;
+		background-color: whitesmoke;
+		margin-right: 10px;
 	}
 	
 	.chat {
-		height: 600px;
+		height: 617px;
 		width: 420px;
-		margin-right: 0px;
 	}
 	
 	.game {
@@ -32,20 +32,26 @@
 	.embedButton {
 		cursor: pointer;
 	}
+	.teamView {
+		
+		position: relative;
+		left: 8px;
+	
+	}
 	</ui:style>
 
 	<g:HTMLPanel>
 		<div>
 			<div class="{style.responsive}">
-				<g:SimplePanel ui:field="topTeamPanel" />
+				<g:SimplePanel ui:field="topTeamPanel" addStyleNames="{style.teamView}"/>
 				<g:SimplePanel ui:field="boardPanel" />
-				<g:SimplePanel ui:field="bottomTeamPanel" />
+				<g:SimplePanel ui:field="bottomTeamPanel" addStyleNames="{style.teamView}"/>
 			</div>
 			<g:ScrollPanel ui:field="pgnPanel"
-				addStyleNames="{style.responsive} {style.pgn} pgnPanel" />
+				addStyleNames="{style.responsive} {style.pgn} chessAnarchyNotation" />
 
 			<g:SimplePanel ui:field="chatPanel"
-				addStyleNames="{style.responsive} expand {style.chat}" />
+				addStyleNames="{style.responsive} expand {style.chat} chessAnarchyChat" />
 		</div>
 		<g:HorizontalPanel width="100%" horizontalAlignment="RIGHT"
 			addStyleNames="{style.embedBar}">

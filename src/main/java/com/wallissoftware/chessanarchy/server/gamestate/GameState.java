@@ -1,11 +1,11 @@
 package com.wallissoftware.chessanarchy.server.gamestate;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,14 +31,16 @@ public class GameState {
 
 	private boolean swapColors;
 
-	private String whiteGovernment = "Anarchy";
-	private String blackGovernment = "Anarchy";
+	private String whiteGovernment = null;
+	private String blackGovernment = null;
 
 	private List<String> moveList = new ArrayList<String>();
 
 	private List<Long> moveTimes = new ArrayList<Long>();
 
 	private Set<MoveRequest> moveRequests = new HashSet<MoveRequest>();
+
+	private boolean electionStarted;
 
 	private String whiteExtraInfo, blackExtraInfo;
 
@@ -52,9 +54,12 @@ public class GameState {
 	public GameState(final boolean swapColors) {
 		this.creationTime = System.currentTimeMillis();
 		this.swapColors = swapColors;
+		addMessage("STARTING ELECTION IN 30 SECONDS.", null);
 
-		addMessage("WHITE USES " + getWhiteSystemOfGovernment(), null);
-		addMessage("BLACK USES " + getBlackSystemOfGovernment(), null);
+	}
+
+	public boolean isGovernmentElected() {
+		return whiteGovernment != null;
 	}
 
 	@OnSave
@@ -69,12 +74,27 @@ public class GameState {
 			MoveTree.get(moveList);
 			moveTimes.add(System.currentTimeMillis());
 			addMessage("m" + move, getCurrentPlayer().getOpposite());
-
+			if (isFinished()) {
+				String message = "GAME OVER: ";
+				if (getLastMove().endsWith("#")) {
+					message += getCurrentPlayer().getOpposite() + " WINS";
+				} else {
+					message += "DRAW";
+				}
+				addMessage(message, null);
+			}
 		} catch (final IllegalMoveException e) {
 			moveList.remove(moveList.size() - 1);
 			addMessage("IllegalMoveException for move: " + move, null);
 		}
 
+	}
+
+	private String getLastMove() {
+		if (moveList.isEmpty()) {
+			return "";
+		}
+		return moveList.get(moveList.size() - 1);
 	}
 
 	public long getLastUpdated() {
@@ -85,8 +105,12 @@ public class GameState {
 		return id;
 	}
 
-	public boolean isComplete() {
-		return !moveList.isEmpty() && moveList.get(moveList.size() - 1).endsWith("#");
+	public boolean isFinished() {
+		try {
+			return (getLastMove().endsWith("#")) || (moveList.size() > 50 && MoveTree.get(moveList).isDraw());
+		} catch (final IllegalMoveException e) {
+			return true;
+		}
 	}
 
 	public String getJson() {
@@ -121,13 +145,62 @@ public class GameState {
 
 	public void processMoveRequests() {
 		final List<MoveRequest> moveRequestList = new ArrayList<MoveRequest>(moveRequests);
-		Collections.sort(moveRequestList);
-		if (getSystemOfGovernemnt().isReady(getExtraInfo(), getTimeOfLastMove(), moveRequestList)) {
-			final MoveResult moveResult = getSystemOfGovernemnt().getMove(getExtraInfo(), moveRequestList);
-			addMove(moveResult.getMove());
-			setExtraInfo(moveResult.getExtraInfo());
+		if (isGovernmentElected()) {
+
+			if (getSystemOfGovernemnt().isReady(getExtraInfo(), getTimeOfLastMove(), moveRequestList)) {
+				final MoveResult moveResult = getSystemOfGovernemnt().getMove(getExtraInfo(), moveRequestList);
+				addMove(moveResult.getMove());
+				setExtraInfo(moveResult.getExtraInfo());
+			}
+		} else if (isElectionComplete()) {
+			final Map<String, Integer> whiteVotes = new HashMap<String, Integer>();
+			final Map<String, Integer> blackVotes = new HashMap<String, Integer>();
+			for (final MoveRequest moveRequest : SystemOfGovernment.stripMultipleVotesAndSort(moveRequestList, true)) {
+				final String vote = moveRequest.getMove().toLowerCase();
+				final Map<String, Integer> voteMap = moveRequest.getColor() == Color.WHITE ? whiteVotes : blackVotes;
+				if (!voteMap.containsKey(vote)) {
+					voteMap.put(vote, 0);
+				}
+				voteMap.put(vote, voteMap.get(vote) + 1);
+			}
+
+			Entry<String, Integer> whiteEntry = null;
+			for (final Entry<String, Integer> entry : whiteVotes.entrySet()) {
+				if (whiteEntry == null || whiteEntry.getValue() < entry.getValue()) {
+					whiteEntry = entry;
+				}
+			}
+			this.whiteGovernment = whiteEntry == null ? "anarchy" : whiteEntry.getKey();
+
+			addMessage("WHITE USES " + getWhiteSystemOfGovernment(), null);
+
+			Entry<String, Integer> blackEntry = null;
+			for (final Entry<String, Integer> entry : whiteVotes.entrySet()) {
+				if (blackEntry == null || blackEntry.getValue() < entry.getValue()) {
+					blackEntry = entry;
+				}
+			}
+			this.blackGovernment = whiteEntry == null ? "anarchy" : blackEntry.getKey();
+			addMessage("BLACK USES " + getBlackSystemOfGovernment(), null);
+
 		}
 
+	}
+
+	private boolean isElectionComplete() {
+		return isElectionStarted() && System.currentTimeMillis() - creationTime > 60000;
+	}
+
+	public boolean isElectionStarted() {
+		if (electionStarted) {
+			return true;
+		}
+		if (System.currentTimeMillis() - creationTime > 30000) {
+			addMessage("CHOOSE YOUR GOVERNMENT", null);
+			electionStarted = true;
+			return true;
+		}
+		return false;
 	}
 
 	private void setExtraInfo(final String extraInfo) {

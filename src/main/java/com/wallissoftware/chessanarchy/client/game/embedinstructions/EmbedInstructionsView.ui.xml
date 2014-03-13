@@ -143,7 +143,7 @@
 									place their team at the bottom.</li>
 								<li>The chessAnarchyChat div will expand to fill the space given
 									to it.  You must give it a width and height to make it appear.</li>
-								<li>You can adjust the heights and widths of all divs except for the board which should always be 444x444 px.</li>
+								<li>The notation panel will start small and increase in height as the game progresses.   You should give it a max-height and make it scrollable.</li>
 								<li>You can add your own loading message or a gif to any div and Chess
 									Anarchy will remove it once loaded.</li>
 							</ul>

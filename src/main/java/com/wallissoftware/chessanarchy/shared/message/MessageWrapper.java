@@ -51,9 +51,17 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 	public String getFormattedMessage() {
 		if (getMove() != null) {
 			if (getColor() != null) {
-				return getColor() + " makes move: " + getMove();
+				return getColor().getTitleCase() + " makes move: " + getMove();
 			}
 			return getMove();
+		}
+		if (isFromGameMaster()) {
+			if (getText().startsWith("BLACK USES ")) {
+				return getText().replace("BLACK USES", "Black chooses");
+			}
+			if (getText().startsWith("WHITE USES ")) {
+				return getText().replace("WHITE USES", "White chooses");
+			}
 		}
 		if (isNickChange()) {
 			String name = getText().substring(5);

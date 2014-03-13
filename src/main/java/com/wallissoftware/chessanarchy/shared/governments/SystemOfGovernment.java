@@ -1,7 +1,9 @@
 package com.wallissoftware.chessanarchy.shared.governments;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,10 +16,10 @@ public abstract class SystemOfGovernment implements GovernmentInfo {
 	private static final Map<String, SystemOfGovernment> registeredGovernments = new HashMap<String, SystemOfGovernment>();
 
 	private static void registerGovernment(final SystemOfGovernment government) {
-		if (registeredGovernments.containsKey(government.getName())) {
+		if (registeredGovernments.containsKey(government.getName().toLowerCase())) {
 			throw new RuntimeException("You've already registered a government called " + government.getName() + ".");
 		}
-		registeredGovernments.put(government.getName(), government);
+		registeredGovernments.put(government.getName().toLowerCase(), government);
 	}
 
 	static {
@@ -30,10 +32,35 @@ public abstract class SystemOfGovernment implements GovernmentInfo {
 		return System.currentTimeMillis() - timeOfLastMove > 30000 && !moveRequests.isEmpty();
 	}
 
-	public abstract MoveResult getMove(final String extraInfo, List<MoveRequest> moveRequests);
+	protected abstract MoveResult calculateMove(final String extraInfo, List<MoveRequest> moveRequests);
+
+	public MoveResult getMove(final String extraInfo, final List<MoveRequest> moveRequests) {
+		return calculateMove(extraInfo, stripMultipleVotesAndSort(moveRequests, isLastVoteOfPlayerPreferred()));
+	}
+
+	abstract boolean isLastVoteOfPlayerPreferred();
+
+	public static List<MoveRequest> stripMultipleVotesAndSort(final List<MoveRequest> moveRequests, final boolean preferLastVoteOfPlayer) {
+		Collections.sort(moveRequests);
+		if (preferLastVoteOfPlayer) {
+			Collections.reverse(moveRequests);
+		}
+		final Set<String> playerIds = new HashSet<String>();
+		final Iterator<MoveRequest> it = moveRequests.iterator();
+		while (it.hasNext()) {
+			if (!playerIds.add(it.next().getPlayerId())) {
+				it.remove();
+			}
+		}
+		if (preferLastVoteOfPlayer) {
+			Collections.reverse(moveRequests);
+		}
+		return moveRequests;
+
+	}
 
 	public static SystemOfGovernment get(final String governmentName) {
-		return registeredGovernments.get(governmentName);
+		return registeredGovernments.get(governmentName.toLowerCase());
 	}
 
 	public String getPlayerCount(final Color color, final List<MessageWrapper> messages) {
@@ -46,6 +73,10 @@ public abstract class SystemOfGovernment implements GovernmentInfo {
 			}
 		}
 		return playerCount + " players";
+	}
+
+	public static boolean isSystemOfGovernment(final String governmentName) {
+		return registeredGovernments.containsKey(governmentName.toLowerCase());
 	}
 
 }

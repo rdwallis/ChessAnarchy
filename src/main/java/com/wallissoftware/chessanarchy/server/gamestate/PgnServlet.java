@@ -31,7 +31,7 @@ public class PgnServlet extends HttpServlet {
 			final GameState gameState = ofy.load().type(GameState.class).id(id).getValue();
 			if (gameState != null) {
 				resp.setContentType("text/x-chess-pgn");
-				final String maxAge = idSupplied && gameState.isComplete() ? "31556926" : "0";
+				final String maxAge = idSupplied && gameState.isFinished() ? "31556926" : "0";
 				resp.setHeader("cache-control", "public, max-age=" + maxAge);
 				resp.getWriter().write(gameState.getPgn());
 				return;

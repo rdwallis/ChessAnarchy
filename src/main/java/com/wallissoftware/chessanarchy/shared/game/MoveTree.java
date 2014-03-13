@@ -601,6 +601,10 @@ public class MoveTree {
 		}
 	}
 
+	public boolean isDraw() {
+		return depth > 50 && getMovesUntilDraw() <= 0;
+	}
+
 	private boolean isPawnMoveOrCapture() {
 		return pgn.contains("x") || Character.isLowerCase(pgn.charAt(0));
 	}
@@ -640,5 +644,9 @@ public class MoveTree {
 			}
 		}
 		return false;
+	}
+
+	public boolean isGameFinished() {
+		return isCheckMate() || isDraw();
 	}
 }

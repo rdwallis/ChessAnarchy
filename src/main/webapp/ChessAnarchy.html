@@ -2,6 +2,8 @@
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name = "viewport" content = "width = 455,
+       initial-scale = 0.7">
 <title>Chess Anarchy, inspired by Twitch Plays Pok&#233;mon</title>
 <link rel="stylesheet" type="text/css"
 	href="http://chessanarchy.appspot.com/ChessAnarchy.css">
@@ -18,7 +20,11 @@
 	display: inline;
 }
 
-
+@media (max-width: 920px) {
+	header {
+		max-width: 445px;
+	}
+}
 
 #chessAnarchy {
 	display: inline-block;
@@ -32,7 +38,7 @@
 	padding: 10px;
 	border: 2px solid gray;
 	vertical-align: top;
-	height: 600px;
+	height: 630px;
 	overflow: auto;
 	
 }
@@ -67,7 +73,7 @@ display:block;
 				Your web browser must have JavaScript enabled in order for this
 				application to display correctly.</div>
 		</noscript>
-		<img src="http://chessanarchy.appspot.com/l.cache.gif" class="load">
+		<img src="http://chessanarchy.appspot.com/712.cache.gif" class="load">
 	</div>
 	<div id="essay">
 		A couple of weeks ago, a few thousand people began playing a game of
@@ -111,11 +117,15 @@ display:block;
 					essay.style.height = Math.max(600,
 							mainContent.clientHeight - 20)
 							+ "px";
-					essay.style.width = Math.min(wnd.innerWidth - 1150, 400)
+					essay.style.width = Math.min(wnd.innerWidth - 1150, 350)
 							+ "px";
 				} else {
 					essay.style.width = (mainContent.clientWidth - 20) + "px";
-					essay.style.height = "450px";
+					if (mainContent.clientWidth - 20 > 500) {
+						essay.style.height = "450px";
+					} else {
+						essay.style.height = "640px";
+					}
 				}
 				deferResize(1000);
 			}

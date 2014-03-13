@@ -22,6 +22,7 @@ import com.wallissoftware.chessanarchy.server.gamestate.GameState;
 import com.wallissoftware.chessanarchy.server.gamestate.LatestGameStateId;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.governments.MoveRequest;
+import com.wallissoftware.chessanarchy.shared.governments.SystemOfGovernment;
 
 @Singleton
 public class UpdateMessagesServlet extends HttpServlet {
@@ -83,15 +84,23 @@ public class UpdateMessagesServlet extends HttpServlet {
 		if (latestGameStateId != null) {
 			final GameState gameState = ofy.load().type(GameState.class).id(LatestGameStateId.get()).getValue();
 			if (gameState != null) {
+
 				final Map<String, String> moveMap = gameState.getLegalMoveMap();
 				final Color currentPlayer = gameState.getCurrentPlayer();
 				for (final Map<String, String> message : messageQueue) {
-					if (gameState.swapColors() && message.containsKey("color")) {
-						message.put("color", Color.valueOf(message.get("color")).getOpposite().name());
-					}
-
-					if (message.get("color") != null && currentPlayer == Color.valueOf(message.get("color")) && moveMap.containsKey(message.get("message"))) {
-						gameState.addMoveRequest(new MoveRequest(Color.valueOf(message.get("color")), message.get("userId"), moveMap.get(message.get("message"))));
+					if (message.containsKey("color")) {
+						if (gameState.swapColors()) {
+							message.put("color", Color.valueOf(message.get("color")).getOpposite().name());
+						}
+						if (gameState.isGovernmentElected()) {
+							if (currentPlayer == Color.valueOf(message.get("color")) && moveMap.containsKey(message.get("message"))) {
+								gameState.addMoveRequest(new MoveRequest(Color.valueOf(message.get("color")), message.get("userId"), moveMap.get(message.get("message"))));
+							}
+						} else if (gameState.isElectionStarted()) {
+							if (SystemOfGovernment.isSystemOfGovernment(message.get("message"))) {
+								gameState.addMoveRequest(new MoveRequest(Color.valueOf(message.get("color")), message.get("userId"), moveMap.get(message.get("message"))));
+							}
+						}
 					}
 				}
 
@@ -99,10 +108,11 @@ public class UpdateMessagesServlet extends HttpServlet {
 				messageQueue.addAll(gameState.getLastMessages(1));
 				ofy.save().entity(gameState);
 
-				if (gameState.isComplete()) {
+				if (gameState.isFinished()) {
 					createNewGameState(ofy, !gameState.swapColors());
 					return true;
 				}
+
 			}
 
 		} else {

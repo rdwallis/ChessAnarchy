@@ -10,4 +10,8 @@ public enum Color {
 			return WHITE;
 		}
 	}
+
+	public String getTitleCase() {
+		return Character.toUpperCase(name().charAt(0)) + name().substring(1).toLowerCase();
+	}
 }

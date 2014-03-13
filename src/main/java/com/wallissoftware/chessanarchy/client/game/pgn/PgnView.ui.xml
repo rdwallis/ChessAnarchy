@@ -3,7 +3,9 @@
 	<ui:style>
 	.pgn {
 		padding: 10px;
-		background-color: whitesmoke;
+		
+		min-width: 100px;
+		max-width: 120px;
 	}
 	</ui:style>
 	<g:HTMLPanel addStyleNames="{style.pgn} pgnPanel">

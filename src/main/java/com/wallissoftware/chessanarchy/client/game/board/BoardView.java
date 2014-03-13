@@ -188,7 +188,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 				final Widget fileLabel = getOrientation() == Color.WHITE ? fileLabels.get(i) : fileLabels.get(7 - i);
 				final Widget rankLabel = getOrientation() == Color.WHITE ? rankLabels.get(7 - i) : rankLabels.get(i);
 				layoutPanel.setWidgetLeftWidth(fileLabel, (i * 50) + 30, Unit.PX, 16, Unit.PX);
-				layoutPanel.setWidgetTopHeight(rankLabel, (i * 50) + 26, Unit.PX, 16, Unit.PX);
+				layoutPanel.setWidgetTopHeight(rankLabel, (i * 50) + 26, Unit.PX, 26, Unit.PX);
 			}
 
 			for (int rank = 0; rank < 8; rank++) {
@@ -249,26 +249,15 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 			board[move.getStartFile()][move.getStartRank()] = null;
 			board[move.getEndFile()][move.getEndRank()] = piece;
 			createAnimation(false, false, SyncedTime.get(), piece, move);
-			logger.info("Animating move: " + move);
-			if (piece.isKing()) {
-				logger.info("Is King");
-				logger.info("File delta: " + move.getFileDelta());
-				logger.info("Rank delta: " + move.getRankDelta());
-				logger.info("Start Rank: " + move.getStartRank());
-				logger.info("Start File: " + move.getStartFile());
-			}
 			if (piece.isKing() && move.getFileDelta() == 2 && move.getRankDelta() == 0 && (move.getStartRank() == 7 || move.getStartRank() == 0) && (move.getStartFile() == 4)) {
-				logger.info("Castling detected");
 				//castling
 				if (move.getEndFile() == 2) {
-					logger.info("Left side");
 					final PieceWidget rook = board[0][move.getEndRank()];
 					if (rook != null) {
 						createAnimation(false, false, SyncedTime.get(), rook, new Move(0, move.getEndRank(), 3, move.getEndRank()));
 					}
 				}
 				if (move.getEndFile() == 6) {
-					logger.info("Right side");
 					final PieceWidget rook = board[7][move.getEndRank()];
 					if (rook != null) {
 						createAnimation(false, false, SyncedTime.get(), rook, new Move(7, move.getEndRank(), 5, move.getEndRank()));

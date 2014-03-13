@@ -15,4 +15,16 @@ public interface GovernmentInfo {
 	 */
 	String getDescription();
 
+	/**
+	 * @return the url for the government when the player is black. Should be
+	 *         120x120px see src/main/webapp/images/ for existing examples.
+	 */
+	String getBlackIconUrl();
+
+	/**
+	 * @return the url for the government when the player is white. Should be
+	 *         120x120px see src/main/webapp/images/ for existing examples.
+	 */
+	String getWhiteIconUrl();
+
 }

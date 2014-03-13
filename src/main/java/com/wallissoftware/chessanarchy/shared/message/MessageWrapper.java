@@ -1,5 +1,8 @@
 package com.wallissoftware.chessanarchy.shared.message;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.wallissoftware.chessanarchy.shared.game.Color;
 
 public class MessageWrapper implements Message, Comparable<MessageWrapper> {
@@ -56,6 +59,9 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 			return getMove();
 		}
 		if (isFromGameMaster()) {
+			if (getNewGameId() != null) {
+				return "Starting new game in 30 seconds.";
+			}
 			if (getText().startsWith("BLACK USES ")) {
 				return getText().replace("BLACK USES", "Black chooses");
 			}
@@ -140,7 +146,20 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 
 	public void swapColor() {
 		this.swapColor = true;
+	}
 
+	public Set<MessageWrapper> getFakeMessages() {
+		if (getNewGameId() != null) {
+			final Message electionStartMessage = new MessageImpl(getName(), getUserId(), "CHOOSE YOUR GOVERNMENT", getId() + "esm", getColor(), getCreated() + 30000);
+			final Set<MessageWrapper> result = new HashSet<MessageWrapper>();
+			result.add(new MessageWrapper(electionStartMessage));
+			return result;
+		}
+		return null;
+	}
+
+	public Long getElectionStart() {
+		return isFromGameMaster() && getText().startsWith("CHOOSE YOUR GOVERNMENT") ? getCreated() : null;
 	}
 
 }

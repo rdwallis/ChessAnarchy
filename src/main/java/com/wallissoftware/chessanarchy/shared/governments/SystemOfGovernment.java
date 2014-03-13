@@ -60,6 +60,9 @@ public abstract class SystemOfGovernment implements GovernmentInfo {
 	}
 
 	public static SystemOfGovernment get(final String governmentName) {
+		if (governmentName == null) {
+			return null;
+		}
 		return registeredGovernments.get(governmentName.toLowerCase());
 	}
 
@@ -77,6 +80,11 @@ public abstract class SystemOfGovernment implements GovernmentInfo {
 
 	public static boolean isSystemOfGovernment(final String governmentName) {
 		return registeredGovernments.containsKey(governmentName.toLowerCase());
+	}
+
+	@Override
+	public String getCountingVotesMessage() {
+		return "Counting votes for color Team";
 	}
 
 }

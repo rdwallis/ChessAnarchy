@@ -35,48 +35,50 @@ public class UpdateMessagesServlet extends HttpServlet {
 		LastUpdateTime.markUpdated();
 		final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
 		@SuppressWarnings("unchecked")
-		final Set<Map<String, String>> messageQueue = (Set<Map<String, String>>) cache.get(GetMessageServlet.MESSAGE_QUEUE_KEY);
-		if (messageQueue != null) {
-			final Long previousId = LatestMessageId.get();
-			cache.clearAll();
+		Set<Map<String, String>> msgQueue = (Set<Map<String, String>>) cache.get(GetMessageServlet.MESSAGE_QUEUE_KEY);
+		if (msgQueue == null) {
+			msgQueue = new HashSet<Map<String, String>>();
+		}
+		final Set<Map<String, String>> messageQueue = msgQueue;
+		final Long previousId = LatestMessageId.get();
+		cache.clearAll();
 
-			final Objectify ofy = ObjectifyService.factory().begin();
-			final Long latestGameStateId = LatestGameStateId.get();
-			final Set<Map<String, String>> gameStateMessages = new HashSet<Map<String, String>>();
-			final Long previousGameStateId = LatestGameStateId.getPrevious();
+		final Objectify ofy = ObjectifyService.factory().begin();
+		final Long latestGameStateId = LatestGameStateId.get();
+		final Set<Map<String, String>> gameStateMessages = new HashSet<Map<String, String>>();
+		final Long previousGameStateId = LatestGameStateId.getPrevious();
 
-			if (latestGameStateId != null) {
-				gameStateMessages.addAll(ofy.load().type(GameState.class).id(latestGameStateId).getValue().getLastMessages(5));
-			}
+		if (latestGameStateId != null) {
+			gameStateMessages.addAll(ofy.load().type(GameState.class).id(latestGameStateId).getValue().getLastMessages(5));
+		}
 
-			if (gameStateMessages.size() < 5 && previousGameStateId != null) {
-				gameStateMessages.addAll(ofy.load().type(GameState.class).id(previousGameStateId).getValue().getLastMessages(5));
-
-			}
-
-			ofy.transact(new VoidWork() {
-
-				@Override
-				public void vrun() {
-					updateGameState(ofy, latestGameStateId, messageQueue);
-					final Map<String, Object> messageMap = new HashMap<String, Object>();
-					if (previousId != null) {
-						messageMap.put("previous", previousId + "");
-					}
-					messageMap.put("created", System.currentTimeMillis() + "");
-
-					messageQueue.addAll(gameStateMessages);
-					messageMap.put("messages", messageQueue);
-					final MessageCache messageCache = new MessageCache(previousId, new Gson().toJson(messageMap));
-					ofy.save().entities(messageCache);
-
-					LatestMessageId.set(messageCache.getId());
-
-				}
-
-			});
+		if (gameStateMessages.size() < 5 && previousGameStateId != null) {
+			gameStateMessages.addAll(ofy.load().type(GameState.class).id(previousGameStateId).getValue().getLastMessages(5));
 
 		}
+
+		ofy.transact(new VoidWork() {
+
+			@Override
+			public void vrun() {
+				updateGameState(ofy, latestGameStateId, messageQueue);
+				final Map<String, Object> messageMap = new HashMap<String, Object>();
+				if (previousId != null) {
+					messageMap.put("previous", previousId + "");
+				}
+				messageMap.put("created", System.currentTimeMillis() + "");
+
+				messageQueue.addAll(gameStateMessages);
+				messageMap.put("messages", messageQueue);
+				final MessageCache messageCache = new MessageCache(previousId, new Gson().toJson(messageMap));
+				ofy.save().entities(messageCache);
+
+				LatestMessageId.set(messageCache.getId());
+
+			}
+
+		});
+
 	}
 
 	private boolean updateGameState(final Objectify ofy, final Long latestGameStateId, final Set<Map<String, String>> messageQueue) {
@@ -98,14 +100,14 @@ public class UpdateMessagesServlet extends HttpServlet {
 							}
 						} else if (gameState.isElectionStarted()) {
 							if (SystemOfGovernment.isSystemOfGovernment(message.get("message"))) {
-								gameState.addMoveRequest(new MoveRequest(Color.valueOf(message.get("color")), message.get("userId"), moveMap.get(message.get("message"))));
+								gameState.addMoveRequest(new MoveRequest(Color.valueOf(message.get("color")), message.get("userId"), message.get("message")));
 							}
 						}
 					}
 				}
 
 				gameState.processMoveRequests();
-				messageQueue.addAll(gameState.getLastMessages(1));
+				messageQueue.addAll(gameState.getLastMessages(2));
 				ofy.save().entity(gameState);
 
 				if (gameState.isFinished()) {

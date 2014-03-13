@@ -57,4 +57,9 @@ public class Hipsterism extends SystemOfGovernment {
 		return true;
 	}
 
+	@Override
+	public String getMovePreamble() {
+		return "color Team's least popular move was ";
+	}
+
 }

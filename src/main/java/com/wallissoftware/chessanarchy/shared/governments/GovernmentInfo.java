@@ -27,4 +27,8 @@ public interface GovernmentInfo {
 	 */
 	String getWhiteIconUrl();
 
+	String getMovePreamble();
+
+	String getCountingVotesMessage();
+
 }

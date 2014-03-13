@@ -100,6 +100,12 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 			messageInputPresenter.markMessageArrived(message);
 		}
 		if (loadedMessageIds.add(message.getId())) {
+			final Set<MessageWrapper> fakeMessages = message.getFakeMessages();
+			if (fakeMessages != null) {
+				for (final MessageWrapper fakeMessage : fakeMessages) {
+					addMessage(fakeMessage, inLimbo);
+				}
+			}
 			getView().addMessage(message, inLimbo);
 			messages.add(message);
 			if (message.isFromGameMaster()) {

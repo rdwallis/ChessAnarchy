@@ -41,4 +41,14 @@ public class Anarchy extends SystemOfGovernment {
 		return false;
 	}
 
+	@Override
+	public String getCountingVotesMessage() {
+		return "color government is on fire.";
+	}
+
+	@Override
+	public String getMovePreamble() {
+		return "The first move recieved from the color Team was ";
+	}
+
 }

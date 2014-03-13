@@ -54,4 +54,9 @@ public class Democracy extends SystemOfGovernment {
 		return true;
 	}
 
+	@Override
+	public String getMovePreamble() {
+		return "color Team's most popular move was ";
+	}
+
 }

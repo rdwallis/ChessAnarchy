@@ -25,6 +25,8 @@ import com.wallissoftware.chessanarchy.shared.governments.SystemOfGovernment;
 @Entity
 public class GameState {
 
+	//private static final Logger logger = Logger.getLogger(GameState.class.getName());
+
 	@Id private Long id;
 	private long lastUpdated;
 	@Index private long creationTime;
@@ -40,8 +42,6 @@ public class GameState {
 
 	private Set<MoveRequest> moveRequests = new HashSet<MoveRequest>();
 
-	private boolean electionStarted;
-
 	private String whiteExtraInfo, blackExtraInfo;
 
 	@Serialize private List<Map<String, String>> messages = new ArrayList<Map<String, String>>();
@@ -54,12 +54,10 @@ public class GameState {
 	public GameState(final boolean swapColors) {
 		this.creationTime = System.currentTimeMillis();
 		this.swapColors = swapColors;
-		addMessage("STARTING ELECTION IN 30 SECONDS.", null);
-
 	}
 
 	public boolean isGovernmentElected() {
-		return whiteGovernment != null;
+		return whiteGovernment != null && blackGovernment != null;
 	}
 
 	@OnSave
@@ -145,23 +143,29 @@ public class GameState {
 
 	public void processMoveRequests() {
 		final List<MoveRequest> moveRequestList = new ArrayList<MoveRequest>(moveRequests);
-		if (isGovernmentElected()) {
 
+		if (isGovernmentElected()) {
 			if (getSystemOfGovernemnt().isReady(getExtraInfo(), getTimeOfLastMove(), moveRequestList)) {
 				final MoveResult moveResult = getSystemOfGovernemnt().getMove(getExtraInfo(), moveRequestList);
 				addMove(moveResult.getMove());
 				setExtraInfo(moveResult.getExtraInfo());
 			}
 		} else if (isElectionComplete()) {
+
 			final Map<String, Integer> whiteVotes = new HashMap<String, Integer>();
 			final Map<String, Integer> blackVotes = new HashMap<String, Integer>();
 			for (final MoveRequest moveRequest : SystemOfGovernment.stripMultipleVotesAndSort(moveRequestList, true)) {
-				final String vote = moveRequest.getMove().toLowerCase();
-				final Map<String, Integer> voteMap = moveRequest.getColor() == Color.WHITE ? whiteVotes : blackVotes;
-				if (!voteMap.containsKey(vote)) {
-					voteMap.put(vote, 0);
+				if (moveRequest.getMove() != null) {
+					final String vote = moveRequest.getMove().toLowerCase();
+
+					final Map<String, Integer> voteMap = moveRequest.getColor() == Color.WHITE ? whiteVotes : blackVotes;
+
+					if (!voteMap.containsKey(vote)) {
+						voteMap.put(vote, 0);
+					}
+					voteMap.put(vote, voteMap.get(vote) + 1);
+
 				}
-				voteMap.put(vote, voteMap.get(vote) + 1);
 			}
 
 			Entry<String, Integer> whiteEntry = null;
@@ -170,19 +174,19 @@ public class GameState {
 					whiteEntry = entry;
 				}
 			}
-			this.whiteGovernment = whiteEntry == null ? "anarchy" : whiteEntry.getKey();
+			setWhiteSystemOfGovernment(whiteEntry == null ? "anarchy" : whiteEntry.getKey());
 
 			addMessage("WHITE USES " + getWhiteSystemOfGovernment(), null);
 
 			Entry<String, Integer> blackEntry = null;
-			for (final Entry<String, Integer> entry : whiteVotes.entrySet()) {
+			for (final Entry<String, Integer> entry : blackVotes.entrySet()) {
 				if (blackEntry == null || blackEntry.getValue() < entry.getValue()) {
 					blackEntry = entry;
 				}
 			}
-			this.blackGovernment = whiteEntry == null ? "anarchy" : blackEntry.getKey();
+			setBlackSystemOfGovernment(blackEntry == null ? "anarchy" : blackEntry.getKey());
 			addMessage("BLACK USES " + getBlackSystemOfGovernment(), null);
-
+			moveRequests.clear();
 		}
 
 	}
@@ -192,15 +196,7 @@ public class GameState {
 	}
 
 	public boolean isElectionStarted() {
-		if (electionStarted) {
-			return true;
-		}
-		if (System.currentTimeMillis() - creationTime > 30000) {
-			addMessage("CHOOSE YOUR GOVERNMENT", null);
-			electionStarted = true;
-			return true;
-		}
-		return false;
+		return System.currentTimeMillis() - creationTime > 30000;
 	}
 
 	private void setExtraInfo(final String extraInfo) {
@@ -225,7 +221,7 @@ public class GameState {
 	}
 
 	private SystemOfGovernment getSystemOfGovernemnt() {
-		return SystemOfGovernment.get(getCurrentPlayer() == Color.WHITE ? whiteGovernment : blackGovernment);
+		return SystemOfGovernment.get(getCurrentPlayer() == Color.WHITE ? getWhiteSystemOfGovernment() : getBlackSystemOfGovernment());
 
 	}
 
@@ -242,7 +238,23 @@ public class GameState {
 	}
 
 	public String getWhiteSystemOfGovernment() {
-		return swapColors ? whiteGovernment : blackGovernment;
+		return swapColors ? blackGovernment : whiteGovernment;
+	}
+
+	private void setWhiteSystemOfGovernment(final String governmentName) {
+		if (swapColors) {
+			blackGovernment = governmentName;
+		} else {
+			whiteGovernment = governmentName;
+		}
+	}
+
+	private void setBlackSystemOfGovernment(final String governmentName) {
+		if (swapColors) {
+			whiteGovernment = governmentName;
+		} else {
+			blackGovernment = governmentName;
+		}
 	}
 
 	private void addMessage(final String message, final Color color) {

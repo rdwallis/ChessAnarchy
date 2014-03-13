@@ -11,6 +11,7 @@ public final class GameState {
 	private String id;
 	private String whiteGovernment;
 	private String blackGovernment;
+	private long electionStart = 0;
 	private List<String> moveList = new ArrayList<String>();
 
 	//private final static Logger logger = Logger.getLogger(GameState.class.getName());
@@ -33,6 +34,9 @@ public final class GameState {
 					if (message.getMove() != null) {
 						moveList.add(message.getMove());
 					}
+					if (message.getElectionStart() != null) {
+						electionStart = message.getElectionStart();
+					}
 
 				}
 			}
@@ -41,6 +45,10 @@ public final class GameState {
 			id = "FAKE ID " + Math.random();
 		}
 	};
+
+	public long getElectionStart() {
+		return electionStart;
+	}
 
 	public boolean swapColors() {
 		return id == null ? false : id.endsWith("T");
@@ -55,12 +63,6 @@ public final class GameState {
 	}
 
 	public List<String> getMoveList() {
-		/*final String[] moves = { "e4", "d5", "e5", "f5", "exf6", "d4", "fxg7", "Nc6", "gxh8=Q", "Be6", "c4", "Qd7", "b4", "O-O-O", "b5" };
-		final List<String> moveList = new ArrayList<String>();
-		for (int i = 0; i < moves.length; i++) {
-			moveList.add(moves[i]);
-		}*/
-
 		return moveList;
 	}
 

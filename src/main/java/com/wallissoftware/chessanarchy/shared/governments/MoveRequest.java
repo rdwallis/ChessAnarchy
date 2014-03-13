@@ -85,4 +85,9 @@ public class MoveRequest implements Comparable<MoveRequest> {
 		return color;
 	}
 
+	@Override
+	public String toString() {
+		return "MoveRequest [creationTime=" + creationTime + ", playerId=" + playerId + ", move=" + move + ", color=" + color + "]";
+	}
+
 }

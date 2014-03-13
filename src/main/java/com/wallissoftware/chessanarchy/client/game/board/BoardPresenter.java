@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+import com.google.gwt.user.client.Timer;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
@@ -41,6 +42,16 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	private final GameStateProvider gameStateProvider;
 	private final static Logger logger = Logger.getLogger(BoardPresenter.class.getName());
 	private boolean preventRedraw;
+
+	private final Timer showElectionTimer = new Timer() {
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+
+		}
+
+	};
 
 	int piecePresenterCount = 0;
 
@@ -141,6 +152,11 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 	@Override
 	public void onGameStateUpdated(final GameStateUpdatedEvent event) {
 		updateBoard();
+		final long electionStart = gameStateProvider.getGameState().getElectionStart();
+		final long syncedTime = SyncedTime.get();
+		if (syncedTime < electionStart) {
+			showElectionTimer.schedule((int) (electionStart - syncedTime));
+		}
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package com.wallissoftware.chessanarchy.client.game.gamestate.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.governments.SystemOfGovernment;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
@@ -32,7 +33,10 @@ public final class GameState {
 						blackGovernment = message.getBlackGovernment();
 					}
 					if (message.getMove() != null) {
-						moveList.add(message.getMove());
+						if (moveList.size() % 2 == 0 ^ message.getColor() == Color.BLACK) {
+							moveList.add(message.getMove());
+						}
+
 					}
 					if (message.getElectionStart() != null) {
 						electionStart = message.getElectionStart();

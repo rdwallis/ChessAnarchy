@@ -12,14 +12,14 @@ import com.google.inject.Singleton;
 import com.wallissoftware.chessanarchy.server.session.SessionUtils;
 
 @Singleton
-public class UserServlet extends HttpServlet {
+public class InitServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
 	@Override
 	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-		resp.setContentType("application/json");
-		resp.getWriter().write(new Gson().toJson(SessionUtils.getUserMap(req.getSession(), resp)));
+		resp.setContentType("application/javascript");
+		resp.getWriter().write("var chessAnarchy = {\"user\":" + new Gson().toJson(SessionUtils.getUserMap(req.getSession(), resp)) + "};");
 
 	}
 

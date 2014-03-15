@@ -3,7 +3,6 @@ package com.wallissoftware.chessanarchy.server.messages;
 import static com.google.appengine.api.taskqueue.TaskOptions.Builder.withUrl;
 
 import java.io.IOException;
-import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -41,7 +40,7 @@ public class SendMessageServlet extends HttpServlet {
 	@Override
 	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
 
-		final String message = StringEscapeUtils.escapeHtml(URLDecoder.decode(req.getParameter("msg"), "UTF-8"));
+		final String message = StringEscapeUtils.escapeHtml(req.getParameter("msg"));
 
 		if (message != null && !message.isEmpty()) {
 			boolean sessionModified = false;

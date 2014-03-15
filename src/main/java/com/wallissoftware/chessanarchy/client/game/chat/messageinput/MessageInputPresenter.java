@@ -8,7 +8,6 @@ import java.util.logging.Logger;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
-import com.google.gwt.http.client.URL;
 import com.google.gwt.jsonp.client.JsonpRequestBuilder;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
@@ -86,7 +85,7 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 		final String message = event.getMessage();
 		if (!message.isEmpty()) {
 			final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
-			jsonp.requestObject(URL.encode(JsessionUrlEncoder.encode(CAConstants.HOST + "/send?msg=" + message)), new SuccessCallback<SendMessageResponse>() {
+			jsonp.requestObject(JsessionUrlEncoder.encode(CAConstants.HOST + "/send?msg=" + message), new SuccessCallback<SendMessageResponse>() {
 
 				@Override
 				public void onSuccess(final SendMessageResponse response) {

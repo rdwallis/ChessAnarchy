@@ -40,7 +40,7 @@ public class Nouns {
 			"work", "worm", "wound", "wren", "wrench", "wrist", "writer", "writing	", "yak", "yam", "yard", "yarn", "year", "yoke	", "zebra ", "zephyr", "zinc", "zipper", "zoo" };
 
 	public static String getRandom() {
-		return nouns[(int) (Math.random() * (nouns.length - 1))];
+		return nouns[(int) (Math.random() * (nouns.length))];
 	}
 
 }

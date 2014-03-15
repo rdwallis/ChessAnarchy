@@ -52,6 +52,6 @@ public class Adjectives {
 			"wonderful", "wooden", "woozy", "workable", "worried", "worthless", "wrathful", "wretched", "wrong", "wry", "xenophobic", "yellow", "yielding", "young", "youthful", "yummy", "zany", "zealous", "zesty", "zippy", "zonked" };
 
 	public static String getRandom() {
-		return adjectives[(int) (Math.random() * (adjectives.length - 1))];
+		return adjectives[(int) (Math.random() * (adjectives.length))];
 	}
 }

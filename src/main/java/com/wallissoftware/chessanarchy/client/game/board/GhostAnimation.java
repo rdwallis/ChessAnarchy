@@ -50,7 +50,7 @@ public class GhostAnimation {
     }
 
     private boolean isMovementStarted(final double milli) {
-        return milli < startTime;
+        return milli > startTime;
     }
 
     public int getY(final double milli) {

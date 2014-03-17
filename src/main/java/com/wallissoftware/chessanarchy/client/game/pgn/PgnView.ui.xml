@@ -5,11 +5,12 @@
 		padding: 10px;
 		
 		min-width: 100px;
-		max-width: 120px;
+		max-width: 140px;
+		overflow-x: hidden;
 	}
 	</ui:style>
 	<g:HTMLPanel addStyleNames="{style.pgn} pgnPanel">
-		<g:FlexTable ui:field="flexTable" cellSpacing="10">
+		<g:FlexTable ui:field="flexTable" cellSpacing="5">
 		</g:FlexTable>
 	</g:HTMLPanel>
 

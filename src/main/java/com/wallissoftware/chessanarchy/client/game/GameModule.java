@@ -22,11 +22,13 @@ import com.wallissoftware.chessanarchy.client.game.chat.ChatModule;
 import com.wallissoftware.chessanarchy.client.game.team.TeamModule;
 import com.wallissoftware.chessanarchy.client.game.pgn.PgnModule;
 import com.wallissoftware.chessanarchy.client.game.embedinstructions.EmbedInstructionsModule;
+import com.wallissoftware.chessanarchy.client.game.election.ElectionModule;
 
 public class GameModule extends AbstractPresenterModule {
 	@Override
 	protected void configure() {
 
+		install(new ElectionModule());
 		install(new EmbedInstructionsModule());
 		install(new PgnModule());
 		install(new TeamModule());

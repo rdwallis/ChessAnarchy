@@ -105,7 +105,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 				return true;
 			}
 
-		}, 100);
+		}, 50);
 
 	}
 
@@ -446,7 +446,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 		}
 		if (ghost) {
 			dropSurface.add(piece, x, y);
-			ghostAnimations.add(new GhostAnimation(startTime + 3000, piece, x, y, x1, y1, move.isPromotion() ? new PieceWidget(move.getPromotion()) : null));
+			ghostAnimations.add(new GhostAnimation(startTime + 2000, piece, x, y, x1, y1, move.isPromotion() ? new PieceWidget(move.getPromotion()) : null));
 		} else {
 			animations.add(new GhostAnimation(capture, true, startTime, piece, x, y, x1, y1, move.isPromotion() ? new PieceWidget(move.getPromotion()) : null));
 		}

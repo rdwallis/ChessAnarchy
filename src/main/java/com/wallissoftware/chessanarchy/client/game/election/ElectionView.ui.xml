@@ -1,0 +1,25 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+             xmlns:g="urn:import:com.google.gwt.user.client.ui">
+    <ui:style>
+    
+    .black {
+		background:black;
+		color:white;
+	}
+	
+	.white {
+		background:white;
+		color:black;
+		}
+    </ui:style>
+    <g:DialogBox autoHideOnHistoryEventsEnabled="true" autoHideEnabled="true" text="Vote for your teams governemnt">
+    	<g:HTMLPanel ui:field="mainPanel">
+    		<g:Label>A new game begins in 30 seconds</g:Label>
+    		<g:Label>You're on the White Team</g:Label>
+    		<g:Label>Vote for your government</g:Label>
+    		
+    	
+    	</g:HTMLPanel>
+    </g:DialogBox>
+</ui:UiBinder>

@@ -5,6 +5,6 @@ import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
 public class VoteModule extends AbstractPresenterModule {
     @Override
     protected void configure() {
-        bindSingletonPresenterWidget(VotePresenter.class, VotePresenter.MyView.class, VoteView.class);
+        bindPresenterWidget(VotePresenter.class, VotePresenter.MyView.class, VoteView.class);
     }
 }

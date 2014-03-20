@@ -8,9 +8,11 @@
 	}
 	
 	.pgn {
-		max-height: 600px;
+		height: 575px;
 		background-color: whitesmoke;
 		margin-right: 10px;
+		overflow-x:hidden;
+		margin-bottom: 10px;
 	}
 	
 	.chat {
@@ -47,8 +49,11 @@
 				<g:SimplePanel ui:field="boardPanel" />
 				<g:SimplePanel ui:field="bottomTeamPanel" addStyleNames="{style.teamView}"/>
 			</div>
+            <div class="{style.responsive}">
 			<g:ScrollPanel ui:field="pgnPanel"
-				addStyleNames="{style.responsive} {style.pgn} chessAnarchyNotation" />
+				addStyleNames="{style.pgn} chessAnarchyNotation" />
+       <g:SimplePanel ui:field="drawPanel" addStyleNames="chessAnarchyNotation"/>
+        </div>
 
 			<g:SimplePanel ui:field="chatPanel"
 				addStyleNames="{style.responsive} expand {style.chat} chessAnarchyChat" />

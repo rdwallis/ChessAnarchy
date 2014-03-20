@@ -2,31 +2,38 @@ package com.wallissoftware.chessanarchy.client.game.board;
 
 import com.google.gwt.user.client.ui.Widget;
 import com.wallissoftware.chessanarchy.client.game.board.piece.PieceWidget;
+import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 
 public class GhostAnimation {
 
-    private final static double MOVE_DURATION = 2000;
-    private final static double FADE_DURATION = 1000;
+    private final static double MOVE_DURATION = 1500;
+    private final static double FADE_DURATION = 800;
 
-    private final Widget widget;
+    private final PieceWidget piece;
     private double startTime;
 
     private final int startX;
     private final int startY;
     private final int endX;
     private final int endY;
-    private final boolean fast;
     private final boolean capture;
-    private PieceWidget promotion;
+    private char promotion;
 
-    public GhostAnimation(final double startTime, final Widget widget, final int startX, final int startY, final int endX, final int endY, final PieceWidget promotion) {
-        this(false, false, startTime, widget, startX, startY, endX, endY, promotion);
+    private final long syncDiff;
+
+    public GhostAnimation(final double startTime, final PieceWidget piece, final int startX, final int startY, final int endX, final int endY, final char promotion) {
+        this(false, startTime, piece, startX, startY, endX, endY, promotion);
     }
 
-    public GhostAnimation(final boolean capture, final boolean fast, final double startTime, final Widget widget, final int startX, final int startY, final int endX, final int endY, final PieceWidget promotion) {
+    public GhostAnimation(final boolean capture, final double startTime, final PieceWidget piece, final int startX, final int startY, final int endX, final int endY, final char promotion) {
+        this.syncDiff = SyncedTime.getDiff();
         this.capture = capture;
-        this.fast = fast;
-        this.widget = widget;
+        this.piece = piece;
+        if (!capture) {
+            piece.getElement().getStyle().setZIndex(2);
+        } else {
+            piece.getElement().getStyle().setZIndex(1);
+        }
         this.startTime = startTime;
         this.startX = startX;
         this.startY = startY;
@@ -36,31 +43,35 @@ public class GhostAnimation {
     }
 
     public Widget getWidget() {
-        return widget;
+        return piece;
     }
 
-    public int getX(final double milli) {
-        if (!isMovementStarted(milli)) {
+    public int getX() {
+        if (!isMovementStarted()) {
             return startX;
         }
-        if (isMovementComplete(milli)) {
+        if (isMovementComplete()) {
             return endX;
         }
-        return (int) easeInCubic(milli - startTime, startX, endX, MOVE_DURATION);
+        return (int) easeInCubic(getSyncedTime() - startTime, startX, endX, MOVE_DURATION);
     }
 
-    private boolean isMovementStarted(final double milli) {
-        return milli > startTime;
+    private long getSyncedTime() {
+        return System.currentTimeMillis() - syncDiff;
     }
 
-    public int getY(final double milli) {
-        if (!isMovementStarted(milli)) {
+    private boolean isMovementStarted() {
+        return getSyncedTime() > startTime;
+    }
+
+    public int getY() {
+        if (!isMovementStarted()) {
             return startY;
         }
-        if (isMovementComplete(milli)) {
+        if (isMovementComplete()) {
             return endY;
         }
-        return (int) easeInCubic(milli - startTime, startY, endY, MOVE_DURATION);
+        return (int) easeInCubic(getSyncedTime() - startTime, startY, endY, MOVE_DURATION);
     }
 
     private double easeInCubic(double deltaTime, final double startValue, final double endValue, final double duration) {
@@ -69,28 +80,35 @@ public class GhostAnimation {
         return changeInValue * deltaTime * deltaTime * deltaTime + startValue;
     }
 
-    private double getMovePercent(final double milli) {
-        final double delta = milli - startTime;
+    private double getMovePercent() {
+        final double delta = getSyncedTime() - startTime;
         return Math.max(0, Math.min(delta / getMoveDuration(), 1));
     }
 
-    public boolean isMovementComplete(final double milli) {
-        return getMovePercent(milli) == 1;
+    public boolean isMovementComplete() {
+        return getMovePercent() == 1 && doPromotion();
     }
 
-    private double getOpacity(final double milli) {
-        if (!isMovementComplete(milli)) {
+    private boolean doPromotion() {
+        if (isPromotion()) {
+            piece.setKind(promotion);
+        }
+        return true;
+    }
+
+    private double getOpacity() {
+        if (!isMovementComplete()) {
             return 0.5;
         }
-        if (isFinished(milli)) {
+        if (isFinished()) {
             return 0;
         }
 
-        return easeInCubic(milli - (startTime + getMoveDuration()), 0.5, 0, FADE_DURATION);
+        return easeInCubic(getSyncedTime() - (startTime + getMoveDuration()), 0.5, 0, FADE_DURATION);
     }
 
-    public boolean isFinished(final double milli) {
-        return (milli - startTime) > getMoveDuration() + FADE_DURATION;
+    public boolean isFinished() {
+        return (getSyncedTime() - startTime) > getMoveDuration() + FADE_DURATION;
     }
 
     private double getMoveDuration() {
@@ -107,17 +125,13 @@ public class GhostAnimation {
         return capture;
     }
 
-    public void updateOpacity(final long milli) {
-        getWidget().getElement().getStyle().setOpacity(getOpacity(milli));
+    public void updateOpacity() {
+        getWidget().getElement().getStyle().setOpacity(getOpacity());
 
     }
 
-    public PieceWidget getPromotion() {
-        return promotion;
-    }
-
-    public boolean isPromotion() {
-        return promotion != null;
+    private boolean isPromotion() {
+        return promotion != 'x';
     }
 
 }

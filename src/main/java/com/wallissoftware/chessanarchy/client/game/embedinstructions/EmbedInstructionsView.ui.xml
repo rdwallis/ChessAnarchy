@@ -125,7 +125,10 @@
     			]]><br /><br/>
     			<![CDATA[
     				<div id="chessAnarchyOpponentTeam"></div>
-    			]]>
+    			]]><br /><br/>
+                <![CDATA[
+                  <div id="chessAnarchyMovesUntilDraw"></div>
+                ]]>
 							</code>
 							<h5>Some Tips</h5>
 							<ul>

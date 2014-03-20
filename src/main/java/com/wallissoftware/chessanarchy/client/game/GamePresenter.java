@@ -32,6 +32,7 @@ import com.wallissoftware.chessanarchy.client.game.chat.ChatPresenter;
 import com.wallissoftware.chessanarchy.client.game.embedinstructions.EmbedInstructionsPresenter;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent.GameStateUpdatedHandler;
+import com.wallissoftware.chessanarchy.client.game.movetodraw.MoveToDrawPresenter;
 import com.wallissoftware.chessanarchy.client.game.pgn.PgnPresenter;
 import com.wallissoftware.chessanarchy.client.game.team.TeamPresenter;
 import com.wallissoftware.chessanarchy.client.place.NameTokens;
@@ -40,85 +41,88 @@ import com.wallissoftware.chessanarchy.client.user.UserChangedEvent;
 import com.wallissoftware.chessanarchy.client.user.UserChangedEvent.UserChangedHandler;
 
 public class GamePresenter extends Presenter<GamePresenter.MyView, GamePresenter.MyProxy> implements UserChangedHandler, GameStateUpdatedHandler, GameUiHandlers {
-	public interface MyView extends View, HasUiHandlers<GameUiHandlers> {
-	}
+    public interface MyView extends View, HasUiHandlers<GameUiHandlers> {
+    }
 
-	public static final Object BOARD_SLOT = new Object(), CHAT_SLOT = new Object(), TOP_TEAM_SLOT = new Object(), BOTTOM_TEAM_SLOT = new Object(), PGN_SLOT = new Object();
+    public static final Object BOARD_SLOT = new Object(), CHAT_SLOT = new Object(), TOP_TEAM_SLOT = new Object(), BOTTOM_TEAM_SLOT = new Object(), PGN_SLOT = new Object(), DRAW_SLOT = new Object();
 
-	@ProxyStandard
-	@NameToken(NameTokens.game)
-	public interface MyProxy extends ProxyPlace<GamePresenter> {
-	}
+    @ProxyStandard
+    @NameToken(NameTokens.game)
+    public interface MyProxy extends ProxyPlace<GamePresenter> {
+    }
 
-	private final BoardPresenter boardPresenter;
-	private final ChatPresenter chatPresenter;
-	private final TeamPresenter topTeamPresenter;
-	private final TeamPresenter bottomTeamPresenter;
-	private final PgnPresenter pgnPresenter;
-	private final EmbedInstructionsPresenter embedInstructionsPresenter;
+    private final BoardPresenter boardPresenter;
+    private final ChatPresenter chatPresenter;
+    private final TeamPresenter topTeamPresenter;
+    private final TeamPresenter bottomTeamPresenter;
+    private final PgnPresenter pgnPresenter;
+    private final EmbedInstructionsPresenter embedInstructionsPresenter;
+    private final MoveToDrawPresenter moveToDrawPresenter;
 
-	@Inject
-	GamePresenter(final EventBus eventBus, final MyView view, final MyProxy proxy, final BoardPresenter boardPresenter, final ChatPresenter chatPresenter, final Provider<TeamPresenter> teamPresenterProvider, final PgnPresenter pgnPresenter,
-			final EmbedInstructionsPresenter embedInstructionsPresenter) {
-		super(eventBus, view, proxy, RevealType.Root);
-		this.boardPresenter = boardPresenter;
-		this.chatPresenter = chatPresenter;
-		this.topTeamPresenter = teamPresenterProvider.get();
-		this.bottomTeamPresenter = teamPresenterProvider.get();
-		this.pgnPresenter = pgnPresenter;
-		this.embedInstructionsPresenter = embedInstructionsPresenter;
-		getView().setUiHandlers(this);
-		update();
+    @Inject
+    GamePresenter(final EventBus eventBus, final MyView view, final MyProxy proxy, final BoardPresenter boardPresenter, final ChatPresenter chatPresenter, final Provider<TeamPresenter> teamPresenterProvider, final PgnPresenter pgnPresenter,
+            final EmbedInstructionsPresenter embedInstructionsPresenter, final MoveToDrawPresenter moveToDrawPresenter) {
+        super(eventBus, view, proxy, RevealType.Root);
+        this.boardPresenter = boardPresenter;
+        this.chatPresenter = chatPresenter;
+        this.topTeamPresenter = teamPresenterProvider.get();
+        this.bottomTeamPresenter = teamPresenterProvider.get();
+        this.pgnPresenter = pgnPresenter;
+        this.embedInstructionsPresenter = embedInstructionsPresenter;
+        this.moveToDrawPresenter = moveToDrawPresenter;
+        getView().setUiHandlers(this);
+        update();
 
-	}
+    }
 
-	@Override
-	protected void onBind() {
-		super.onBind();
-		setInSlot(BOARD_SLOT, boardPresenter);
-		setInSlot(CHAT_SLOT, chatPresenter);
-		setInSlot(BOTTOM_TEAM_SLOT, bottomTeamPresenter);
-		setInSlot(TOP_TEAM_SLOT, topTeamPresenter);
-		setInSlot(PGN_SLOT, pgnPresenter);
-		addRegisteredHandler(UserChangedEvent.getType(), this);
-		addRegisteredHandler(GameStateUpdatedEvent.getType(), this);
-	}
+    @Override
+    protected void onBind() {
+        super.onBind();
+        setInSlot(BOARD_SLOT, boardPresenter);
+        setInSlot(CHAT_SLOT, chatPresenter);
+        setInSlot(BOTTOM_TEAM_SLOT, bottomTeamPresenter);
+        setInSlot(TOP_TEAM_SLOT, topTeamPresenter);
+        setInSlot(PGN_SLOT, pgnPresenter);
+        setInSlot(DRAW_SLOT, moveToDrawPresenter);
+        addRegisteredHandler(UserChangedEvent.getType(), this);
+        addRegisteredHandler(GameStateUpdatedEvent.getType(), this);
+    }
 
-	@Override
-	public void onUserChanged(final UserChangedEvent event) {
-		update();
+    @Override
+    public void onUserChanged(final UserChangedEvent event) {
+        update();
 
-	}
+    }
 
-	private void update() {
-		if (User.get().getColor(true) != null) {
-			bottomTeamPresenter.setColor(User.get().getColor(true));
-			topTeamPresenter.setColor(User.get().getColor(true).getOpposite());
-		} else {
-			Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+    private void update() {
+        if (User.get().getColor(true) != null) {
+            bottomTeamPresenter.setColor(User.get().getColor(true));
+            topTeamPresenter.setColor(User.get().getColor(true).getOpposite());
+        } else {
+            Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
 
-				@Override
-				public boolean execute() {
-					update();
-					return false;
-				}
+                @Override
+                public boolean execute() {
+                    update();
+                    return false;
+                }
 
-			}, 50);
+            }, 50);
 
-		}
+        }
 
-	}
+    }
 
-	@Override
-	public void onGameStateUpdated(final GameStateUpdatedEvent event) {
-		update();
+    @Override
+    public void onGameStateUpdated(final GameStateUpdatedEvent event) {
+        update();
 
-	}
+    }
 
-	@Override
-	public void showEmbedInstructions() {
-		addToPopupSlot(embedInstructionsPresenter);
+    @Override
+    public void showEmbedInstructions() {
+        addToPopupSlot(embedInstructionsPresenter);
 
-	}
+    }
 
 }

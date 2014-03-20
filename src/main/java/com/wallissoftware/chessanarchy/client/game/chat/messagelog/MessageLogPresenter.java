@@ -28,211 +28,228 @@ import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessage;
 import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessageCache;
 import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent;
+import com.wallissoftware.chessanarchy.client.game.gamestate.events.ResyncGameStateRequestEvent;
+import com.wallissoftware.chessanarchy.client.game.gamestate.events.ResyncGameStateRequestEvent.ResyncGameStateRequestHandler;
+import com.wallissoftware.chessanarchy.client.game.gamestate.model.GameState;
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.message.Message;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
-public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyView> implements MessageLogUiHandlers, MessageInLimboHandler, RemoveMessageHandler {
-	public interface MyView extends View, HasUiHandlers<MessageLogUiHandlers> {
+public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyView> implements MessageLogUiHandlers, MessageInLimboHandler, RemoveMessageHandler, ResyncGameStateRequestHandler {
+    public interface MyView extends View, HasUiHandlers<MessageLogUiHandlers> {
 
-		boolean isScrollBarShowing();
+        boolean isScrollBarShowing();
 
-		void addMessage(MessageWrapper message, boolean immediately);
+        void addMessage(MessageWrapper message, boolean immediately);
 
-		void removeLimboMessage(String messageId);
-	}
+        void removeLimboMessage(String messageId);
+    }
 
-	private List<MessageWrapper> messages = new ArrayList<MessageWrapper>();
+    private List<MessageWrapper> messages = new ArrayList<MessageWrapper>();
 
-	private List<MessageWrapper> gameMasterMessages = new ArrayList<MessageWrapper>();
+    private List<MessageWrapper> gameMasterMessages = new ArrayList<MessageWrapper>();
 
-	private Set<String> loadedMessageIds = new HashSet<String>();
+    private Set<String> loadedMessageIds = new HashSet<String>();
 
-	private final MessageInputPresenter messageInputPresenter;
+    private final MessageInputPresenter messageInputPresenter;
 
-	@Inject
-	MessageLogPresenter(final EventBus eventBus, final MyView view, final MessageInputPresenter messageInputPresenter, final GameStateProvider gameStateProvider) {
-		super(eventBus, view);
-		getView().setUiHandlers(this);
-		this.messageInputPresenter = messageInputPresenter;
-		gameStateProvider.setMessageLogPresenter(this);
-	}
+    private final GameStateProvider gameStateProvider;
 
-	@Override
-	protected void onBind() {
-		super.onBind();
-		addRegisteredHandler(MessageInLimboEvent.getType(), this);
-		addRegisteredHandler(RemoveMessageEvent.getType(), this);
-		fetchGameStateMessages();
-		fetchLatestMessage();
-		Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
+    @Inject
+    MessageLogPresenter(final EventBus eventBus, final MyView view, final MessageInputPresenter messageInputPresenter, final GameStateProvider gameStateProvider) {
+        super(eventBus, view);
+        getView().setUiHandlers(this);
+        this.messageInputPresenter = messageInputPresenter;
+        gameStateProvider.setMessageLogPresenter(this);
+        this.gameStateProvider = gameStateProvider;
+    }
 
-			@Override
-			public boolean execute() {
-				fetchLatestMessage();
-				return true;
-			}
+    @Override
+    protected void onBind() {
+        super.onBind();
+        addRegisteredHandler(MessageInLimboEvent.getType(), this);
+        addRegisteredHandler(RemoveMessageEvent.getType(), this);
+        addRegisteredHandler(ResyncGameStateRequestEvent.getType(), this);
+        fetchGameStateMessages();
+        fetchLatestMessage();
+        Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
 
-		}, 2003);
-	}
+            @Override
+            public boolean execute() {
+                fetchLatestMessage();
+                return true;
+            }
 
-	private final SuccessCallback<JsArray<JsonMessage>> gameStateCallback = new SuccessCallback<JsArray<JsonMessage>>() {
+        }, 2003);
+    }
 
-		@Override
-		public void onSuccess(final JsArray<JsonMessage> msgAry) {
-			for (int i = 0; i < msgAry.length(); i++) {
-				addMessage(new MessageWrapper(msgAry.get(i)), false);
-			}
-			fireEvent(new GameStateUpdatedEvent());
+    private final SuccessCallback<JsArray<JsonMessage>> gameStateCallback = new SuccessCallback<JsArray<JsonMessage>>() {
 
-		}
-	};
+        @Override
+        public void onSuccess(final JsArray<JsonMessage> msgAry) {
+            for (int i = 0; i < msgAry.length(); i++) {
+                addMessage(new MessageWrapper(msgAry.get(i)), false);
+            }
+            fireEvent(new GameStateUpdatedEvent());
 
-	private void fetchGameStateMessages() {
-		final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
-		jsonp.requestObject(URL.encode(CAConstants.HOST + "/gamemessages"), gameStateCallback);
+        }
+    };
 
-	}
+    private void fetchGameStateMessages() {
+        final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
+        jsonp.requestObject(URL.encode(CAConstants.HOST + "/gamemessages"), gameStateCallback);
 
-	private boolean addMessage(final MessageWrapper message, final boolean inLimbo) {
-		if (!inLimbo) {
-			messageInputPresenter.markMessageArrived(message);
-		}
-		if (loadedMessageIds.add(message.getId())) {
-			final Set<MessageWrapper> fakeMessages = message.getFakeMessages();
-			if (fakeMessages != null) {
-				for (final MessageWrapper fakeMessage : fakeMessages) {
-					addMessage(fakeMessage, inLimbo);
-				}
-			}
-			getView().addMessage(message, inLimbo);
-			messages.add(message);
-			if (message.isFromGameMaster()) {
-				gameMasterMessages.add(message);
-				return true;
+    }
 
-			}
-		}
-		return false;
+    private boolean addMessage(final MessageWrapper message, final boolean inLimbo) {
+        if (!inLimbo) {
+            messageInputPresenter.markMessageArrived(message);
+        }
+        if (loadedMessageIds.add(message.getId())) {
+            final GameState gameState = gameStateProvider.getGameState();
+            final Set<MessageWrapper> fakeMessages = message.getFakeMessages(gameState.getWhiteGovernment(), gameState.getBlackGovernment());
+            if (fakeMessages != null) {
+                for (final MessageWrapper fakeMessage : fakeMessages) {
+                    addMessage(fakeMessage, inLimbo);
+                }
+            }
+            if (message.getMove() == null || fakeMessages == null) {
+                getView().addMessage(message, inLimbo);
+            }
 
-	}
+            messages.add(message);
+            if (message.isFromGameMaster()) {
+                gameMasterMessages.add(message);
+                return true;
 
-	public String getGameId(int gamesAgo) {
-		Collections.sort(gameMasterMessages);
-		for (final MessageWrapper gameMasterMessage : gameMasterMessages) {
-			final String gameId = gameMasterMessage.getNewGameId();
-			if (gameId != null) {
+            }
+        }
+        return false;
 
-				if (gamesAgo == 0) {
-					return gameId;
-				}
-				gamesAgo -= 1;
-			}
-		}
-		return null;
-	}
+    }
 
-	private List<MessageWrapper> getMessagesForGame(final String gameId) {
-		if (gameId != null) {
-			Collections.sort(gameMasterMessages);
-			for (final MessageWrapper gameMasterMessage : gameMasterMessages) {
-				if (gameId.equals(gameMasterMessage.getNewGameId())) {
-					Collections.sort(messages);
-					final List<MessageWrapper> result = new ArrayList<MessageWrapper>();
-					result.add(gameMasterMessage);
-					for (int index = Collections.binarySearch(messages, gameMasterMessage) - 1; index >= 0; index--) {
-						if (messages.get(index).getNewGameId() == null) {
-							result.add(messages.get(index));
-						} else {
-							return result;
-						}
+    public String getGameId(int gamesAgo) {
+        Collections.sort(gameMasterMessages);
+        for (final MessageWrapper gameMasterMessage : gameMasterMessages) {
+            final String gameId = gameMasterMessage.getNewGameId();
+            if (gameId != null && SyncedTime.get() - 10000 > gameMasterMessage.getCreated()) {
 
-					}
-					return result;
-				}
-			}
-		}
-		return new ArrayList<MessageWrapper>();
-	}
+                if (gamesAgo == 0) {
+                    return gameId;
+                }
+                gamesAgo -= 1;
+            }
+        }
+        return null;
+    }
 
-	public List<MessageWrapper> getMessagesForGames(final String... gameIds) {
-		final List<MessageWrapper> result = new ArrayList<MessageWrapper>();
-		for (final String gameId : gameIds) {
-			result.addAll(getMessagesForGame(gameId));
-		}
-		return result;
-	}
+    private List<MessageWrapper> getMessagesForGame(final String gameId) {
+        if (gameId != null) {
+            Collections.sort(gameMasterMessages);
+            for (final MessageWrapper gameMasterMessage : gameMasterMessages) {
+                if (gameId.equals(gameMasterMessage.getNewGameId())) {
+                    Collections.sort(messages);
+                    final List<MessageWrapper> result = new ArrayList<MessageWrapper>();
+                    result.add(gameMasterMessage);
+                    for (int index = Collections.binarySearch(messages, gameMasterMessage) - 1; index >= 0; index--) {
+                        if (messages.get(index).getNewGameId() == null) {
+                            result.add(messages.get(index));
+                        } else {
+                            return result;
+                        }
 
-	private void fetchLatestMessage() {
-		fetchMessage(null);
-	}
+                    }
+                    return result;
+                }
+            }
+        }
+        return new ArrayList<MessageWrapper>();
+    }
 
-	private void fetchMessage(final String id) {
-		final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
-		if (JsessionUrlEncoder.cookiesEnabled()) {
-			jsonp.setPredeterminedId("fm");
-		}
-		jsonp.requestObject(URL.encode(CAConstants.HOST + "/message" + (id == null ? "" : "?id=" + id)), fetchMessageCallback);
+    public List<MessageWrapper> getMessagesForGames(final String... gameIds) {
+        final List<MessageWrapper> result = new ArrayList<MessageWrapper>();
+        for (final String gameId : gameIds) {
+            result.addAll(getMessagesForGame(gameId));
+        }
+        return result;
+    }
 
-	}
+    private void fetchLatestMessage() {
+        fetchMessage(null);
+    }
 
-	final SuccessCallback<JsonMessageCache> fetchMessageCallback = new SuccessCallback<JsonMessageCache>() {
+    private void fetchMessage(final String id) {
+        final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
+        if (JsessionUrlEncoder.cookiesEnabled()) {
+            jsonp.setPredeterminedId("fm");
+        }
+        jsonp.requestObject(URL.encode(CAConstants.HOST + "/message" + (id == null ? "" : "?id=" + id)), fetchMessageCallback);
 
-		@Override
-		public void onSuccess(final JsonMessageCache messageCache) {
+    }
 
-			if (MessageLink.addMessageLink(messageCache)) {
-				boolean gameStateUpdated = false;
-				for (final Message message : messageCache.getMessages()) {
-					gameStateUpdated = addMessage(new MessageWrapper(message), false) || gameStateUpdated;
+    final SuccessCallback<JsonMessageCache> fetchMessageCallback = new SuccessCallback<JsonMessageCache>() {
 
-				}
-				if (Math.abs(SyncedTime.get() - messageCache.getCreated()) < 10000) {
-					fireEvent(new ReceivedMessageCacheEvent(messageCache));
-				}
-				if (gameStateUpdated) {
-					fireEvent(new GameStateUpdatedEvent());
-				}
-			}
-			fireEvent(new GameStateUpdatedEvent());
+        @Override
+        public void onSuccess(final JsonMessageCache messageCache) {
 
-		}
-	};
+            if (MessageLink.addMessageLink(messageCache)) {
+                boolean gameStateUpdated = false;
+                for (final Message message : messageCache.getMessages()) {
+                    gameStateUpdated = addMessage(new MessageWrapper(message), false) || gameStateUpdated;
 
-	@Override
-	public void prependEarlierMessages() {
-		/*final MessageLink tail = MessageLink.getTail();
-		if (tail != null && tail.getPreviousId() != null) {
-			fetchMessage(tail.getPreviousId(), 10);
-		}*/
+                }
+                if (Math.abs(SyncedTime.get() - messageCache.getCreated()) < 10000) {
+                    fireEvent(new ReceivedMessageCacheEvent(messageCache));
+                }
+                if (gameStateUpdated) {
+                    fireEvent(new GameStateUpdatedEvent());
+                }
+            }
+            fireEvent(new GameStateUpdatedEvent());
 
-	}
+        }
+    };
 
-	public List<MessageWrapper> getCurrentGameMessages() {
-		return getMessagesForGame(getGameId(0));
-	}
+    @Override
+    public void prependEarlierMessages() {
+        /*final MessageLink tail = MessageLink.getTail();
+        if (tail != null && tail.getPreviousId() != null) {
+        	fetchMessage(tail.getPreviousId(), 10);
+        }*/
 
-	@Override
-	public void onMessageInLimbo(final MessageInLimboEvent event) {
-		addMessage(event.getMessage(), true);
+    }
 
-	}
+    public List<MessageWrapper> getCurrentGameMessages() {
+        return getMessagesForGame(getGameId(0));
+    }
 
-	public List<MessageWrapper> getCurrentGameMasterMessages() {
-		final List<MessageWrapper> result = new ArrayList<MessageWrapper>();
-		for (final MessageWrapper message : getCurrentGameMessages()) {
-			if (message.isFromGameMaster()) {
-				result.add(message);
-			}
-		}
-		return result;
-	}
+    @Override
+    public void onMessageInLimbo(final MessageInLimboEvent event) {
+        addMessage(event.getMessage(), true);
 
-	@Override
-	public void onRemoveMessage(final RemoveMessageEvent event) {
-		getView().removeLimboMessage(event.getMessageId());
+    }
 
-	}
+    public List<MessageWrapper> getCurrentGameMasterMessages() {
+        final List<MessageWrapper> result = new ArrayList<MessageWrapper>();
+        for (final MessageWrapper message : getCurrentGameMessages()) {
+            if (message.isFromGameMaster()) {
+                result.add(message);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void onRemoveMessage(final RemoveMessageEvent event) {
+        getView().removeLimboMessage(event.getMessageId());
+
+    }
+
+    @Override
+    public void onResyncGameStateRequest(final ResyncGameStateRequestEvent event) {
+        fetchGameStateMessages();
+
+    }
 
 }

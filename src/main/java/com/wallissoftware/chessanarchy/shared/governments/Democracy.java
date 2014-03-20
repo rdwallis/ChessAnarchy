@@ -9,54 +9,55 @@ import com.wallissoftware.chessanarchy.shared.CAConstants;
 
 public class Democracy extends SystemOfGovernment {
 
-	@Override
-	public MoveResult calculateMove(final String extraInfo, final List<MoveRequest> moveRequests) {
-		final Map<String, Integer> moveVotes = new HashMap<String, Integer>();
-		for (final MoveRequest moveRequest : moveRequests) {
-			if (!moveVotes.containsKey(moveRequest.getMove())) {
-				moveVotes.put(moveRequest.getMove(), 0);
-			}
-			moveVotes.put(moveRequest.getMove(), moveVotes.get(moveRequest.getMove()));
-		}
+    public Democracy() {
+        addCountingVoteMessage("The ${color} team's votes are being counted.");
+        addMoveMessage("The people have spoken, ${color} team moves to ${move}");
+        addInsult("The ${color} team proves Vox Populi Vox Moranus.  The voice of the people is the voice of a moron.");
+    }
 
-		Entry<String, Integer> mostPopularMove = null;
-		for (final Entry<String, Integer> entry : moveVotes.entrySet()) {
-			if (mostPopularMove == null || entry.getValue() > mostPopularMove.getValue()) {
-				mostPopularMove = entry;
+    @Override
+    public MoveResult calculateMove(final String extraInfo, final List<MoveRequest> moveRequests) {
+        final Map<String, Integer> moveVotes = new HashMap<String, Integer>();
+        for (final MoveRequest moveRequest : moveRequests) {
+            if (!moveVotes.containsKey(moveRequest.getMove())) {
+                moveVotes.put(moveRequest.getMove(), 0);
+            }
+            moveVotes.put(moveRequest.getMove(), moveVotes.get(moveRequest.getMove()) + 1);
+        }
 
-			}
-		}
-		return new MoveResult(extraInfo, mostPopularMove.getKey());
-	}
+        Entry<String, Integer> mostPopularMove = null;
+        for (final Entry<String, Integer> entry : moveVotes.entrySet()) {
+            if (mostPopularMove == null || entry.getValue() > mostPopularMove.getValue()) {
+                mostPopularMove = entry;
 
-	@Override
-	public String getName() {
-		return "Democracy";
-	}
+            }
+        }
+        return new MoveResult(extraInfo, mostPopularMove.getKey());
+    }
 
-	@Override
-	public String getDescription() {
-		return "Under democracy votes are counted after 30 seconds and the most popular move is played.";
-	}
+    @Override
+    public String getName() {
+        return "Democracy";
+    }
 
-	@Override
-	public String getBlackIconUrl() {
-		return CAConstants.HOST + "/images/democracy_black.png";
-	}
+    @Override
+    public String getDescription() {
+        return "Under democracy votes are counted after 20 seconds and the most popular move is played.";
+    }
 
-	@Override
-	public String getWhiteIconUrl() {
-		return CAConstants.HOST + "/images/democracy_white.png";
-	}
+    @Override
+    public String getBlackIconUrl() {
+        return CAConstants.HOST + "/images/democracy_black.png";
+    }
 
-	@Override
-	boolean isLastVoteOfPlayerPreferred() {
-		return true;
-	}
+    @Override
+    public String getWhiteIconUrl() {
+        return CAConstants.HOST + "/images/democracy_white.png";
+    }
 
-	@Override
-	public String getMovePreamble() {
-		return "color Team's most popular move was ";
-	}
+    @Override
+    boolean isLastVoteOfPlayerPreferred() {
+        return true;
+    }
 
 }

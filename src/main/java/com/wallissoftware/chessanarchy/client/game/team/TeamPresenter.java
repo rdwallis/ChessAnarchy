@@ -14,103 +14,113 @@ import com.gwtplatform.mvp.client.View;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
 import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.client.game.team.governmentdescription.GovernmentDescriptionPresenter;
+import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.governments.GovernmentInfo;
 import com.wallissoftware.chessanarchy.shared.governments.SystemOfGovernment;
 
 public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> implements TeamUiHandlers {
-	public interface MyView extends View, HasUiHandlers<TeamUiHandlers> {
+    public interface MyView extends View, HasUiHandlers<TeamUiHandlers> {
 
-		void setColor(Color color);
+        void setColor(Color color);
 
-		void setJoinCountDown(Long joinTime);
+        void setJoinCountDown(Long joinTime);
 
-		void setGovernmentName(String name);
+        void setGovernmentName(String name);
 
-		void setGovernmentIcon(String governmentIcon);
+        void setGovernmentIcon(String governmentIcon);
 
-		Set<IsWidget> getAutoHidePartners();
+        Set<IsWidget> getAutoHidePartners();
 
-	}
+        void setTimeUntilMove(long timeUntilMove);
 
-	private final GameStateProvider gameStateProvider;
-	private Color color;
-	private final GovernmentDescriptionPresenter governmentDescriptionPresenter;
+    }
 
-	@Inject
-	TeamPresenter(final EventBus eventBus, final MyView view, final GameStateProvider gameStateProvider, final Provider<GovernmentDescriptionPresenter> governmentDescriptionPresenterProvider) {
-		super(eventBus, view);
+    private final GameStateProvider gameStateProvider;
+    private Color color;
+    private final GovernmentDescriptionPresenter governmentDescriptionPresenter;
 
-		getView().setUiHandlers(this);
-		this.gameStateProvider = gameStateProvider;
-		this.governmentDescriptionPresenter = governmentDescriptionPresenterProvider.get();
-		for (final IsWidget autoHidePartner : getView().getAutoHidePartners()) {
-			governmentDescriptionPresenter.addAutoHidePartner(autoHidePartner);
-		}
+    @Inject
+    TeamPresenter(final EventBus eventBus, final MyView view, final GameStateProvider gameStateProvider, final Provider<GovernmentDescriptionPresenter> governmentDescriptionPresenterProvider) {
+        super(eventBus, view);
 
-		Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
+        getView().setUiHandlers(this);
+        this.gameStateProvider = gameStateProvider;
+        this.governmentDescriptionPresenter = governmentDescriptionPresenterProvider.get();
+        for (final IsWidget autoHidePartner : getView().getAutoHidePartners()) {
+            governmentDescriptionPresenter.addAutoHidePartner(autoHidePartner);
+        }
 
-			@Override
-			public boolean execute() {
-				update();
-				return true;
-			}
-		}, 1000);
-	}
+        Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
 
-	public void setColor(final Color color) {
-		this.color = color;
-		if (color != null) {
-			getView().setColor(getColor());
-			update();
-		}
-	}
+            @Override
+            public boolean execute() {
+                update();
+                return true;
+            }
+        }, 1000);
+    }
 
-	private Color getColor() {
-		if (this.color == null) {
-			return null;
-		}
-		try {
-			if (gameStateProvider.getGameState().swapColors()) {
-				return color.getOpposite();
-			} else {
-				return color;
-			}
-		} catch (final NullPointerException e) {
-			return color;
-		}
-	}
+    public void setColor(final Color color) {
+        this.color = color;
+        if (color != null) {
+            getView().setColor(getColor());
+            update();
+        }
+    }
 
-	private void update() {
-		if (getGovernment() != null) {
-			getView().setGovernmentName(getGovernment().getName());
-			getView().setGovernmentIcon(getColor() == Color.WHITE ? getGovernment().getWhiteIconUrl() : getGovernment().getBlackIconUrl());
-		}
-		getView().setJoinCountDown(User.get().getColorJoinTime(color));
-	}
+    private Color getColor() {
+        if (this.color == null) {
+            return null;
+        }
+        try {
+            if (gameStateProvider.getGameState().swapColors()) {
+                return color.getOpposite();
+            } else {
+                return color;
+            }
+        } catch (final NullPointerException e) {
+            return color;
+        }
+    }
 
-	@Override
-	public void joinTeam() {
-		fireEvent(new SendMessageEvent("/team " + getColor().name()));
-		User.get().joinTeam(getEventBus(), getColor());
-	}
+    private void update() {
+        if (getGovernment() != null) {
+            getView().setGovernmentName(getGovernment().getName());
+            getView().setGovernmentIcon(getColor() == Color.WHITE ? getGovernment().getWhiteIconUrl() : getGovernment().getBlackIconUrl());
+            if (!getGovernment().getName().equals("Anarchy") && (gameStateProvider.getMoveTree().isWhitesTurn() ^ getColor() == Color.BLACK)) {
+                final long timeSinceMove = (SyncedTime.get() - gameStateProvider.getLastMoveTime()) / 1000;
+                getView().setTimeUntilMove(20 - timeSinceMove);
+            } else {
+                getView().setTimeUntilMove(0);
+            }
+        }
+        getView().setJoinCountDown(User.get().getColorJoinTime(color));
 
-	@Override
-	public void showGovernmentDescription() {
-		governmentDescriptionPresenter.setGovernment(getGovernment());
-		governmentDescriptionPresenter.showRelativeTo(getView());
+    }
 
-	}
+    @Override
+    public void joinTeam() {
+        fireEvent(new SendMessageEvent("/team " + getColor().name()));
+        User.get().joinTeam(getEventBus(), getColor());
+    }
 
-	private GovernmentInfo getGovernment() {
-		try {
-			return getColor() == Color.WHITE ? gameStateProvider.getGameState().getWhiteGovernment() : gameStateProvider.getGameState().getBlackGovernment();
+    @Override
+    public void showGovernmentDescription() {
+        governmentDescriptionPresenter.setGovernment(getGovernment());
+        governmentDescriptionPresenter.showRelativeTo(getView());
 
-		} catch (final NullPointerException e) {
-			return SystemOfGovernment.get("Anarchy");
-		}
+    }
 
-	}
+    private GovernmentInfo getGovernment() {
+        try {
+            return getColor() == Color.WHITE ? gameStateProvider.getGameState().getWhiteGovernment() : gameStateProvider.getGameState().getBlackGovernment();
+
+        } catch (final NullPointerException e) {
+            return SystemOfGovernment.get("Anarchy");
+        }
+
+    }
 
 }

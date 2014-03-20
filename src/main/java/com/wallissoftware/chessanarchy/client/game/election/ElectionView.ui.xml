@@ -1,25 +1,33 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
              xmlns:g="urn:import:com.google.gwt.user.client.ui">
-    <ui:style>
+    <ui:style type="com.wallissoftware.chessanarchy.client.game.election.ElectionView.MyStyle">
+    
     
     .black {
-		background:black;
+		background-color:black;
 		color:white;
 	}
 	
 	.white {
-		background:white;
+		background-color:white;
 		color:black;
 		}
+		
+		.header {
+		font-size: 16px;
+		font-weight: bold;
+		}
     </ui:style>
-    <g:DialogBox autoHideOnHistoryEventsEnabled="true" autoHideEnabled="true" text="Vote for your teams governemnt">
-    	<g:HTMLPanel ui:field="mainPanel">
-    		<g:Label>A new game begins in 30 seconds</g:Label>
-    		<g:Label>You're on the White Team</g:Label>
-    		<g:Label>Vote for your government</g:Label>
-    		
+    <g:PopupPanel autoHideOnHistoryEventsEnabled="true" autoHideEnabled="true" animationEnabled="true">
+    	<g:VerticalPanel horizontalAlignment="CENTER" ui:field="mainPanel" spacing="10">
+    		<g:Label addStyleNames="{style.header}" ui:field="countDown">A new game begins in 30 seconds</g:Label>
+    		<g:Label addStyleNames="{style.header}" ui:field="teamLabel">You're on the White Team</g:Label>
+    		<g:Label addStyleNames="{style.header}">Vote for your government</g:Label>
+    		<g:HorizontalPanel ui:field="votePanel" spacing="10">
+        
+            </g:HorizontalPanel>
     	
-    	</g:HTMLPanel>
-    </g:DialogBox>
+    	</g:VerticalPanel>
+    </g:PopupPanel>
 </ui:UiBinder>

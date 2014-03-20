@@ -13,74 +13,79 @@ import com.wallissoftware.chessanarchy.shared.CAConstants;
 
 public class SyncedTime {
 
-	private static long diff = 0;
+    private static long diff = 0;
 
-	private static List<Long> diffs = new ArrayList<Long>();
+    private static List<Long> diffs = new ArrayList<Long>();
 
-	private static boolean accurateEnough = false;
+    private static boolean accurateEnough = false;
 
-	private final static Logger logger = Logger.getLogger(SyncedTime.class.getName());
+    private final static Logger logger = Logger.getLogger(SyncedTime.class.getName());
 
-	static {
-		Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+    static {
+        Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
 
-			private int count = 5;
+            private int count = 5;
 
-			@Override
-			public boolean execute() {
-				final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
-				jsonp.requestString(CAConstants.HOST + "/time", new SuccessCallback<String>() {
+            @Override
+            public boolean execute() {
+                final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
+                jsonp.requestString(CAConstants.HOST + "/time", new SuccessCallback<String>() {
 
-					@Override
-					public void onSuccess(final String result) {
-						setDiff(result);
+                    @Override
+                    public void onSuccess(final String result) {
+                        setDiff(result);
 
-					}
+                    }
 
-				});
-				return --count >= 0 && !accurateEnough;
+                });
+                return --count >= 0 && !accurateEnough;
 
-			}
-		}, 1019);
+            }
+        }, 1019);
 
-	}
+    }
 
-	public static long get() {
-		return System.currentTimeMillis() - diff;
-	}
+    public static long getDiff() {
 
-	private static void setDiff(final String text) {
+        return diff;
+    }
 
-		try {
-			final long d = System.currentTimeMillis() - Long.valueOf(text);
-			logger.info("Time diff with server = " + d);
-			diffs.add(d);
-			recalcDiff();
-		} catch (final Exception e) {
+    public static long get() {
+        return System.currentTimeMillis() - diff;
+    }
 
-		}
+    private static void setDiff(final String text) {
 
-	}
+        try {
+            final long d = System.currentTimeMillis() - Long.valueOf(text);
+            logger.info("Time diff with server = " + d);
+            diffs.add(d);
+            recalcDiff();
+        } catch (final Exception e) {
 
-	private static void recalcDiff() {
-		final long lastDiff = diff;
-		if (diffs.size() < 4) {
-			long total = 0;
-			for (final long d : diffs) {
-				total += d;
-			}
-			diff = total / diffs.size();
-		} else {
-			Collections.sort(diffs);
-			long total = 0;
-			for (int i = 0; i < diffs.size() - 2; i++) {
-				total += diffs.get(i);
-			}
-			diff = total / (diffs.size() - 2);
+        }
 
-		}
-		logger.info("Calculated time diff with server = " + diff);
-		accurateEnough = Math.abs(diff - lastDiff) < 200;
+    }
 
-	}
+    private static void recalcDiff() {
+        final long lastDiff = diff;
+        if (diffs.size() < 4) {
+            long total = 0;
+            for (final long d : diffs) {
+                total += d;
+            }
+            diff = total / diffs.size();
+        } else {
+            Collections.sort(diffs);
+            long total = 0;
+            for (int i = 0; i < diffs.size() - 2; i++) {
+                total += diffs.get(i);
+            }
+            diff = total / (diffs.size() - 2);
+
+        }
+        logger.info("Calculated time diff with server = " + diff);
+        accurateEnough = Math.abs(diff - lastDiff) < 200;
+
+    }
 }

@@ -44,6 +44,13 @@
 		cursor: pointer;
 		margin:0px;
 	}
+	.timeUntilMove {
+		position:absolute;
+		top:10px;
+		right:10px;
+		margin:0px;
+		font-size: 32px;
+	}
 	
 	.hide {
 		visibility: hidden;
@@ -61,5 +68,6 @@
 	    	<g:Label ui:field="joinTeamCountDown"  addStyleNames="{style.heading} {style.countDown} {style.hide}"></g:Label>
 	    </g:VerticalPanel>
 	    <g:Image addStyleNames="{style.governmentImage}" ui:field="governmentImage" width="60px" height="60px"></g:Image>
+      <g:Label ui:field="timeUntilMove" addStyleNames="{style.heading} {style.timeUntilMove} "/>
     </g:HTMLPanel>
 </ui:UiBinder>

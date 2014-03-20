@@ -1,11 +1,11 @@
 #chessAnarchy{
-	min-width: 1008px;
+	min-width: 1022px;
 	min-height: 617px;
 	border: 2px gray solid;
 	padding: 10px;
 }
 
-@media (max-width: 1043px) {
+@media (max-width: 1077px) {
 	.chessAnarchyNotation {
 		display:none!important;
 		visibility:hidden!important;

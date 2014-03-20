@@ -83,7 +83,7 @@ public class VotePresenter extends PresenterWidget<VotePresenter.MyView> impleme
     private int getVoteTotal() {
         int count = 0;
         for (final Message message : messageLogPresenter.getCurrentGameMessages()) {
-            if (message.getText().equals(government.getName())) {
+            if (message.getColor() == playerColor && message.getText().equals(government.getName())) {
                 count += 1;
             }
         }

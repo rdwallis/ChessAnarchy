@@ -8,36 +8,36 @@ import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
 
 public class PgnView extends ViewWithUiHandlers<PgnUiHandlers> implements PgnPresenter.MyView {
-	public interface Binder extends UiBinder<Widget, PgnView> {
-	}
+    public interface Binder extends UiBinder<Widget, PgnView> {
+    }
 
-	int moveCount = 0;
+    int moveCount = 0;
 
-	@UiField FlexTable flexTable;
+    @UiField FlexTable flexTable;
 
-	@Inject
-	PgnView(final Binder binder) {
-		initWidget(binder.createAndBindUi(this));
-	}
+    @Inject
+    PgnView(final Binder binder) {
+        initWidget(binder.createAndBindUi(this));
+    }
 
-	@Override
-	public void addMove(final String pgn) {
+    @Override
+    public void addMove(final String pgn) {
 
-		final int row = moveCount / 2;
-		if (moveCount % 2 == 0) {
-			flexTable.setText(row, 0, (row + 1) + "");
-			flexTable.setText(row, 1, pgn);
-		} else {
-			flexTable.setText(row, 2, pgn);
-		}
+        final int row = moveCount / 2;
+        if (moveCount % 2 == 0) {
+            flexTable.setText(row, 0, (row + 1) + ".");
+            flexTable.setText(row, 1, pgn);
+        } else {
+            flexTable.setText(row, 2, pgn);
+        }
 
-		moveCount += 1;
+        moveCount += 1;
 
-	}
+    }
 
-	@Override
-	public void clearMoves() {
-		moveCount = 0;
-		flexTable.clear();
-	}
+    @Override
+    public void clearMoves() {
+        moveCount = 0;
+        flexTable.clear();
+    }
 }

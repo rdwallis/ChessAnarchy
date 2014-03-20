@@ -13,51 +13,55 @@ import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpd
 import com.wallissoftware.chessanarchy.client.game.gamestate.events.GameStateUpdatedEvent.GameStateUpdatedHandler;
 
 public class PgnPresenter extends PresenterWidget<PgnPresenter.MyView> implements PgnUiHandlers, GameStateUpdatedHandler {
-	public interface MyView extends View, HasUiHandlers<PgnUiHandlers> {
+    public interface MyView extends View, HasUiHandlers<PgnUiHandlers> {
 
-		void addMove(String pgn);
+        void addMove(String pgn);
 
-		void clearMoves();
-	}
+        void clearMoves();
+    }
 
-	private final GameStateProvider gameStateProvider;
+    private final GameStateProvider gameStateProvider;
 
-	private List<String> moveList = new ArrayList<String>();
+    private List<String> moveList = new ArrayList<String>();
 
-	@Inject
-	PgnPresenter(final EventBus eventBus, final MyView view, final GameStateProvider gameStateProvider) {
-		super(eventBus, view);
-		this.gameStateProvider = gameStateProvider;
-		getView().setUiHandlers(this);
+    @Inject
+    PgnPresenter(final EventBus eventBus, final MyView view, final GameStateProvider gameStateProvider) {
+        super(eventBus, view);
+        this.gameStateProvider = gameStateProvider;
+        getView().setUiHandlers(this);
 
-	}
+    }
 
-	@Override
-	protected void onBind() {
-		super.onBind();
-		addRegisteredHandler(GameStateUpdatedEvent.getType(), this);
-	}
+    @Override
+    protected void onBind() {
+        super.onBind();
+        addRegisteredHandler(GameStateUpdatedEvent.getType(), this);
+    }
 
-	@Override
-	public void onGameStateUpdated(final GameStateUpdatedEvent event) {
-		setMoveList(gameStateProvider.getGameState().getMoveList());
+    @Override
+    public void onGameStateUpdated(final GameStateUpdatedEvent event) {
+        setMoveList(gameStateProvider.getGameState().getMoveList());
 
-	}
+    }
 
-	private void setMoveList(final List<String> moveList) {
-		if (!moveList.equals(this.moveList)) {
-			if (moveList.subList(0, moveList.size() - 1).equals(this.moveList)) {
-				getView().addMove(moveList.get(moveList.size() - 1));
-			} else {
-				getView().clearMoves();
+    private void setMoveList(final List<String> moveList) {
+        if (moveList.isEmpty()) {
+            getView().clearMoves();
+            this.moveList = moveList;
+        }
+        if (!moveList.equals(this.moveList)) {
+            if (moveList.subList(0, moveList.size() - 1).equals(this.moveList)) {
+                getView().addMove(moveList.get(moveList.size() - 1));
+            } else {
+                getView().clearMoves();
 
-				for (final String move : moveList) {
-					getView().addMove(move);
-				}
-			}
-			this.moveList = moveList;
-		}
+                for (final String move : moveList) {
+                    getView().addMove(move);
+                }
+            }
+            this.moveList = moveList;
+        }
 
-	}
+    }
 
 }

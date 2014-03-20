@@ -159,8 +159,8 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
         }
         if (whiteGovernment != null && blackGovernment != null) {
             if (getWinner() != null) {
-                final Message insultMessage = new MessageImpl(getName(), getUserId(), getWinner().getOpposite() == Color.WHITE ? whiteGovernment.getInsult(getCreated(), getWinner().getOpposite()) : blackGovernment.getInsult(getCreated(), getWinner().getOpposite()), getId()
-                        + "insult", getColor(), getCreated() + 500);
+                final Message insultMessage = new MessageImpl(getName(), getUserId(), getWinner().getOpposite() == Color.WHITE ? whiteGovernment.getInsult(getCreated() + 500, getWinner().getOpposite()) : blackGovernment.getInsult(getCreated() + 500, getWinner().getOpposite()),
+                        getId() + "insult", getColor(), getCreated() + 500);
                 final Set<MessageWrapper> result = new HashSet<MessageWrapper>();
                 result.add(new MessageWrapper(insultMessage));
                 return result;
@@ -168,8 +168,8 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
             if (getMove() != null) {
                 final Set<MessageWrapper> result = new HashSet<MessageWrapper>();
                 final GovernmentInfo gov = getColor() == Color.WHITE ? whiteGovernment : blackGovernment;
-                result.add(new MessageWrapper(new MessageImpl(getName(), getUserId(), gov.getCountingVotesMessage(getCreated(), getColor()), getId() + "cvm", getColor(), getCreated() + 500)));
-                result.add(new MessageWrapper(new MessageImpl(getName(), getUserId(), gov.getMoveMessage(getCreated(), getColor(), getMove()), getId() + "move", getColor(), getCreated() + 750)));
+                result.add(new MessageWrapper(new MessageImpl(getName(), getUserId(), gov.getCountingVotesMessage(getCreated() - 1000, getColor()), getId() + "cvm", getColor(), getCreated() - 1000)));
+                result.add(new MessageWrapper(new MessageImpl(getName(), getUserId(), gov.getMoveMessage(getCreated(), getColor(), getMove()), getId() + "move", getColor(), getCreated())));
                 return result;
             }
         }

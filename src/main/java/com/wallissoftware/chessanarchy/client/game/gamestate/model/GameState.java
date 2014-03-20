@@ -19,6 +19,7 @@ public final class GameState {
     private long electionStart = 0;
     private List<String> moveList = new ArrayList<String>();
     private long lastMoveTime = 0;
+    private long secondLastMoveTime = 0;
 
     private final static Logger logger = Logger.getLogger(GameState.class.getName());
 
@@ -41,6 +42,7 @@ public final class GameState {
 
                         if (moveList.size() % 2 == 0 ^ message.getColor() == Color.BLACK) {
                             moveList.add(message.getMove());
+                            secondLastMoveTime = lastMoveTime;
                             lastMoveTime = message.getCreated();
                         } else {
                             logger.info("GameState Out Of Sync");
@@ -86,6 +88,10 @@ public final class GameState {
 
     public long getLastMoveTime() {
         return Math.max(getElectionStart() + 30000, lastMoveTime);
+    }
+
+    public long getSecondLastMoveTime() {
+        return Math.max(getElectionStart(), secondLastMoveTime);
     }
 
 }

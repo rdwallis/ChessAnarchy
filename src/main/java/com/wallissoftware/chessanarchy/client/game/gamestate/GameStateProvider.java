@@ -66,4 +66,8 @@ public class GameStateProvider {
         return getGameState().getLastMoveTime();
     }
 
+    public long getSecondLastMoveTime() {
+        return getGameState().getSecondLastMoveTime();
+    }
+
 }

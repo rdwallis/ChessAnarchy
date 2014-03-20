@@ -13,6 +13,7 @@
 		margin-right: 10px;
 		overflow-x:hidden;
 		margin-bottom: 10px;
+		overflow-y:auto;
 	}
 	
 	.chat {
@@ -50,7 +51,7 @@
 				<g:SimplePanel ui:field="bottomTeamPanel" addStyleNames="{style.teamView}"/>
 			</div>
             <div class="{style.responsive}">
-			<g:ScrollPanel ui:field="pgnPanel"
+			<g:SimplePanel ui:field="pgnPanel"
 				addStyleNames="{style.pgn} chessAnarchyNotation" />
        <g:SimplePanel ui:field="drawPanel" addStyleNames="chessAnarchyNotation"/>
         </div>

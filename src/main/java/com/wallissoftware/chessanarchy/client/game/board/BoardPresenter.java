@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
@@ -24,7 +25,6 @@ import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.client.user.UserChangedEvent;
 import com.wallissoftware.chessanarchy.client.user.UserChangedEvent.UserChangedHandler;
-import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Move;
 import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
@@ -49,7 +49,9 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
         @Override
         public void run() {
-            addToPopupSlot(electionPresenter);
+            if (RootPanel.get("chessAnarchy") != null || RootPanel.get("chessAnarchyShowElection") != null) {
+                addToPopupSlot(electionPresenter);
+            }
 
         }
 
@@ -152,7 +154,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
     }
 
     private void makeGhostMove(final long startTime, final Move move) {
-        getView().makeGhostMove(startTime + CAConstants.SYNC_DELAY, gameStateProvider.getMoveTree().getBoard(), move);
+        getView().makeGhostMove(startTime, gameStateProvider.getMoveTree().getBoard(), move);
 
     }
 

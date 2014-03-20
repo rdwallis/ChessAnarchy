@@ -81,7 +81,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
                 return true;
             }
 
-        }, 2003);
+        }, (int) CAConstants.SYNC_DELAY);
     }
 
     private final SuccessCallback<JsArray<JsonMessage>> gameStateCallback = new SuccessCallback<JsArray<JsonMessage>>() {

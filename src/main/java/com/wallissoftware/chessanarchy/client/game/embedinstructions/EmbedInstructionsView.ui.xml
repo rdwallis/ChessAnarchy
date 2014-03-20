@@ -130,6 +130,14 @@
                   <div id="chessAnarchyMovesUntilDraw"></div>
                 ]]>
 							</code>
+              30 seconds after a game starts an election is called so that teams can choose their government.<br/>
+              Users can vote in the chat window but if you want the full election popup to show add the following to your page: <br/>
+             <code class="{style.copy} {style.adv}">
+             <![CDATA[
+            <div id="chessAnarchyShowElection" style='display:none'></div>
+          ]]>
+              </code>
+              
 							<h5>Some Tips</h5>
 							<ul>
 								<li>You don't have to include the ChessAnarchy.css file if

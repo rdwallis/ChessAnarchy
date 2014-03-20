@@ -16,6 +16,7 @@ import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
 import com.wallissoftware.chessanarchy.client.game.team.governmentdescription.GovernmentDescriptionPresenter;
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
 import com.wallissoftware.chessanarchy.client.user.User;
+import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.governments.GovernmentInfo;
 import com.wallissoftware.chessanarchy.shared.governments.SystemOfGovernment;
@@ -52,20 +53,21 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
             governmentDescriptionPresenter.addAutoHidePartner(autoHidePartner);
         }
 
-        Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
+        Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
 
             @Override
             public boolean execute() {
                 update();
                 return true;
             }
-        }, 1000);
+        }, 200);
     }
 
     public void setColor(final Color color) {
         this.color = color;
         if (color != null) {
             getView().setColor(getColor());
+            getView().setTimeUntilMove(0);
             update();
         }
     }
@@ -90,7 +92,10 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
             getView().setGovernmentName(getGovernment().getName());
             getView().setGovernmentIcon(getColor() == Color.WHITE ? getGovernment().getWhiteIconUrl() : getGovernment().getBlackIconUrl());
             if (!getGovernment().getName().equals("Anarchy") && (gameStateProvider.getMoveTree().isWhitesTurn() ^ getColor() == Color.BLACK)) {
-                final long timeSinceMove = (SyncedTime.get() - gameStateProvider.getLastMoveTime()) / 1000;
+                final long timeSinceMove = Math.max(0, ((SyncedTime.get() - CAConstants.SYNC_DELAY) - gameStateProvider.getLastMoveTime()) / 1000);
+                getView().setTimeUntilMove(20 - timeSinceMove);
+            } else if (!getGovernment().getName().equals("Anarchy")) {
+                final long timeSinceMove = Math.max(0, ((SyncedTime.get() - CAConstants.SYNC_DELAY) - gameStateProvider.getSecondLastMoveTime()) / 1000);
                 getView().setTimeUntilMove(20 - timeSinceMove);
             } else {
                 getView().setTimeUntilMove(0);

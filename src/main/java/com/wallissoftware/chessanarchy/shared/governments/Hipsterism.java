@@ -11,8 +11,10 @@ public class Hipsterism extends SystemOfGovernment {
 
     public Hipsterism() {
         addCountingVoteMessage("The ${color} team's votes are being counted.");
-        addMoveMessage("The ${color} team, totally likes ${move} because, you know, it hasn't sold out.  It's authentic you know like a piece of art, not like that commercial crap everyone else is into.");
-        addInsult("Perhaps if the ${color} team put some lenses in their glasses they would see how stupid they were.");
+        addMoveMessage("The ${color} team bought ${move} at a thrift shop.  They overpaid.");
+        addMoveMessage("The ${color} team likes ${move}.  You probably haven't heard of it.");
+        addMoveMessage("The ${color} team, moves to ${move} because ${move} hasn't sold out.  It's authentic like a piece of art, not like that commercial crap everyone else is into.");
+        addInsult("Perhaps if the ${color} team put some lenses in their glasses they would see how stupid they are.");
     }
 
     @Override

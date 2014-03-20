@@ -8,7 +8,11 @@ public class Anarchy extends SystemOfGovernment {
 
     public Anarchy() {
         addCountingVoteMessage("The ${color} team's government has been set on fire.");
-        addMoveMessage("In the ensuing chaos ${color} team moves to ${move}");
+        addCountingVoteMessage("The ${color} team is revolting.");
+        addCountingVoteMessage("Unidentified troops have moved to take control of ${color} team's seaports.");
+        addCountingVoteMessage("An unidentified boeing 777 has crashed into ${color} team's parlimentary buildings.");
+        addCountingVoteMessage("A duck faced man has released sarin gas in a ${color} team subburb.");
+        addMoveMessage("In the chaos ${color} team moves to ${move}");
         addInsult("The ${color} team is not a part of the system because the system didn't want them.");
     }
 

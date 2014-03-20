@@ -43,7 +43,7 @@ public class GetMessageServlet extends HttpServlet {
             final MessageCache messageCache = ofy.load().type(MessageCache.class).id(id).getValue();
             if (messageCache != null) {
                 resp.setContentType("application/json");
-                final String maxAge = idSupplied ? "31556926" : ((int) (CAConstants.SYNC_DELAY / 1000)) + "";
+                final String maxAge = idSupplied ? "31556926" : ((int) (CAConstants.SYNC_DELAY / 1000) - 1) + "";
                 resp.setHeader("cache-control", "public, max-age=" + maxAge);
 
                 resp.getWriter().write(messageCache.getJson());

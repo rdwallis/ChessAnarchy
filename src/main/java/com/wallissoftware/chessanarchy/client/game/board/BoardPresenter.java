@@ -16,6 +16,7 @@ import com.wallissoftware.chessanarchy.client.game.board.promotion.PromotionPres
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent;
 import com.wallissoftware.chessanarchy.client.game.chat.events.ReceivedMessageCacheEvent.ReceivedMessageCacheHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent;
+import com.wallissoftware.chessanarchy.client.game.chat.events.SendMessageEvent.SendMessageHandler;
 import com.wallissoftware.chessanarchy.client.game.chat.model.JsonMessage;
 import com.wallissoftware.chessanarchy.client.game.election.ElectionPresenter;
 import com.wallissoftware.chessanarchy.client.game.gamestate.GameStateProvider;
@@ -29,7 +30,7 @@ import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Move;
 import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveException;
 
-public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler, GameStateUpdatedHandler, UserChangedHandler {
+public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler, GameStateUpdatedHandler, UserChangedHandler, SendMessageHandler {
     public interface MyView extends View, HasUiHandlers<BoardUiHandlers> {
 
         void makeGhostMove(long startTime, char[][] board, Move move);
@@ -79,6 +80,16 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
         addRegisteredHandler(ReceivedMessageCacheEvent.getType(), this);
         addRegisteredHandler(GameStateUpdatedEvent.getType(), this);
         addRegisteredHandler(UserChangedEvent.getType(), this);
+        addRegisteredHandler(SendMessageEvent.getType(), this);
+        Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+
+            @Override
+            public boolean execute() {
+                checkElection();
+                return true;
+            }
+
+        }, 5000);
 
     }
 
@@ -94,7 +105,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
                     return false;
                 }
 
-            }, 100);
+            }, 200);
         }
 
     }
@@ -130,7 +141,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
             final Map<String, Move> lastMoveMap = gameStateProvider.getParentMoveTree().getPgnMoveMap();
             for (final JsonMessage msg : event.getMessageCache().getMessages()) {
                 final String message = msg.getText();
-                final long created = msg.getCreated();
+                final long created = User.get().getUserId().equals(msg.getUserId()) ? 0 : msg.getCreated();
                 if (SyncedTime.get() - created < 10000) {
                     if (pgnMoveMap.containsKey(message)) {
                         makeGhostMove(created, pgnMoveMap.get(message));
@@ -161,11 +172,16 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
     @Override
     public void onGameStateUpdated(final GameStateUpdatedEvent event) {
         updateBoard();
+    }
+
+    private void checkElection() {
         final long electionStart = gameStateProvider.getGameState().getElectionStart();
         final long syncedTime = SyncedTime.get();
+
         if (syncedTime < electionStart) {
             showElectionTimer.schedule((int) (electionStart - syncedTime));
         }
+
     }
 
     @Override
@@ -213,6 +229,33 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
     @Override
     public void allowRedraw() {
         preventRedraw = false;
+
+    }
+
+    @Override
+    public void onSendMessage(final SendMessageEvent event) {
+        try {
+            final Map<String, Move> pgnMoveMap = gameStateProvider.getMoveTree().getPgnMoveMap();
+            final Map<String, Move> lastMoveMap = gameStateProvider.getParentMoveTree().getPgnMoveMap();
+
+            final String message = event.getMessage();
+            final long created = 0;
+
+            if (pgnMoveMap.containsKey(message)) {
+                makeGhostMove(created, pgnMoveMap.get(message));
+            } else if (lastMoveMap.containsKey(message)) {
+                makeGhostMove(created, lastMoveMap.get(message));
+            } else if (message.length() == 4) {
+                try {
+                    makeGhostMove(created, Move.fromString(message));
+                } catch (final IllegalMoveException e) {
+                    logger.info("Couldn't make move from string");
+                }
+            }
+
+        } catch (final Exception e) {
+            logger.info("Problem processing ghost moves");
+        }
 
     }
 

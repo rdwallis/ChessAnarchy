@@ -2,8 +2,12 @@ package com.wallissoftware.chessanarchy.client.game.chat.messagelog;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.gwt.core.client.JsArray;
@@ -50,7 +54,13 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
     private List<MessageWrapper> gameMasterMessages = new ArrayList<MessageWrapper>();
 
+    private Map<String, MessageWrapper> awaitingValidationMessages = new HashMap<String, MessageWrapper>();
+
     private Set<String> loadedMessageIds = new HashSet<String>();
+
+    private Set<String> loadedMessageCacheIds = new HashSet<String>();
+
+    private Set<String> missingMessageCacheIds = new HashSet<String>();
 
     private final MessageInputPresenter messageInputPresenter;
 
@@ -78,6 +88,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
             @Override
             public boolean execute() {
                 fetchLatestMessage();
+                invalidateMessages();
                 return true;
             }
 
@@ -96,9 +107,14 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
         }
     };
 
+    private long lastGameStateFetchTime = 0;
+
     private void fetchGameStateMessages() {
-        final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
-        jsonp.requestObject(URL.encode(CAConstants.HOST + "/gamemessages"), gameStateCallback);
+        if (System.currentTimeMillis() - lastGameStateFetchTime > 10000) {
+            final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
+            jsonp.requestObject(URL.encode(CAConstants.HOST + "/gamemessages"), gameStateCallback);
+            lastGameStateFetchTime = System.currentTimeMillis();
+        }
 
     }
 
@@ -106,12 +122,14 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
         if (!inLimbo) {
             messageInputPresenter.markMessageArrived(message);
         }
+        validateMessage(message);
         if (loadedMessageIds.add(message.getId())) {
             final GameState gameState = gameStateProvider.getGameState();
             final Set<MessageWrapper> fakeMessages = message.getFakeMessages(gameState.getWhiteGovernment(), gameState.getBlackGovernment());
             if (fakeMessages != null) {
                 for (final MessageWrapper fakeMessage : fakeMessages) {
                     addMessage(fakeMessage, inLimbo);
+                    validateMessage(fakeMessage);
                 }
             }
             if (message.getMove() == null || fakeMessages == null) {
@@ -120,6 +138,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
             messages.add(message);
             if (message.isFromGameMaster()) {
+
                 gameMasterMessages.add(message);
                 return true;
 
@@ -127,6 +146,33 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
         }
         return false;
 
+    }
+
+    private void validateMessage(final MessageWrapper message) {
+        if (!message.isFromGameMaster()) {
+            return;
+        }
+        final Iterator<Entry<String, MessageWrapper>> it = awaitingValidationMessages.entrySet().iterator();
+        while (it.hasNext()) {
+            final Entry<String, MessageWrapper> entry = it.next();
+            if (entry.getKey().equals(message.getId())) {
+                entry.getValue().setValid(true);
+                it.remove();
+                return;
+            }
+        }
+        if (SyncedTime.get() - message.getCreated() < 8000) {
+            awaitingValidationMessages.put(message.getId(), message);
+        }
+
+    }
+
+    private void invalidateMessages() {
+        for (final MessageWrapper message : awaitingValidationMessages.values()) {
+            if (SyncedTime.get() - message.getCreated() > 10000) {
+                message.setValid(false);
+            }
+        }
     }
 
     public String getGameId(int gamesAgo) {
@@ -182,7 +228,11 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
     private void fetchMessage(final String id) {
         final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
         if (JsessionUrlEncoder.cookiesEnabled()) {
-            jsonp.setPredeterminedId("fm");
+            if (id == null) {
+                jsonp.setPredeterminedId("fm");
+            } else {
+                jsonp.setPredeterminedId(id);
+            }
         }
         jsonp.requestObject(URL.encode(CAConstants.HOST + "/message" + (id == null ? "" : "?id=" + id)), fetchMessageCallback);
 
@@ -193,7 +243,10 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
         @Override
         public void onSuccess(final JsonMessageCache messageCache) {
 
-            if (MessageLink.addMessageLink(messageCache)) {
+            if (loadedMessageCacheIds.add(messageCache.getId())) {
+                if (loadedMessageCacheIds.size() > 4 && !loadedMessageCacheIds.contains(messageCache.getPreviousId()) && missingMessageCacheIds.add(messageCache.getPreviousId()) && Math.abs(SyncedTime.get() - messageCache.getCreated()) < 5000) {
+                    fetchMessage(messageCache.getPreviousId());
+                }
                 boolean gameStateUpdated = false;
                 for (final Message message : messageCache.getMessages()) {
                     gameStateUpdated = addMessage(new MessageWrapper(message), false) || gameStateUpdated;
@@ -206,7 +259,6 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
                     fireEvent(new GameStateUpdatedEvent());
                 }
             }
-            fireEvent(new GameStateUpdatedEvent());
 
         }
     };

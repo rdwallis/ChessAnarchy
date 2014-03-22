@@ -30,8 +30,7 @@ public class UpdateMessagesServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     @Override
-    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-
+    protected synchronized void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
         LastUpdateTime.markUpdated();
         final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
         @SuppressWarnings("unchecked")

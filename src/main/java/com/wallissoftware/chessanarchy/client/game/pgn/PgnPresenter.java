@@ -45,13 +45,12 @@ public class PgnPresenter extends PresenterWidget<PgnPresenter.MyView> implement
     }
 
     private void setMoveList(final List<String> moveList) {
-        if (moveList.isEmpty()) {
-            getView().clearMoves();
-            this.moveList = moveList;
-        }
+
         if (!moveList.equals(this.moveList)) {
             if (moveList.subList(0, moveList.size() - 1).equals(this.moveList)) {
-                getView().addMove(moveList.get(moveList.size() - 1));
+                final String move = moveList.get(moveList.size() - 1);
+                getView().addMove(move);
+
             } else {
                 getView().clearMoves();
 

@@ -13,6 +13,8 @@ import com.allen_sauer.gwt.dnd.client.DragStartEvent;
 import com.allen_sauer.gwt.dnd.client.PickupDragController;
 import com.allen_sauer.gwt.dnd.client.VetoDragException;
 import com.allen_sauer.gwt.dnd.client.drop.GridConstrainedDropController;
+import com.google.gwt.animation.client.AnimationScheduler;
+import com.google.gwt.animation.client.AnimationScheduler.AnimationCallback;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.dom.client.Style.Unit;
@@ -28,6 +30,7 @@ import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
 import com.wallissoftware.chessanarchy.client.game.board.piece.PieceWidget;
 import com.wallissoftware.chessanarchy.client.user.User;
+import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.game.Move;
 
@@ -72,6 +75,8 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
     private Move lastMove;
 
+    private boolean animationFrameWorks = false;
+
     private static Logger logger = Logger.getLogger(BoardView.class.getName());
 
     @Inject
@@ -91,34 +96,63 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
         super.setUiHandlers(uiHandlers);
         drawSquares();
         resetOrientation();
-        startGhostAnimations();
+        startGhostAnimationFrame();
 
     }
 
-    private void startGhostAnimations() {
+    private void startGhostAnimationFrame() {
+        AnimationScheduler.get().requestAnimationFrame(new AnimationCallback() {
+
+            @Override
+            public void execute(final double timestamp) {
+                animationFrameWorks = true;
+                updateGhostAnimations((long) timestamp);
+
+                startGhostAnimationFrame();
+            }
+
+        });
+        if (!animationFrameWorks) {
+            Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+
+                @Override
+                public boolean execute() {
+                    if (!animationFrameWorks) {
+                        startGhostAnimationScheduler();
+                    }
+
+                    return false;
+                }
+
+            }, 2000);
+        }
+
+    }
+
+    protected void startGhostAnimationScheduler() {
         Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
 
             @Override
             public boolean execute() {
-                updateGhostAnimations();
-                return true;
+                updateGhostAnimations(System.currentTimeMillis());
+                return !animationFrameWorks;
             }
 
-        }, 50);
+        }, 100);
 
     }
 
-    private void updateGhostAnimations() {
+    private void updateGhostAnimations(final long timestamp) {
 
         final Iterator<GhostAnimation> it = ghostAnimations.iterator();
         while (it.hasNext()) {
             final GhostAnimation ghostAnimation = it.next();
-            if (ghostAnimation.isFinished()) {
+            if (ghostAnimation.isFinished(timestamp)) {
                 it.remove();
                 dropSurface.remove(ghostAnimation.getWidget());
             } else {
-                ghostAnimation.updateOpacity();
-                dropSurface.setWidgetPosition(ghostAnimation.getWidget(), ghostAnimation.getX(), ghostAnimation.getY());
+                ghostAnimation.updateOpacity(timestamp);
+                dropSurface.setWidgetPosition(ghostAnimation.getWidget(), ghostAnimation.getX(timestamp), ghostAnimation.getY(timestamp));
             }
         }
 
@@ -126,17 +160,17 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
         while (it1.hasNext()) {
             final GhostAnimation animation = it1.next();
             if (animation.isCapture()) {
-                if (animation.isMovementComplete()) {
-                    animation.updateOpacity();
-                    if (animation.isFinished()) {
+                if (animation.isMovementComplete(timestamp)) {
+                    animation.updateOpacity(timestamp);
+                    if (animation.isFinished(timestamp)) {
                         dropSurface.remove(animation.getWidget());
                         it1.remove();
                     }
                 }
 
             } else {
-                dropSurface.setWidgetPosition(animation.getWidget(), animation.getX(), animation.getY());
-                if (animation.isMovementComplete()) {
+                dropSurface.setWidgetPosition(animation.getWidget(), animation.getX(timestamp), animation.getY(timestamp));
+                if (animation.isMovementComplete(timestamp)) {
                     it1.remove();
                 }
             }
@@ -189,7 +223,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
             for (final GhostAnimation animation : animations) {
                 animation.end();
             }
-            updateGhostAnimations();
+            updateGhostAnimations(System.currentTimeMillis());
             for (int rank = 0; rank < 8; rank++) {
                 for (int file = 0; file < 8; file++) {
                     if (board[file][rank] != null) {
@@ -306,19 +340,21 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
                 dropSurface.remove(existingPiece);
                 board[file][rank] = null;
             }
-
+            int x = file * 50;
+            int y = 350 - (rank * 50);
+            if (getOrientation() == Color.BLACK) {
+                x = 350 - x;
+                y = 350 - y;
+            }
             if (existingPiece == null || existingPiece.getKind() != kind) {
-                int x = file * 50;
-                int y = 350 - (rank * 50);
-                if (getOrientation() == Color.BLACK) {
-                    x = 350 - x;
-                    y = 350 - y;
-                }
+
                 final PieceWidget pieceWidget = new PieceWidget(kind);
 
                 dropSurface.add(pieceWidget, x, y);
                 dragController.makeDraggable(pieceWidget);
                 board[file][rank] = pieceWidget;
+            } else {
+                dropSurface.setWidgetPosition(existingPiece, x, y);
             }
 
         }
@@ -393,7 +429,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
 
     @Override
     public void makeGhostMove(final long startTime, final char[][] board, final Move move) {
-        if (ghostAnimations.size() > 40 || move == null) {
+        if ((!animationFrameWorks && ghostAnimations.size() > 5) || ghostAnimations.size() > 40 || move == null) {
             return;
         }
 
@@ -443,7 +479,7 @@ public class BoardView extends ViewWithUiHandlers<BoardUiHandlers> implements Bo
         }
         if (ghost) {
             dropSurface.add(piece, x, y);
-            ghostAnimations.add(new GhostAnimation(startTime + 2000, piece, x, y, x1, y1, move.getPromotion()));
+            ghostAnimations.add(new GhostAnimation(startTime + CAConstants.SYNC_DELAY, piece, x, y, x1, y1, move.getPromotion()));
         } else {
             animations.add(new GhostAnimation(capture, startTime, piece, x, y, x1, y1, move.getPromotion()));
         }

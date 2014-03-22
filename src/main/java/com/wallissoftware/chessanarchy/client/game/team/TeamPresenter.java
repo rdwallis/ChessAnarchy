@@ -53,14 +53,14 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
             governmentDescriptionPresenter.addAutoHidePartner(autoHidePartner);
         }
 
-        Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+        Scheduler.get().scheduleFixedPeriod(new RepeatingCommand() {
 
             @Override
             public boolean execute() {
                 update();
                 return true;
             }
-        }, 200);
+        }, 1000);
     }
 
     public void setColor(final Color color) {
@@ -91,14 +91,13 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
         if (getGovernment() != null) {
             getView().setGovernmentName(getGovernment().getName());
             getView().setGovernmentIcon(getColor() == Color.WHITE ? getGovernment().getWhiteIconUrl() : getGovernment().getBlackIconUrl());
-            if (!getGovernment().getName().equals("Anarchy") && (gameStateProvider.getMoveTree().isWhitesTurn() ^ getColor() == Color.BLACK)) {
+            final int timeForMove = getGovernment().getName().equals("Anarchy") ? 2 : 5;
+            if (gameStateProvider.getMoveTree().isWhitesTurn() ^ getColor() == Color.BLACK) {
                 final long timeSinceMove = Math.max(0, ((SyncedTime.get() - CAConstants.SYNC_DELAY) - gameStateProvider.getLastMoveTime()) / 1000);
-                getView().setTimeUntilMove(20 - timeSinceMove);
-            } else if (!getGovernment().getName().equals("Anarchy")) {
-                final long timeSinceMove = Math.max(0, ((SyncedTime.get() - CAConstants.SYNC_DELAY) - gameStateProvider.getSecondLastMoveTime()) / 1000);
-                getView().setTimeUntilMove(20 - timeSinceMove);
+                getView().setTimeUntilMove(timeForMove - timeSinceMove);
             } else {
-                getView().setTimeUntilMove(0);
+                final long timeSinceMove = Math.max(0, ((SyncedTime.get() - CAConstants.SYNC_DELAY) - gameStateProvider.getSecondLastMoveTime()) / 1000);
+                getView().setTimeUntilMove(timeForMove - timeSinceMove);
             }
         }
         getView().setJoinCountDown(User.get().getColorJoinTime(color));

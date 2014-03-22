@@ -38,6 +38,6 @@ public class PgnView extends ViewWithUiHandlers<PgnUiHandlers> implements PgnPre
     @Override
     public void clearMoves() {
         moveCount = 0;
-        flexTable.clear();
+        flexTable.removeAllRows();
     }
 }

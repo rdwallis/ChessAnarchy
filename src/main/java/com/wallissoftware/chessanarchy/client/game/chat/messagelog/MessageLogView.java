@@ -19,6 +19,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.gwtplatform.mvp.client.ViewWithUiHandlers;
 import com.wallissoftware.chessanarchy.client.time.SyncedTime;
+import com.wallissoftware.chessanarchy.client.user.User;
 import com.wallissoftware.chessanarchy.shared.CAConstants;
 import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
@@ -68,7 +69,7 @@ public class MessageLogView extends ViewWithUiHandlers<MessageLogUiHandlers> imp
 
     @Override
     public void addMessage(final MessageWrapper message, final boolean force) {
-        if (force || SyncedTime.get() - message.getCreated() > CAConstants.SYNC_DELAY) {
+        if (force || SyncedTime.get() - message.getCreated() > CAConstants.SYNC_DELAY || User.get().getUserId().equals(message.getUserId())) {
             final boolean isOnBottom = scrollPanel.getMaximumVerticalScrollPosition() - scrollPanel.getVerticalScrollPosition() < 50;
 
             final MessageWidget messageWidget = new MessageWidget(message);

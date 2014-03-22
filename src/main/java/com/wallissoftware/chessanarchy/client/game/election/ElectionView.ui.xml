@@ -18,8 +18,12 @@
 		font-size: 16px;
 		font-weight: bold;
 		}
+		.popup {
+			position:relative;
+			z-index: 11;
+		}
     </ui:style>
-    <g:PopupPanel autoHideOnHistoryEventsEnabled="true" autoHideEnabled="true" animationEnabled="true">
+    <g:PopupPanel autoHideOnHistoryEventsEnabled="false" autoHideEnabled="false" animationEnabled="true" addStyleNames="{style.popup}">
     	<g:VerticalPanel horizontalAlignment="CENTER" ui:field="mainPanel" spacing="10">
     		<g:Label addStyleNames="{style.header}" ui:field="countDown">A new game begins in 30 seconds</g:Label>
     		<g:Label addStyleNames="{style.header}" ui:field="teamLabel">You're on the White Team</g:Label>

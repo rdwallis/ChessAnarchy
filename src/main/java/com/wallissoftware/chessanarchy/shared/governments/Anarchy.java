@@ -11,14 +11,13 @@ public class Anarchy extends SystemOfGovernment {
         addCountingVoteMessage("The ${color} team is revolting.");
         addCountingVoteMessage("Unidentified troops have moved to take control of ${color} team's seaports.");
         addCountingVoteMessage("An unidentified boeing 777 has crashed into ${color} team's parlimentary buildings.");
-        addCountingVoteMessage("A duck faced man has released sarin gas in a ${color} team subburb.");
         addMoveMessage("In the chaos ${color} team moves to ${move}");
         addInsult("The ${color} team is not a part of the system because the system didn't want them.");
     }
 
     @Override
     public boolean isReady(final String extraInfo, final long timeOfLastMove, final List<MoveRequest> moveRequests) {
-        return !moveRequests.isEmpty();
+        return !moveRequests.isEmpty() && System.currentTimeMillis() - timeOfLastMove > CAConstants.SYNC_DELAY;
     }
 
     @Override

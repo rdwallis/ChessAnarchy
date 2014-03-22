@@ -212,7 +212,7 @@ public class GameState {
 
     private long getTimeOfLastMove() {
         if (moveTimes.isEmpty()) {
-            return creationTime;
+            return creationTime + 60000;
         } else {
             return moveTimes.get(moveTimes.size() - 1);
         }

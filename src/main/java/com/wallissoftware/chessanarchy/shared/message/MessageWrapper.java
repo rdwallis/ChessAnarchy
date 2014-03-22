@@ -10,6 +10,8 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 
     private final Message message;
     private boolean swapColor = false;
+    private boolean valid = true;
+    private boolean validated = false;
 
     public MessageWrapper(final Message message) {
         this.message = message;
@@ -42,7 +44,7 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
     }
 
     public boolean isFromGameMaster() {
-        return getUserId().equals("Game Master");
+        return isValid() && getUserId().equals("Game Master");
     }
 
     public String getNewGameId() {
@@ -186,6 +188,18 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
 
     public Long getElectionStart() {
         return isFromGameMaster() && getText().startsWith("CHOOSE YOUR GOVERNMENT") ? getCreated() : null;
+    }
+
+    private boolean isValid() {
+        return valid || validated;
+    }
+
+    public void setValid(final boolean valid) {
+        this.valid = valid;
+        if (valid) {
+            validated = true;
+        }
+
     }
 
 }

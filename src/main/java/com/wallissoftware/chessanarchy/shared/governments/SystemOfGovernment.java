@@ -55,7 +55,7 @@ public abstract class SystemOfGovernment implements GovernmentInfo {
     }
 
     public boolean isReady(final String extraInfo, final long timeOfLastMove, final List<MoveRequest> moveRequests) {
-        return System.currentTimeMillis() - timeOfLastMove > 20000 && !moveRequests.isEmpty();
+        return System.currentTimeMillis() - timeOfLastMove > 5000 && !moveRequests.isEmpty();
     }
 
     protected abstract MoveResult calculateMove(final String extraInfo, List<MoveRequest> moveRequests);

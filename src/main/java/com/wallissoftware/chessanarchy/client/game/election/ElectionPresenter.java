@@ -78,13 +78,18 @@ public class ElectionPresenter extends PresenterWidget<ElectionPresenter.MyView>
 
             @Override
             public boolean execute() {
-                final long electionTime = SyncedTime.get() - gameStateProvider.getGameState().getElectionStart();
-                final long secondsRemaining = Math.max(0, (30000 - electionTime) / 1000);
-                getView().setCountDown(secondsRemaining);
-                if (secondsRemaining <= 0) {
-                    getView().hide();
+                final long electionStart = gameStateProvider.getGameState().getElectionStart();
+                if (electionStart > 10000) {
+                    final long electionTime = SyncedTime.get() - electionStart;
+                    final long secondsRemaining = Math.max(0, (30000 - electionTime) / 1000);
+                    getView().setCountDown(secondsRemaining);
+                    if (secondsRemaining <= 0) {
+                        getView().hide();
+                    }
+
+                    return secondsRemaining > 0;
                 }
-                return secondsRemaining > 0;
+                return true;
             }
         }, 1000);
 

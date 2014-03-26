@@ -1,33 +1,37 @@
-#GWTP AppEngine using Objectify
+#ChessAnarchy
+## By Richard Wallis
 
-GWTP using AppEngine with Objectify, RPC dispatch and Google Login.
+[Play Chess Anarchy](http://chessanarchy.appspot.com)
 
-##Highlights
-* [Client Server Directories](https://github.com/ArcBees/ArcBees-tools/tree/master/archetypes/gwtp-appengine-objectify/src/main/java/com/arcbees/project)
-* [GWT Module](https://github.com/ArcBees/ArcBees-tools/blob/master/archetypes/gwtp-appengine-objectify/src/main/java/com/arcbees/project)
-* [Tests](https://github.com/ArcBees/ArcBees-tools/tree/master/archetypes/gwtp-appengine-objectify/src/test/java/com/arcbees/project/client)
+A couple of weeks ago, a few thousand people began playing a game of
+Pok&#233;mon. By sending a message to a chat window any of them could
+press a button on a virtual Game Boy. The result was a barely
+organized chaos that managed to beat the game over 16 sleepless days.
 
-##Maven Archetype Usage
+I built Chess Anarchy to find out what happens when you play
+chess in the same way. 
 
-1. Goto directory you want the project.
-2. Rename parameter below `com.projectname.project` to a package naming scheme you like.
-3. Rename parameter `new-project-name` to a project title you like.
-4. Rename parameter `-dmodule=Project` to a name that starts with a capital. Name it like `MyAppModule` or `Application`.
-5. Run the mvn archetype generator below.
+You can make a move by dragging a piece across the board or by
+typing the move into the chat window. Your move is a vote that
+influences the move that will be made by your team. The way your vote
+is counted is determined by your team's system of government, which
+is chosen at the beginning of the game. 
 
-* This project Project.gwt.xml module name is hard coded and will will not be changed from the parameters below at this time.
+###The Systems of Government are:
+####Anarchy
+Under anarchy the first legal move received by the server is
+immediately played. 
 
-```
-mvn archetype:generate -DarchetypeGroupId=com.arcbees.archetypes \
--DarchetypeRepository=https://oss.sonatype.org/content/repositories/snapshots/ \
--DarchetypeArtifactId=gwtp-appengine-objectify-archetype \
--DarchetypeVersion=1.0-SNAPSHOT \
--DgroupId=com.projectname.project \
--DartifactId=new-project-name \
--Dmodule=Project
-```
+####Democracy
+Under democracy votes are counted after 9 seconds and the most
+popular move is played. If you vote more than once only your last
+vote counts. 
 
-##Thanks to
-[![Arcbees.com](http://arcbees-ads.appspot.com/ad.png)](http://arcbees.com)
+####Hipsterism
+Hipsters liked your move before it became popular.
+Under Hipsterism the votes are counted after 9 seconds and then the
+least popular move is made. If you vote more than once only your last
+vote counts. 
 
-[![IntelliJ](https://lh6.googleusercontent.com/--QIIJfKrjSk/UJJ6X-UohII/AAAAAAAAAVM/cOW7EjnH778/s800/banner_IDEA.png)](http://www.jetbrains.com/idea/index.html)
+
+

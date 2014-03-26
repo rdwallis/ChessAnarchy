@@ -1,7 +1,7 @@
 #ChessAnarchy
 ## By Richard Wallis
 
-##[Play Chess Anarchy](http://chessanarchy.appspot.com)
+###[Click Here To Play Chess Anarchy](http://chessanarchy.appspot.com)
 
 A couple of weeks ago, a few thousand people began playing a game of
 Pok&#233;mon. By sending a message to a chat window any of them could

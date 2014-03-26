@@ -42,7 +42,7 @@ public class Democracy extends SystemOfGovernment {
 
     @Override
     public String getDescription() {
-        return "Under democracy votes are counted after 20 seconds and the most popular move is played.";
+        return "Under democracy votes are counted after 9 seconds and the most popular move is played. If you vote more than once only your last vote counts.";
     }
 
     @Override
@@ -60,4 +60,8 @@ public class Democracy extends SystemOfGovernment {
         return true;
     }
 
+    @Override
+    public String getShortDescription() {
+        return "Under democracy votes are counted after 9 seconds and the most popular move is played.";
+    }
 }

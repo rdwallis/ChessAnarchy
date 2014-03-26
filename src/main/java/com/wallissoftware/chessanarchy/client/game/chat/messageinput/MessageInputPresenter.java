@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.jsonp.client.JsonpRequestBuilder;
@@ -14,6 +15,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.HasUiHandlers;
 import com.gwtplatform.mvp.client.PresenterWidget;
 import com.gwtplatform.mvp.client.View;
+import com.gwtplatform.mvp.client.googleanalytics.GoogleAnalytics;
 import com.wallissoftware.chessanarchy.client.dispatch.JsessionUrlEncoder;
 import com.wallissoftware.chessanarchy.client.dispatch.SuccessCallback;
 import com.wallissoftware.chessanarchy.client.game.chat.events.MessageInLimboEvent;
@@ -32,16 +34,19 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 
     }
 
-    private final Map<Long, Message> waitingMessages = new HashMap<Long, Message>();
+    private final Map<Double, Message> waitingMessages = new HashMap<Double, Message>();
 
     private final Logger logger = Logger.getLogger(MessageInputPresenter.class.getName());
 
     private final GameStateProvider gameStateProvider;
 
+    private final GoogleAnalytics googleAnalytics;
+
     @Inject
-    MessageInputPresenter(final EventBus eventBus, final MyView view, final GameStateProvider gameStateProvider) {
+    MessageInputPresenter(final EventBus eventBus, final MyView view, final GameStateProvider gameStateProvider, final GoogleAnalytics googleAnalytics) {
         super(eventBus, view);
         this.gameStateProvider = gameStateProvider;
+        this.googleAnalytics = googleAnalytics;
         getView().setUiHandlers(this);
         Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
 
@@ -55,10 +60,10 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
     }
 
     private void resendOldMessages() {
-        final Iterator<Entry<Long, Message>> it = waitingMessages.entrySet().iterator();
+        final Iterator<Entry<Double, Message>> it = waitingMessages.entrySet().iterator();
         while (it.hasNext()) {
-            final Entry<Long, Message> next = it.next();
-            if (System.currentTimeMillis() - next.getKey() > 5000) {
+            final Entry<Double, Message> next = it.next();
+            if (Duration.currentTimeMillis() - next.getKey() > 5000) {
                 fireEvent(new RemoveMessageEvent(next.getValue().getId()));
                 sendMessage(next.getValue().getText(), false);
                 logger.info("Resending message: " + next.getValue().getText());
@@ -82,6 +87,9 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
 
     @Override
     public void onSendMessage(final SendMessageEvent event) {
+        if (event.resendOnFail()) {
+            googleAnalytics.trackEvent("Chat", "Send Message");
+        }
         final String message = event.getMessage();
         if (!message.isEmpty()) {
             final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
@@ -112,7 +120,7 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
     private void addToMessagesCheckQueue(final MessageWrapper message) {
         if (User.get().getUserId().equals(message.getUserId())) {
             logger.info("Adding message to waiting queue: " + message.getText());
-            waitingMessages.put(System.currentTimeMillis(), message);
+            waitingMessages.put(Duration.currentTimeMillis(), message);
             fireEvent(new MessageInLimboEvent(message));
         }
     }
@@ -120,7 +128,7 @@ public class MessageInputPresenter extends PresenterWidget<MessageInputPresenter
     public void markMessageArrived(final Message message) {
         if (User.get().getUserId().equals(message.getUserId())) {
             logger.info("Removing message from waiting queue: " + message.getText());
-            final Iterator<Entry<Long, Message>> it = waitingMessages.entrySet().iterator();
+            final Iterator<Entry<Double, Message>> it = waitingMessages.entrySet().iterator();
             while (it.hasNext()) {
                 if (message.getId().equals(it.next().getValue().getId())) {
                     it.remove();

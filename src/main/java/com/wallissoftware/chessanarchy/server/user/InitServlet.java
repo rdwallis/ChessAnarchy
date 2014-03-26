@@ -14,13 +14,14 @@ import com.wallissoftware.chessanarchy.server.session.SessionUtils;
 @Singleton
 public class InitServlet extends HttpServlet {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Override
-	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-		resp.setContentType("application/javascript");
-		resp.getWriter().write("var chessAnarchy = {\"user\":" + new Gson().toJson(SessionUtils.getUserMap(req.getSession(), resp)) + "};");
+    @Override
+    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("application/javascript");
+        resp.setHeader("Cache-Control", "max-age=3600, private");
+        resp.getWriter().write("var chessAnarchy = {\"user\":" + new Gson().toJson(SessionUtils.getUserMap(req.getSession(), resp)) + "};");
 
-	}
+    }
 
 }

@@ -3,6 +3,7 @@ package com.wallissoftware.chessanarchy.client.game.board;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.Timer;
@@ -33,11 +34,11 @@ import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveExcepti
 public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> implements BoardUiHandlers, ReceivedMessageCacheHandler, GameStateUpdatedHandler, UserChangedHandler, SendMessageHandler {
     public interface MyView extends View, HasUiHandlers<BoardUiHandlers> {
 
-        void makeGhostMove(long startTime, char[][] board, Move move);
+        void makeGhostMove(double startTime, char[][] board, Move move);
 
-        void drawBoard(char[][] board, Move move, long startTime);
+        void drawBoard(char[][] board, Move move, double startTime);
 
-        void animateCapture(Move move, long startTime);
+        void animateCapture(Move move, double startTime);
 
     }
 
@@ -95,7 +96,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
     private void updateBoard() {
         if (!preventRedraw) {
-            getView().drawBoard(gameStateProvider.getParentMoveTree().getBoard(), gameStateProvider.getMoveTree().getMove(), System.currentTimeMillis() - 500);
+            getView().drawBoard(gameStateProvider.getParentMoveTree().getBoard(), gameStateProvider.getMoveTree().getMove(), Duration.currentTimeMillis() - 500);
         } else {
             Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
 
@@ -141,7 +142,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
             final Map<String, Move> lastMoveMap = gameStateProvider.getParentMoveTree().getPgnMoveMap();
             for (final JsonMessage msg : event.getMessageCache().getMessages()) {
                 final String message = msg.getText();
-                final long created = User.get().getUserId().equals(msg.getUserId()) ? 0 : msg.getCreated();
+                final double created = User.get().getUserId().equals(msg.getUserId()) ? 0 : msg.getCreated();
                 if (SyncedTime.get() - created < 10000) {
                     if (pgnMoveMap.containsKey(message)) {
                         makeGhostMove(created, pgnMoveMap.get(message));
@@ -164,7 +165,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
 
     }
 
-    private void makeGhostMove(final long startTime, final Move move) {
+    private void makeGhostMove(final double startTime, final Move move) {
         getView().makeGhostMove(startTime, gameStateProvider.getMoveTree().getBoard(), move);
 
     }
@@ -175,8 +176,8 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
     }
 
     private void checkElection() {
-        final long electionStart = gameStateProvider.getGameState().getElectionStart();
-        final long syncedTime = SyncedTime.get();
+        final double electionStart = gameStateProvider.getGameState().getElectionStart();
+        final double syncedTime = SyncedTime.get();
 
         if (syncedTime < electionStart) {
             showElectionTimer.schedule((int) (electionStart - syncedTime));
@@ -239,7 +240,7 @@ public class BoardPresenter extends PresenterWidget<BoardPresenter.MyView> imple
             final Map<String, Move> lastMoveMap = gameStateProvider.getParentMoveTree().getPgnMoveMap();
 
             final String message = event.getMessage();
-            final long created = 0;
+            final double created = 0;
 
             if (pgnMoveMap.containsKey(message)) {
                 makeGhostMove(created, pgnMoveMap.get(message));

@@ -66,14 +66,14 @@ public class TeamView extends ViewWithUiHandlers<TeamUiHandlers> implements Team
     }
 
     @Override
-    public void setJoinCountDown(final Long joinTime) {
+    public void setJoinCountDown(final double joinTime) {
 
-        if (joinTime != null) {
+        if (joinTime != -1) {
             joinTeamButton.addStyleName(style.hide());
             joinTeamCountDown.removeStyleName(style.hide());
-            final long timeSinceStart = SyncedTime.get() - joinTime;
+            final double timeSinceStart = SyncedTime.get() - joinTime;
             if (timeSinceStart < CAConstants.JOIN_TEAM_WAIT) {
-                joinTeamCountDown.setText("Joining in " + (CAConstants.JOIN_TEAM_WAIT - timeSinceStart) / 1000 + " seconds.");
+                joinTeamCountDown.setText("Joining in " + Math.floor((CAConstants.JOIN_TEAM_WAIT - timeSinceStart) / 1000) + " seconds.");
                 timeUntilMove.setVisible(false);
             } else {
                 joinTeamCountDown.setText("You're on the " + getTeamName());
@@ -116,10 +116,20 @@ public class TeamView extends ViewWithUiHandlers<TeamUiHandlers> implements Team
     }
 
     @Override
-    public void setTimeUntilMove(final long timeUntilMove) {
-        this.timeUntilMove.setText(timeUntilMove + "s");
+    public void setTimeUntilMove(final double timeUntilMove) {
+        this.timeUntilMove.setText(Math.floor(timeUntilMove) + "s");
         this.timeUntilMove.setVisible(timeUntilMove > 0);
 
+    }
+
+    @Override
+    public void setGovernmentVisible(final boolean visible) {
+        governmentImage.setVisible(visible);
+        governmentHelpIcon.setVisible(visible);
+        if (!visible) {
+            government.setText("No government elected.");
+        }
+        timeUntilMove.setVisible(visible);
     }
 
 }

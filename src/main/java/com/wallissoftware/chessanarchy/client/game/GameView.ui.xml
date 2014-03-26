@@ -29,7 +29,7 @@
 	.embedBar {
 		position: relative;
 		margin-top: -30px;
-		top: 46px;
+		top: 43px;
 		left: 8px;
 	}
 	.embedButton {

@@ -4,16 +4,18 @@ import com.wallissoftware.chessanarchy.shared.game.Color;
 
 public interface Message {
 
-	String getName();
+    String getName();
 
-	String getUserId();
+    String getUserId();
 
-	String getText();
+    String getText();
 
-	Color getColor();
+    Color getColor();
 
-	long getCreated();
+    double getCreated();
 
-	String getId();
+    String getId();
+
+    void swapColors();
 
 }

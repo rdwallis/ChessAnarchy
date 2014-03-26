@@ -31,7 +31,7 @@
     		<g:HorizontalPanel ui:field="votePanel" spacing="10">
         
             </g:HorizontalPanel>
-    	
+    	   <g:Button ui:field="closeButton">Close</g:Button>
     	</g:VerticalPanel>
     </g:PopupPanel>
 </ui:UiBinder>

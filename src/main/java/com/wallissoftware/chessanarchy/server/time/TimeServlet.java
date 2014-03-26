@@ -12,10 +12,11 @@ import com.google.inject.Singleton;
 @Singleton
 public class TimeServlet extends HttpServlet {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Override
-	protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
-		resp.getWriter().write("\"" + System.currentTimeMillis() + "\"");
-	}
+    @Override
+    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
+        resp.setHeader("Cache-Control", "max-age=0, no-cache, public");
+        resp.getWriter().write(System.currentTimeMillis() + "");
+    }
 }

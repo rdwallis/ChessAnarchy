@@ -11,7 +11,8 @@
 		<include path="**" />
 		<include path="**.nocache.*" expiration="0s" />
 		<include path="**.cache.*" expiration="365d" />
-		<include path="**.png*" expiration="365d" />
+		<include path="**.png" expiration="365d" />
+        <include path="**.ico" expiration="365d" />
 		<exclude path="**.gwt.rpc" />
 	</static-files>
 	

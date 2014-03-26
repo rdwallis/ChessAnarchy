@@ -19,19 +19,23 @@ package com.wallissoftware.chessanarchy.client.gin;
 import javax.inject.Inject;
 
 import com.gwtplatform.mvp.client.Bootstrapper;
+import com.gwtplatform.mvp.client.googleanalytics.GoogleAnalytics;
 import com.gwtplatform.mvp.client.proxy.PlaceManager;
 
 public class BootstrapperImpl implements Bootstrapper {
-	private final PlaceManager placeManager;
+    private final PlaceManager placeManager;
+    private final GoogleAnalytics googleAnalytics;
 
-	@Inject
-	public BootstrapperImpl(final PlaceManager placeManager) {
-		this.placeManager = placeManager;
-	}
+    @Inject
+    public BootstrapperImpl(final PlaceManager placeManager, final GoogleAnalytics googleAnalytics) {
+        this.placeManager = placeManager;
+        this.googleAnalytics = googleAnalytics;
+    }
 
-	@Override
-	public void onBootstrap() {
-		placeManager.revealCurrentPlace();
-	}
+    @Override
+    public void onBootstrap() {
+        placeManager.revealCurrentPlace();
+        googleAnalytics.trackPageview();
+    }
 
 }

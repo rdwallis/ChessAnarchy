@@ -46,8 +46,8 @@ public abstract class SystemOfGovernment implements GovernmentInfo {
         insults.add(message);
     }
 
-    private String getRandomMessage(final long seed, final List<String> messages, final Color color) {
-        final String result = messages.get(new Random(seed).nextInt(messages.size()));
+    private String getRandomMessage(final double seed, final List<String> messages, final Color color) {
+        final String result = messages.get(new Random((long) seed).nextInt(messages.size()));
         if (color != null) {
             return result.replace("${color}", color.name().toLowerCase());
         }
@@ -55,7 +55,7 @@ public abstract class SystemOfGovernment implements GovernmentInfo {
     }
 
     public boolean isReady(final String extraInfo, final long timeOfLastMove, final List<MoveRequest> moveRequests) {
-        return System.currentTimeMillis() - timeOfLastMove > 5000 && !moveRequests.isEmpty();
+        return System.currentTimeMillis() - timeOfLastMove > 9000 && !moveRequests.isEmpty();
     }
 
     protected abstract MoveResult calculateMove(final String extraInfo, List<MoveRequest> moveRequests);
@@ -118,17 +118,17 @@ public abstract class SystemOfGovernment implements GovernmentInfo {
     }
 
     @Override
-    public String getMoveMessage(final long seed, final Color color, final String move) {
+    public String getMoveMessage(final double seed, final Color color, final String move) {
         return getRandomMessage(seed, moveMessages, color).replace("${move}", move);
     }
 
     @Override
-    public String getInsult(final long seed, final Color color) {
+    public String getInsult(final double seed, final Color color) {
         return getRandomMessage(seed, insults, color);
     }
 
     @Override
-    public String getCountingVotesMessage(final long seed, final Color color) {
+    public String getCountingVotesMessage(final double seed, final Color color) {
         return getRandomMessage(seed, countingVoteMessages, color);
     }
 

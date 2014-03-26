@@ -5,8 +5,11 @@
      .close {
 		cursor:pointer;
 	}
+	.popup {
+		z-index: 11;
+	}
     </ui:style>
-    <g:DialogBox autoHideOnHistoryEventsEnabled="true" autoHideEnabled="true" ui:field="dialogBox" width="300px">
+    <g:DialogBox autoHideOnHistoryEventsEnabled="true" autoHideEnabled="true" ui:field="dialogBox" width="300px" addStyleNames="{style.popup}">
     	<g:VerticalPanel horizontalAlignment="CENTER">
     		<g:Label ui:field="description"></g:Label>
     		<g:Anchor ui:field="close" addStyleNames="{style.close}">Close</g:Anchor>

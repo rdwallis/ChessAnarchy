@@ -14,7 +14,7 @@ public class Hipsterism extends SystemOfGovernment {
         addMoveMessage("The ${color} team bought ${move} at a thrift shop.  They overpaid.");
         addMoveMessage("The ${color} team likes ${move}.  You probably haven't heard of it.");
         addMoveMessage("The ${color} team, moves to ${move} because ${move} hasn't sold out.  It's authentic like a piece of art, not like that commercial crap everyone else is into.");
-        addInsult("Perhaps if the ${color} team put some lenses in their glasses they would see how stupid they are.");
+        addInsult("Perhaps if the ${color} team put some lenses in their glasses they would see the board better.");
     }
 
     @Override
@@ -47,7 +47,7 @@ public class Hipsterism extends SystemOfGovernment {
 
     @Override
     public String getDescription() {
-        return "Hipsters liked your move before it became popular. Under Hipsterism the votes are counted after 20 seconds and then the least popular move is made.";
+        return "Hipsters liked your move before it became popular. Under Hipsterism the votes are counted after 9 seconds and then the least popular move is made. If you vote more than once only your last vote is counted.";
     }
 
     @Override
@@ -67,7 +67,7 @@ public class Hipsterism extends SystemOfGovernment {
 
     @Override
     public String getShortDescription() {
-        return "Under Hipsterism the votes are counted after 20 seconds and then the least popular move is made.";
+        return "Under Hipsterism the votes are counted after 9 seconds and then the least popular move is made.";
     }
 
 }

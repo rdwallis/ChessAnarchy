@@ -19,7 +19,7 @@ public class GhostAnimation {
     private final boolean capture;
     private char promotion;
 
-    private final long syncDiff;
+    private final double syncDiff;
 
     public GhostAnimation(final double startTime, final PieceWidget piece, final int startX, final int startY, final int endX, final int endY, final char promotion) {
         this(false, startTime, piece, startX, startY, endX, endY, promotion);
@@ -46,7 +46,7 @@ public class GhostAnimation {
         return piece;
     }
 
-    public int getX(final long timestamp) {
+    public int getX(final double timestamp) {
         if (!isMovementStarted(timestamp)) {
             return startX;
         }
@@ -56,15 +56,15 @@ public class GhostAnimation {
         return (int) easeInCubic(getSyncedTime(timestamp) - startTime, startX, endX, MOVE_DURATION);
     }
 
-    private long getSyncedTime(final long timestamp) {
+    private double getSyncedTime(final double timestamp) {
         return timestamp - syncDiff;
     }
 
-    private boolean isMovementStarted(final long timestamp) {
+    private boolean isMovementStarted(final double timestamp) {
         return getSyncedTime(timestamp) > startTime;
     }
 
-    public int getY(final long timestamp) {
+    public int getY(final double timestamp) {
         if (!isMovementStarted(timestamp)) {
             return startY;
         }
@@ -80,12 +80,12 @@ public class GhostAnimation {
         return changeInValue * deltaTime * deltaTime * deltaTime + startValue;
     }
 
-    private double getMovePercent(final long timestamp) {
+    private double getMovePercent(final double timestamp) {
         final double delta = getSyncedTime(timestamp) - startTime;
         return Math.max(0, Math.min(delta / getMoveDuration(), 1));
     }
 
-    public boolean isMovementComplete(final long timestamp) {
+    public boolean isMovementComplete(final double timestamp) {
         return getMovePercent(timestamp) == 1 && doPromotion();
     }
 
@@ -96,7 +96,7 @@ public class GhostAnimation {
         return true;
     }
 
-    private double getOpacity(final long timestamp) {
+    private double getOpacity(final double timestamp) {
         if (!isMovementComplete(timestamp)) {
             return 0.5;
         }
@@ -107,7 +107,7 @@ public class GhostAnimation {
         return easeInCubic(getSyncedTime(timestamp) - (startTime + getMoveDuration()), 0.5, 0, FADE_DURATION);
     }
 
-    public boolean isFinished(final long timestamp) {
+    public boolean isFinished(final double timestamp) {
         return (getSyncedTime(timestamp) - startTime) > getMoveDuration() + FADE_DURATION;
     }
 
@@ -125,7 +125,7 @@ public class GhostAnimation {
         return capture;
     }
 
-    public void updateOpacity(final long timestamp) {
+    public void updateOpacity(final double timestamp) {
         getWidget().getElement().getStyle().setOpacity(getOpacity(timestamp));
 
     }

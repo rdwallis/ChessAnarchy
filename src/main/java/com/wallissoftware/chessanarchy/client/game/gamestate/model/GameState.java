@@ -16,10 +16,10 @@ public final class GameState {
     private String id;
     private String whiteGovernment;
     private String blackGovernment;
-    private long electionStart = 0;
+    private double electionStart = 0;
     private List<String> moveList = new ArrayList<String>();
-    private long lastMoveTime = 0;
-    private long secondLastMoveTime = 0;
+    private double lastMoveTime = 0;
+    private double secondLastMoveTime = 0;
 
     private final static Logger logger = Logger.getLogger(GameState.class.getName());
 
@@ -62,7 +62,7 @@ public final class GameState {
         }
     };
 
-    public long getElectionStart() {
+    public double getElectionStart() {
         return electionStart;
     }
 
@@ -86,11 +86,11 @@ public final class GameState {
         return id;
     }
 
-    public long getLastMoveTime() {
+    public double getLastMoveTime() {
         return Math.max(getElectionStart() + 30000, lastMoveTime);
     }
 
-    public long getSecondLastMoveTime() {
+    public double getSecondLastMoveTime() {
         return Math.max(getElectionStart(), secondLastMoveTime);
     }
 

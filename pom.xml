@@ -19,7 +19,7 @@
 		<gwt.style>OBF</gwt.style>
 
 		<!-- server -->
-		<gae.version>1.8.9</gae.version>
+		<gae.version>1.9.1</gae.version>
 		<gae-runtime.version>1.8.6</gae-runtime.version>
 		<guice.version>3.0</guice.version>
 		<objectify.version>4.0b1</objectify.version>
@@ -47,8 +47,8 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
-		<gae.home>C:\Programming\appengine-java-sdk-${gae.version}</gae.home>
-		 <!-- <gae.home>${settings.localRepository}/com/google/appengine/appengine-java-sdk/${gae.version}/appengine-java-sdk-${gae.version}</gae.home>-->
+		<!-- <gae.home>C:\Programming\appengine-java-sdk-${gae.version}</gae.home>-->
+		 <gae.home>${settings.localRepository}/com/google/appengine/appengine-java-sdk/${gae.version}/appengine-java-sdk-${gae.version}</gae.home>
 	</properties>
 
 	<build>

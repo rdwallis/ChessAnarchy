@@ -623,7 +623,7 @@ public class MoveTree {
     }
 
     public boolean isDraw() {
-        return depth > 50 && getMovesUntilDraw() <= 0;
+        return depth > 50 && getMovesUntilDraw() <= 0 || (!isCheckMate() && getLegalMoveMap().isEmpty());
     }
 
     private boolean isPawnMoveOrCapture() {

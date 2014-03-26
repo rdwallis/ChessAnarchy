@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Logger;
 
+import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
@@ -66,6 +68,8 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
 
     private final GameStateProvider gameStateProvider;
 
+    private final static Logger logger = Logger.getLogger(MessageLogPresenter.class.getName());
+
     @Inject
     MessageLogPresenter(final EventBus eventBus, final MyView view, final MessageInputPresenter messageInputPresenter, final GameStateProvider gameStateProvider) {
         super(eventBus, view);
@@ -107,13 +111,14 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
         }
     };
 
-    private long lastGameStateFetchTime = 0;
+    private double lastGameStateFetchTime = 0;
 
     private void fetchGameStateMessages() {
-        if (System.currentTimeMillis() - lastGameStateFetchTime > 10000) {
+        if (Duration.currentTimeMillis() - lastGameStateFetchTime > 10000) {
+            logger.info("Fetching Gamestate");
             final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
             jsonp.requestObject(URL.encode(CAConstants.HOST + "/gamemessages"), gameStateCallback);
-            lastGameStateFetchTime = System.currentTimeMillis();
+            lastGameStateFetchTime = Duration.currentTimeMillis();
         }
 
     }
@@ -234,7 +239,7 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
                 jsonp.setPredeterminedId(id);
             }
         }
-        jsonp.requestObject(URL.encode(CAConstants.HOST + "/message" + (id == null ? "" : "?id=" + id)), fetchMessageCallback);
+        jsonp.requestObject(URL.encode(CAConstants.HOST + "/getm" + (id == null ? "" : "?id=" + id)), fetchMessageCallback);
 
     }
 
@@ -244,8 +249,13 @@ public class MessageLogPresenter extends PresenterWidget<MessageLogPresenter.MyV
         public void onSuccess(final JsonMessageCache messageCache) {
 
             if (loadedMessageCacheIds.add(messageCache.getId())) {
-                if (loadedMessageCacheIds.size() > 4 && !loadedMessageCacheIds.contains(messageCache.getPreviousId()) && missingMessageCacheIds.add(messageCache.getPreviousId()) && Math.abs(SyncedTime.get() - messageCache.getCreated()) < 5000) {
-                    fetchMessage(messageCache.getPreviousId());
+                if (loadedMessageCacheIds.size() > 4 && !loadedMessageCacheIds.contains(messageCache.getPreviousId()) && missingMessageCacheIds.add(messageCache.getPreviousId())) {
+                    if (Math.abs(SyncedTime.get() - messageCache.getCreated()) < 5000) {
+                        logger.info("fetching misplaced messageCache: " + messageCache.getPreviousId());
+                        fetchMessage(messageCache.getPreviousId());
+                    } else {
+                        //fetchGameStateMessages();
+                    }
                 }
                 boolean gameStateUpdated = false;
                 for (final Message message : messageCache.getMessages()) {

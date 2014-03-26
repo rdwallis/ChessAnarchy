@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,13 +30,18 @@ import com.wallissoftware.chessanarchy.server.gamestate.GameState;
 import com.wallissoftware.chessanarchy.server.gamestate.LatestGameStateId;
 import com.wallissoftware.chessanarchy.server.session.SessionUtils;
 import com.wallissoftware.chessanarchy.shared.game.Color;
+import com.wallissoftware.chessanarchy.shared.message.Message;
+import com.wallissoftware.chessanarchy.shared.message.MessageImpl;
 
 @Singleton
 public class SendMessageServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
+    public static final int SHARD_COUNT = 10;
     public static final String MESSAGE_QUEUE_KEY = "mq";
+
+    public static Random random = new Random();
 
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
@@ -44,9 +50,7 @@ public class SendMessageServlet extends HttpServlet {
 
         if (message != null && !message.isEmpty()) {
             boolean sessionModified = false;
-            final Map<String, String> map = new HashMap<String, String>();
-            map.put("userId", SessionUtils.getUserId(req.getSession()));
-            map.put("name", SessionUtils.getName(req.getSession()));
+
             if (message.toLowerCase().startsWith("/nick")) {
                 String name = message.substring(5);
                 name = name.replace(" ", "");
@@ -78,29 +82,25 @@ public class SendMessageServlet extends HttpServlet {
 
                 }
             }
-            map.put("id", UUID.randomUUID().toString());
-            map.put("created", System.currentTimeMillis() + "");
-            map.put("message", message);
-            final Color color = SessionUtils.getColor(req.getSession());
-            if (color != null) {
-                map.put("color", color.name());
-            }
+            final Message msg = new MessageImpl(SessionUtils.getName(req.getSession()), SessionUtils.getUserId(req.getSession()), message, UUID.randomUUID().toString(), SessionUtils.getColor(req.getSession()), System.currentTimeMillis());
 
             final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
+
+            final String messageQueueShardKey = MESSAGE_QUEUE_KEY + random.nextInt(SHARD_COUNT);
             @SuppressWarnings("unchecked")
-            Set<Map<String, String>> messageQueue = (Set<Map<String, String>>) cache.get(MESSAGE_QUEUE_KEY);
+            Set<Message> messageQueue = (Set<Message>) cache.get(messageQueueShardKey);
             if (messageQueue == null) {
-                messageQueue = new HashSet<Map<String, String>>();
+                messageQueue = new HashSet<Message>();
             }
-            messageQueue.add(map);
-            cache.put(MESSAGE_QUEUE_KEY, messageQueue);
-            if (messageQueue.size() % 300 == 0 || LastUpdateTime.isTimeToUpdate()) {
+            messageQueue.add(msg);
+            cache.put(messageQueueShardKey, messageQueue);
+            if (LastUpdateTime.isTimeToUpdate()) {
                 final Queue queue = QueueFactory.getDefaultQueue();
                 queue.add(withUrl("/admin/processmessages").method(Method.GET));
             }
             resp.setContentType("application/json");
-            final Map<String, Map<String, String>> resultMap = new HashMap<String, Map<String, String>>();
-            resultMap.put("message", map);
+            final Map<String, Object> resultMap = new HashMap<String, Object>();
+            resultMap.put("message", msg);
             if (sessionModified) {
                 resultMap.put("user", SessionUtils.getUserMap(req.getSession(), resp));
             }

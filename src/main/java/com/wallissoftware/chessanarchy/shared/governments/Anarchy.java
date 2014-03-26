@@ -17,7 +17,7 @@ public class Anarchy extends SystemOfGovernment {
 
     @Override
     public boolean isReady(final String extraInfo, final long timeOfLastMove, final List<MoveRequest> moveRequests) {
-        return !moveRequests.isEmpty() && System.currentTimeMillis() - timeOfLastMove > CAConstants.SYNC_DELAY;
+        return !moveRequests.isEmpty() && System.currentTimeMillis() - timeOfLastMove > 4000;
     }
 
     @Override

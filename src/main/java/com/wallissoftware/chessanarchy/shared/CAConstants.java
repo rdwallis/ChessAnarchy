@@ -6,6 +6,6 @@ public class CAConstants {
 
     public final static String HOST = "http://chessanarchy.appspot.com";
 
-    public final static long SYNC_DELAY = 2000;
+    public final static double SYNC_DELAY = 2000;
 
 }

@@ -21,6 +21,8 @@ import com.wallissoftware.chessanarchy.shared.game.exceptions.IllegalMoveExcepti
 import com.wallissoftware.chessanarchy.shared.governments.MoveRequest;
 import com.wallissoftware.chessanarchy.shared.governments.MoveResult;
 import com.wallissoftware.chessanarchy.shared.governments.SystemOfGovernment;
+import com.wallissoftware.chessanarchy.shared.message.Message;
+import com.wallissoftware.chessanarchy.shared.message.MessageImpl;
 
 @Entity
 public class GameState {
@@ -44,7 +46,7 @@ public class GameState {
 
     private String whiteExtraInfo, blackExtraInfo;
 
-    @Serialize private List<Map<String, String>> messages = new ArrayList<Map<String, String>>();
+    @Serialize private List<Message> messages = new ArrayList<Message>();
     private static long lastServerMessage = -1;
 
     @SuppressWarnings("unused")
@@ -191,11 +193,11 @@ public class GameState {
     }
 
     private boolean isElectionComplete() {
-        return isElectionStarted() && System.currentTimeMillis() - creationTime > 60000;
+        return isElectionStarted() && System.currentTimeMillis() - creationTime > 45000;
     }
 
     public boolean isElectionStarted() {
-        return System.currentTimeMillis() - creationTime > 30000;
+        return System.currentTimeMillis() - creationTime > 15000;
     }
 
     private void setExtraInfo(final String extraInfo) {
@@ -262,8 +264,8 @@ public class GameState {
 
     }
 
-    public Set<Map<String, String>> getLastMessages(final int count) {
-        final HashSet<Map<String, String>> result = new HashSet<Map<String, String>>(messages.subList(Math.max(0, messages.size() - count), messages.size()));
+    public Set<Message> getLastMessages(final int count) {
+        final Set<Message> result = new HashSet<Message>(messages.subList(Math.max(0, messages.size() - count), messages.size()));
         if (getId() != null && result.size() < count) {
             result.add(getMessage("Start" + getId(), creationTime, "STARTING GAME: " + getId() + (swapColors() ? "T" : "F"), null));
         }
@@ -271,8 +273,8 @@ public class GameState {
         return result;
     }
 
-    public Set<Map<String, String>> getAllMessages() {
-        final HashSet<Map<String, String>> result = new HashSet<Map<String, String>>(messages);
+    public Set<Message> getAllMessages() {
+        final HashSet<Message> result = new HashSet<Message>(messages);
         if (getId() != null) {
             result.add(getMessage("Start" + getId(), creationTime, "STARTING GAME: " + getId() + (swapColors() ? "T" : "F"), null));
         }
@@ -286,17 +288,9 @@ public class GameState {
 
     }
 
-    private Map<String, String> getMessage(final String id, final long creationTime, final String message, final Color color) {
-        final Map<String, String> serverMessageMap = new HashMap<String, String>();
-        serverMessageMap.put("userId", "Game Master");
-        serverMessageMap.put("name", "Game Master");
-        serverMessageMap.put("id", id);
-        serverMessageMap.put("message", message);
-        serverMessageMap.put("created", creationTime + "");
-        if (color != null) {
-            serverMessageMap.put("color", color.name());
-        }
-        return serverMessageMap;
+    private Message getMessage(final String id, final double creationTime, final String message, final Color color) {
+        return new MessageImpl("Game Master", "Game Master", message, id, color, creationTime);
+
     }
 
     public String getPgn() {

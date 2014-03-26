@@ -20,6 +20,7 @@ import com.gwtplatform.dispatch.shared.SecurityCookie;
 import com.gwtplatform.mvp.client.RootPresenter;
 import com.gwtplatform.mvp.client.annotations.DefaultPlace;
 import com.gwtplatform.mvp.client.annotations.ErrorPlace;
+import com.gwtplatform.mvp.client.annotations.GaAccount;
 import com.gwtplatform.mvp.client.annotations.UnauthorizedPlace;
 import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
 import com.gwtplatform.mvp.client.gin.DefaultModule;
@@ -34,18 +35,19 @@ import com.wallissoftware.chessanarchy.client.place.NameTokens;
  * >DefaultModule's > DefaultPlaceManager</a>
  */
 public class ClientModule extends AbstractPresenterModule {
-	@Override
-	protected void configure() {
-		bindConstant().annotatedWith(SecurityCookie.class).to("JSESSIONID");
-		bind(RootPresenter.class).to(MyRootPresenter.class);
+    @Override
+    protected void configure() {
+        bindConstant().annotatedWith(SecurityCookie.class).to("JSESSIONID");
+        bindConstant().annotatedWith(GaAccount.class).to("UA-49404262-1");
+        bind(RootPresenter.class).to(MyRootPresenter.class);
 
-		install(new DefaultModule(DefaultPlaceManager.class));
-		install(new GameModule());
+        install(new DefaultModule(DefaultPlaceManager.class));
+        install(new GameModule());
 
-		// DefaultPlaceManager Places
-		bindConstant().annotatedWith(DefaultPlace.class).to(NameTokens.game);
-		bindConstant().annotatedWith(ErrorPlace.class).to(NameTokens.game);
-		bindConstant().annotatedWith(UnauthorizedPlace.class).to(NameTokens.game);
+        // DefaultPlaceManager Places
+        bindConstant().annotatedWith(DefaultPlace.class).to(NameTokens.game);
+        bindConstant().annotatedWith(ErrorPlace.class).to(NameTokens.game);
+        bindConstant().annotatedWith(UnauthorizedPlace.class).to(NameTokens.game);
 
-	}
+    }
 }

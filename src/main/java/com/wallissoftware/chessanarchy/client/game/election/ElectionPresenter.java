@@ -24,7 +24,7 @@ public class ElectionPresenter extends PresenterWidget<ElectionPresenter.MyView>
 
         void setColor(Color color);
 
-        void setCountDown(long seconds);
+        void setCountDown(double seconds);
     }
 
     private final Set<VotePresenter> votePresenters = new HashSet<VotePresenter>();
@@ -78,10 +78,10 @@ public class ElectionPresenter extends PresenterWidget<ElectionPresenter.MyView>
 
             @Override
             public boolean execute() {
-                final long electionStart = gameStateProvider.getGameState().getElectionStart();
+                final double electionStart = gameStateProvider.getGameState().getElectionStart();
                 if (electionStart > 10000) {
-                    final long electionTime = SyncedTime.get() - electionStart;
-                    final long secondsRemaining = Math.max(0, (30000 - electionTime) / 1000);
+                    final double electionTime = SyncedTime.get() - electionStart;
+                    final double secondsRemaining = Math.max(0, (30000 - electionTime) / 1000);
                     getView().setCountDown(secondsRemaining);
                     if (secondsRemaining <= 0) {
                         getView().hide();

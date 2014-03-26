@@ -63,7 +63,7 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
         }
         if (isFromGameMaster()) {
             if (getNewGameId() != null) {
-                return "Starting new game in 30 seconds.";
+                return "I'll call an election in 15 seconds.";
             }
             if (getText().startsWith("BLACK USES ")) {
                 return getText().replace("BLACK USES", "Black chooses");
@@ -109,7 +109,7 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
     }
 
     @Override
-    public long getCreated() {
+    public double getCreated() {
         return message.getCreated();
     }
 
@@ -154,7 +154,7 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
     public Set<MessageWrapper> getFakeMessages(final GovernmentInfo whiteGovernment, final GovernmentInfo blackGovernment) {
 
         if (getNewGameId() != null) {
-            final Message electionStartMessage = new MessageImpl(getName(), getUserId(), "CHOOSE YOUR GOVERNMENT", getId() + "esm", getColor(), getCreated() + 30000);
+            final Message electionStartMessage = new MessageImpl(getName(), getUserId(), "CHOOSE YOUR GOVERNMENT", getId() + "esm", getColor(), getCreated() + 15000);
             final Set<MessageWrapper> result = new HashSet<MessageWrapper>();
             result.add(new MessageWrapper(electionStartMessage));
             return result;
@@ -186,7 +186,7 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
         return null;
     }
 
-    public Long getElectionStart() {
+    public Double getElectionStart() {
         return isFromGameMaster() && getText().startsWith("CHOOSE YOUR GOVERNMENT") ? getCreated() : null;
     }
 
@@ -199,6 +199,12 @@ public class MessageWrapper implements Message, Comparable<MessageWrapper> {
         if (valid) {
             validated = true;
         }
+
+    }
+
+    @Override
+    public void swapColors() {
+        message.swapColors();
 
     }
 

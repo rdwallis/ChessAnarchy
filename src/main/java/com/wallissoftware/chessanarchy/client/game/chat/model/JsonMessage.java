@@ -8,63 +8,63 @@ import com.wallissoftware.chessanarchy.shared.message.Message;
 
 public final class JsonMessage extends JavaScriptObject implements Message {
 
-	protected JsonMessage() {
-	};
+    protected JsonMessage() {
+    };
 
-	@Override
-	public final native String getName() /*-{
+    @Override
+    public final native String getName() /*-{
 		return this.name;
-	}-*/;
+    }-*/;
 
-	@Override
-	public final native String getUserId() /*-{
+    @Override
+    public final native String getUserId() /*-{
 		return this.userId;
-	}-*/;
+    }-*/;
 
-	@Override
-	public final native String getText() /*-{
-		return this.message;
-	}-*/;
+    @Override
+    public final native String getText() /*-{
+		return this.text;
+    }-*/;
 
-	private final native String getNativeCreated() /*-{
-		return this.created;
-	}-*/;
+    @Override
+    public final native double getCreated() /*-{
+		return this.created || -1;
+    }-*/;
 
-	private final native String getNativeColor() /*-{
+    private final native String getNativeColor() /*-{
 		return this.color;
-	}-*/;
+    }-*/;
 
-	@Override
-	public Color getColor() {
-		final String color = getNativeColor();
-		if (color == null) {
-			return null;
-		}
-		return Color.valueOf(color);
-	}
+    @Override
+    public Color getColor() {
+        final String color = getNativeColor();
+        if (color == null) {
+            return null;
+        }
+        return Color.valueOf(color);
+    }
 
-	@Override
-	public long getCreated() {
-		final String created = getNativeCreated();
+    public static JsonMessage fromJson(final String json) {
+        return JsonUtils.safeEval(json);
+    }
 
-		return Long.valueOf(created);
-	}
-
-	public static JsonMessage fromJson(final String json) {
-		return JsonUtils.safeEval(json);
-	}
-
-	public static native JsonMessage wrap(final JavaScriptObject object) /*-{
+    public static native JsonMessage wrap(final JavaScriptObject object) /*-{
 		return object;
-	}-*/;
+    }-*/;
 
-	@Override
-	public final native String getId() /*-{
+    @Override
+    public final native String getId() /*-{
 		return this.id;
-	}-*/;
+    }-*/;
 
-	public static JsArray<JsonMessage> aryFromJson(final String json) {
-		return JsonUtils.safeEval(json);
-	};
+    public static JsArray<JsonMessage> aryFromJson(final String json) {
+        return JsonUtils.safeEval(json);
+    }
+
+    @Override
+    public void swapColors() {
+        // TODO Auto-generated method stub
+
+    };
 
 }

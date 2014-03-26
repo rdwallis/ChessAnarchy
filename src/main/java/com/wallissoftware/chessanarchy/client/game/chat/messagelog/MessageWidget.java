@@ -18,65 +18,65 @@ import com.wallissoftware.chessanarchy.shared.message.MessageWrapper;
 
 public class MessageWidget extends Composite {
 
-	private static MessageWidgetUiBinder uiBinder = GWT.create(MessageWidgetUiBinder.class);
+    private static MessageWidgetUiBinder uiBinder = GWT.create(MessageWidgetUiBinder.class);
 
-	interface MessageWidgetUiBinder extends UiBinder<Widget, MessageWidget> {
-	}
+    interface MessageWidgetUiBinder extends UiBinder<Widget, MessageWidget> {
+    }
 
-	interface MyStyle extends CssResource {
-		String command();
+    interface MyStyle extends CssResource {
+        String command();
 
-		String gameMaster();
+        String gameMaster();
 
-		String black();
+        String black();
 
-		String white();
+        String white();
 
-		String ownMessage();
-	}
+        String ownMessage();
+    }
 
-	@UiField MyStyle style;
+    @UiField MyStyle style;
 
-	@UiField(provided = true) InlineLabel message, creation, name;
-	@UiField SimplePanel color;
-	private final double creationTime;
+    @UiField(provided = true) InlineLabel message, creation, name;
+    @UiField SimplePanel color;
+    private final double creationTime;
 
-	public MessageWidget(final MessageWrapper message) {
+    public MessageWidget(final MessageWrapper message) {
 
-		this.message = new InlineLabel(message.getFormattedMessage());
-		this.name = new InlineLabel("<" + message.getName() + ">");
+        this.message = new InlineLabel(message.getFormattedMessage());
+        this.name = new InlineLabel("<" + message.getName() + ">");
 
-		this.creation = new InlineLabel(DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM).format(new Date(message.getCreated())));
-		this.creationTime = message.getCreated();
-		initWidget(uiBinder.createAndBindUi(this));
-		if (message.is3rdPerson() || message.isNickChange() || message.isTeamChange() || message.isFromGameMaster()) {
-			name.setVisible(false);
+        this.creation = new InlineLabel(DateTimeFormat.getFormat(PredefinedFormat.TIME_MEDIUM).format(new Date((long) message.getCreated())));
+        this.creationTime = message.getCreated();
+        initWidget(uiBinder.createAndBindUi(this));
+        if (message.is3rdPerson() || message.isNickChange() || message.isTeamChange() || message.isFromGameMaster()) {
+            name.setVisible(false);
 
-			if (message.isFromGameMaster()) {
-				this.message.addStyleName(style.gameMaster());
-			} else {
-				this.message.addStyleName(style.command());
-			}
-		} else {
-			try {
-				name.getElement().getStyle().setColor(intToColor(getHash(message.getUserId())));
-			} catch (final Exception e) {
+            if (message.isFromGameMaster()) {
+                this.message.addStyleName(style.gameMaster());
+            } else {
+                this.message.addStyleName(style.command());
+            }
+        } else {
+            try {
+                name.getElement().getStyle().setColor(intToColor(getHash(message.getUserId())));
+            } catch (final Exception e) {
 
-			}
-		}
-		if (message.getColor() != null) {
-			this.color.addStyleName(message.getColor() == Color.WHITE ? style.white() : style.black());
-		}
-		if (message.getUserId().equals(User.get().getUserId())) {
-			this.addStyleName(style.ownMessage());
-		}
-	}
+            }
+        }
+        if (message.getColor() != null) {
+            this.color.addStyleName(message.getColor() == Color.WHITE ? style.white() : style.black());
+        }
+        if (message.getUserId().equals(User.get().getUserId())) {
+            this.addStyleName(style.ownMessage());
+        }
+    }
 
-	public double getCreated() {
-		return creationTime;
-	}
+    public double getCreated() {
+        return creationTime;
+    }
 
-	private final native double getHash(String input) /*-{
+    private final native double getHash(String input) /*-{
 		var hash = 0;
 		if (this.length == 0) {
 			return hash;
@@ -86,12 +86,12 @@ public class MessageWidget extends Composite {
 			hash = hash & hash; // Convert to 32bit integer
 		}
 		return hash;
-	}-*/;
+    }-*/;
 
-	private final native String intToColor(double input)/*-{
+    private final native String intToColor(double input)/*-{
 
 		var shortened = input % 360;
 		return "hsl(" + shortened + ",100%,30%)";
-	}-*/;
+    }-*/;
 
 }

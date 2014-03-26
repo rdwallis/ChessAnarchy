@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="x-ua-compatible" content="IE=10">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta name = "viewport" content = "width = 455,
+<meta name="viewport" content="width = 455,
        initial-scale = 0.7">
 <title>Chess Anarchy, inspired by Twitch Plays Pok&#233;mon</title>
 <link rel="stylesheet" type="text/css"
@@ -21,16 +21,23 @@
 	display: inline;
 }
 
-@media (max-width: 920px) {
+@media ( max-width : 920px) {
 	header {
 		max-width: 445px;
 	}
 }
 
 #chessAnarchy {
-	display: inline-block;
-	margin-bottom: 40px;
+	display: block;
+	margin-bottom: 6px;
+	
+}
+
+#game {
+	display:inline-block;
 	margin-right: 10px;
+	
+	margin-bottom: 10px;
 }
 
 #essay {
@@ -41,7 +48,6 @@
 	vertical-align: top;
 	height: 630px;
 	overflow: auto;
-	
 }
 
 .last {
@@ -49,12 +55,21 @@
 }
 
 .load {
-display:block;
+	display: block;
 	margin-top: 268px;
 	margin-right: auto;
-	margin-left:auto;
+	margin-left: auto;
 	width: 64px;
 	height: 64px;
+}
+
+
+.chess-anarchy-responsive { width: 320px; height: 50px; }
+@media(min-width: 500px) { 
+.chess-anarchy-responsive { width: 468px; height: 60px; } 
+}
+@media(min-width: 800px) { 
+.chess-anarchy-responsive { width: 728px; height: 90px; } 
 }
 
 </style>
@@ -67,7 +82,9 @@ display:block;
 		</h1>
 		<h2>By Richard Wallis</h2>
 	</header>
-<div id="chessAnarchy">
+	
+	<div id="game">
+	<div id="chessAnarchy">
 		<noscript>
 			<div
 				style="width: 22em; position: absolute; left: 50%; margin-left: -11em; color: red; background-color: white; border: 1px solid red; padding: 4px; font-family: sans-serif;">
@@ -76,6 +93,14 @@ display:block;
 		</noscript>
 		<img src="http://chessanarchy.appspot.com/712.cache.gif" class="load">
 	</div>
+
+<ins class="adsbygoogle chess-anarchy-responsive"
+     style="display:block"
+     data-ad-client="ca-pub-7267915774549358"
+     data-ad-slot="2837367914"></ins>
+
+	</div>
+
 	<div id="essay">
 		A couple of weeks ago, a few thousand people began playing a game of
 		Pok&#233;mon. By sending a message to a chat window any of them could
@@ -93,12 +118,14 @@ display:block;
 		<p>Under anarchy the first legal move received by the server is
 			immediately played.</p>
 		<h4>Democracy</h4>
-		<p>Under democracy votes are counted after 20 seconds and the most
-			popular move is played.</p>
+		<p>Under democracy votes are counted after 9 seconds and the most
+			popular move is played. If you vote more than once only your last
+			vote counts.</p>
 		<h4>Hipsterism</h4>
 		<p class="last">Hipsters liked your move before it became popular.
-			Under Hipsterism the votes are counted after 20 seconds and then the
-			least popular move is made.</p>
+			Under Hipsterism the votes are counted after 9 seconds and then the
+			least popular move is made. If you vote more than once only your last
+			vote counts.</p>
 		<hr>
 		<a href="https://github.com/rdwallis/ChessAnarchy">You can find
 			Chess Anarchy's source code and instructions on how to create your
@@ -107,7 +134,13 @@ display:block;
 
 
 	</div>
+	<!-- Chess Anarchy -->
+	<ins class="adsbygoogle"
+		style="display: inline-block; width: 728px; height: 90px"
+		data-ad-client="ca-pub-7267915774549358" data-ad-slot="9023502317"></ins>
 	
+	
+
 	<script>
 		(function(doc, wnd) {
 			var essay = doc.getElementById("essay");
@@ -118,7 +151,7 @@ display:block;
 					essay.style.height = Math.max(600,
 							mainContent.clientHeight - 20)
 							+ "px";
-					essay.style.width = Math.min(wnd.innerWidth - 1150, 350)
+					essay.style.width = Math.min(wnd.innerWidth - 1150, 380)
 							+ "px";
 				} else {
 					essay.style.width = (mainContent.clientWidth - 20) + "px";
@@ -151,7 +184,14 @@ display:block;
 	<script type="text/javascript"
 		src="http://chessanarchy.appspot.com/init.js"></script>
 	<script type="text/javascript"
-		src="http://chessanarchy.appspot.com/chessanarchy/chessanarchy.nocache.js"></script>
+		src="/chessanarchy/chessanarchy.nocache.js"></script>
+
+	<script async
+		src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+	<script>
+		(adsbygoogle = window.adsbygoogle || []).push({});
+	</script>
+	
 
 
 </body>

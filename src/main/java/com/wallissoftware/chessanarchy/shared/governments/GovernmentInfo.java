@@ -29,11 +29,11 @@ public interface GovernmentInfo {
      */
     String getWhiteIconUrl();
 
-    String getMoveMessage(long randomSeed, Color color, String move);
+    String getMoveMessage(double randomSeed, Color color, String move);
 
-    String getInsult(long randomSeed, Color color);
+    String getInsult(double randomSeed, Color color);
 
-    String getCountingVotesMessage(long randomSeed, Color color);
+    String getCountingVotesMessage(double randomSeed, Color color);
 
     String getShortDescription();
 

@@ -23,8 +23,6 @@ public class GetMessageServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String MESSAGE_QUEUE_KEY = "mq";
-
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
         final String idStr = req.getParameter("id");
@@ -64,7 +62,7 @@ public class GetMessageServlet extends HttpServlet {
         if (lastUpdateTime == null) {
             return System.currentTimeMillis();
         }
-        if (System.currentTimeMillis() - lastUpdateTime > 30000) {
+        if (System.currentTimeMillis() - lastUpdateTime > 15000) {
             final Queue queue = QueueFactory.getDefaultQueue();
             queue.add(withUrl("/admin/processmessages").method(Method.GET));
         }

@@ -1,8 +1,10 @@
 package com.wallissoftware.chessanarchy.client.game.election;
 
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.IsWidget;
@@ -56,9 +58,13 @@ public class ElectionView extends PopupViewImpl implements ElectionPresenter.MyV
     }
 
     @Override
-    public void setCountDown(final long seconds) {
-        countDown.setText("A new game begins in " + seconds + " seconds");
+    public void setCountDown(final double seconds) {
+        countDown.setText("A new game begins in " + Math.floor(seconds) + " seconds");
+    }
 
+    @UiHandler("closeButton")
+    void onCloseButtonClick(final ClickEvent event) {
+        hide();
     }
 
 }

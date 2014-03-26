@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.google.gwt.core.client.Duration;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.jsonp.client.JsonpRequestBuilder;
@@ -13,9 +14,9 @@ import com.wallissoftware.chessanarchy.shared.CAConstants;
 
 public class SyncedTime {
 
-    private static long diff = 0;
+    private static double diff = 0;
 
-    private static List<Long> diffs = new ArrayList<Long>();
+    private static List<Double> diffs = new ArrayList<Double>();
 
     private static boolean accurateEnough = false;
 
@@ -29,10 +30,10 @@ public class SyncedTime {
             @Override
             public boolean execute() {
                 final JsonpRequestBuilder jsonp = new JsonpRequestBuilder();
-                jsonp.requestString(CAConstants.HOST + "/time", new SuccessCallback<String>() {
+                jsonp.requestDouble(CAConstants.HOST + "/time", new SuccessCallback<Double>() {
 
                     @Override
-                    public void onSuccess(final String result) {
+                    public void onSuccess(final Double result) {
                         setDiff(result);
 
                     }
@@ -41,23 +42,23 @@ public class SyncedTime {
                 return --count >= 0 && !accurateEnough;
 
             }
-        }, 1019);
+        }, 4019);
 
     }
 
-    public static long getDiff() {
+    public static double getDiff() {
 
         return diff;
     }
 
-    public static long get() {
-        return System.currentTimeMillis() - diff;
+    public static double get() {
+        return Duration.currentTimeMillis() - diff;
     }
 
-    private static void setDiff(final String text) {
+    private static void setDiff(final Double serverTime) {
 
         try {
-            final long d = System.currentTimeMillis() - Long.valueOf(text);
+            final double d = Duration.currentTimeMillis() - serverTime;
             logger.info("Time diff with server = " + d);
             diffs.add(d);
             recalcDiff();
@@ -68,16 +69,16 @@ public class SyncedTime {
     }
 
     private static void recalcDiff() {
-        final long lastDiff = diff;
+        final double lastDiff = diff;
         if (diffs.size() < 4) {
-            long total = 0;
-            for (final long d : diffs) {
+            double total = 0;
+            for (final double d : diffs) {
                 total += d;
             }
             diff = total / diffs.size();
         } else {
             Collections.sort(diffs);
-            long total = 0;
+            double total = 0;
             for (int i = 0; i < diffs.size() - 2; i++) {
                 total += diffs.get(i);
             }

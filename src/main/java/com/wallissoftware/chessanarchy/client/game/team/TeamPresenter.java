@@ -26,7 +26,7 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
 
         void setColor(Color color);
 
-        void setJoinCountDown(Long joinTime);
+        void setJoinCountDown(double joinTime);
 
         void setGovernmentName(String name);
 
@@ -34,7 +34,9 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
 
         Set<IsWidget> getAutoHidePartners();
 
-        void setTimeUntilMove(long timeUntilMove);
+        void setTimeUntilMove(double timeUntilMove);
+
+        void setGovernmentVisible(boolean visible);
 
     }
 
@@ -88,19 +90,27 @@ public class TeamPresenter extends PresenterWidget<TeamPresenter.MyView> impleme
     }
 
     private void update() {
-        if (getGovernment() != null) {
-            getView().setGovernmentName(getGovernment().getName());
-            getView().setGovernmentIcon(getColor() == Color.WHITE ? getGovernment().getWhiteIconUrl() : getGovernment().getBlackIconUrl());
-            final int timeForMove = getGovernment().getName().equals("Anarchy") ? 2 : 5;
-            if (gameStateProvider.getMoveTree().isWhitesTurn() ^ getColor() == Color.BLACK) {
-                final long timeSinceMove = Math.max(0, ((SyncedTime.get() - CAConstants.SYNC_DELAY) - gameStateProvider.getLastMoveTime()) / 1000);
-                getView().setTimeUntilMove(timeForMove - timeSinceMove);
+        try {
+            if (getGovernment() != null) {
+                getView().setGovernmentVisible(true);
+                getView().setGovernmentName(getGovernment().getName());
+                getView().setGovernmentIcon(getColor() == Color.WHITE ? getGovernment().getWhiteIconUrl() : getGovernment().getBlackIconUrl());
+                final int timeForMove = getGovernment().getName().equals("Anarchy") ? 4 : 9;
+                if (gameStateProvider.getMoveTree().isWhitesTurn() ^ getColor() == Color.BLACK) {
+                    final double timeSinceMove = Math.max(0, ((SyncedTime.get() - CAConstants.SYNC_DELAY) - gameStateProvider.getLastMoveTime()) / 1000);
+                    getView().setTimeUntilMove(timeForMove - timeSinceMove);
+                } else {
+                    final double timeSinceMove = Math.max(0, ((SyncedTime.get() - CAConstants.SYNC_DELAY) - gameStateProvider.getSecondLastMoveTime()) / 1000);
+                    getView().setTimeUntilMove(timeForMove - timeSinceMove);
+                }
+
             } else {
-                final long timeSinceMove = Math.max(0, ((SyncedTime.get() - CAConstants.SYNC_DELAY) - gameStateProvider.getSecondLastMoveTime()) / 1000);
-                getView().setTimeUntilMove(timeForMove - timeSinceMove);
+                getView().setGovernmentVisible(false);
             }
+            getView().setJoinCountDown(User.get().getColorJoinTime(color));
+        } catch (final Exception e) {
+
         }
-        getView().setJoinCountDown(User.get().getColorJoinTime(color));
 
     }
 

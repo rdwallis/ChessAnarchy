@@ -23,6 +23,7 @@ import com.wallissoftware.chessanarchy.server.gamestate.LatestGameStateId;
 import com.wallissoftware.chessanarchy.shared.game.Color;
 import com.wallissoftware.chessanarchy.shared.governments.MoveRequest;
 import com.wallissoftware.chessanarchy.shared.governments.SystemOfGovernment;
+import com.wallissoftware.chessanarchy.shared.message.Message;
 
 @Singleton
 public class UpdateMessagesServlet extends HttpServlet {
@@ -33,18 +34,24 @@ public class UpdateMessagesServlet extends HttpServlet {
     protected synchronized void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
         LastUpdateTime.markUpdated();
         final MemcacheService cache = MemcacheServiceFactory.getMemcacheService();
-        @SuppressWarnings("unchecked")
-        Set<Map<String, String>> msgQueue = (Set<Map<String, String>>) cache.get(GetMessageServlet.MESSAGE_QUEUE_KEY);
-        if (msgQueue == null) {
-            msgQueue = new HashSet<Map<String, String>>();
+
+        final Set<String> keys = new HashSet<String>();
+        for (int i = 0; i < SendMessageServlet.SHARD_COUNT; i++) {
+            keys.add(SendMessageServlet.MESSAGE_QUEUE_KEY + i);
+
         }
-        final Set<Map<String, String>> messageQueue = msgQueue;
+        final Map<String, Object> messageCache = cache.getAll(keys);
+        cache.deleteAll(keys);
+        final Set<Message> messageQueue = new HashSet<Message>();
+        for (final Object shard : messageCache.values()) {
+            messageQueue.addAll((Set<Message>) shard);
+        }
+
         final Long previousId = LatestMessageId.get();
-        cache.clearAll();
 
         final Objectify ofy = ObjectifyService.factory().begin();
         final Long latestGameStateId = LatestGameStateId.get();
-        final Set<Map<String, String>> gameStateMessages = new HashSet<Map<String, String>>();
+        final Set<Message> gameStateMessages = new HashSet<Message>();
         final Long previousGameStateId = LatestGameStateId.getPrevious();
 
         if (latestGameStateId != null) {
@@ -80,7 +87,7 @@ public class UpdateMessagesServlet extends HttpServlet {
 
     }
 
-    private boolean updateGameState(final Objectify ofy, final Long latestGameStateId, final Set<Map<String, String>> messageQueue) {
+    private boolean updateGameState(final Objectify ofy, final Long latestGameStateId, final Set<Message> messageQueue) {
 
         if (latestGameStateId != null) {
             final GameState gameState = ofy.load().type(GameState.class).id(LatestGameStateId.get()).getValue();
@@ -88,18 +95,18 @@ public class UpdateMessagesServlet extends HttpServlet {
 
                 final Map<String, String> moveMap = gameState.getLegalMoveMap();
                 final Color currentPlayer = gameState.getCurrentPlayer();
-                for (final Map<String, String> message : messageQueue) {
-                    if (message.containsKey("color")) {
+                for (final Message message : messageQueue) {
+                    if (message.getColor() != null) {
                         if (gameState.swapColors()) {
-                            message.put("color", Color.valueOf(message.get("color")).getOpposite().name());
+                            message.swapColors();
                         }
                         if (gameState.isGovernmentElected()) {
-                            if (currentPlayer == Color.valueOf(message.get("color")) && moveMap.containsKey(message.get("message"))) {
-                                gameState.addMoveRequest(new MoveRequest(Color.valueOf(message.get("color")), message.get("userId"), moveMap.get(message.get("message"))));
+                            if (currentPlayer == message.getColor() && moveMap.containsKey(message.getText())) {
+                                gameState.addMoveRequest(new MoveRequest(message.getColor(), message.getUserId(), moveMap.get(message.getText())));
                             }
                         } else if (gameState.isElectionStarted()) {
-                            if (SystemOfGovernment.isSystemOfGovernment(message.get("message"))) {
-                                gameState.addMoveRequest(new MoveRequest(Color.valueOf(message.get("color")), message.get("userId"), message.get("message")));
+                            if (SystemOfGovernment.isSystemOfGovernment(message.getText())) {
+                                gameState.addMoveRequest(new MoveRequest(message.getColor(), message.getUserId(), message.getText()));
                             }
                         }
                     }
